@@ -1,0 +1,13 @@
+# Python
+__pycache_/
+*.pyc
+
+# Entornos
+venv/
+.env
+
+# IDE
+.vscode/
+
+# OS
+.DS_Store
