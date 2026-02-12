@@ -1,31 +1,28 @@
-from fastapi import APIRouter, Depends, HTTPException
-from app.modules.users.schemas import UserCreate, UserLogin
-from app.modules.users.service import authenticate_user
-from app.core.security import create_access_token
-from app.middleware.auth import require_permission
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+from app.db.session import get_db
+from app.modules.users.schemas import UserCreate
+from app.core.permissions import require_permission
+from app.modules.auth.service import create_user as create_auth_user
+from app.core.security import get_current_user
+
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
 @router.get("/")
-def list_users():
-    return {"message": "Users module working"}
+def list_users(current_user=Depends(get_current_user)):
+    return {"message": "Users module working", "user_id": current_user["id"]}
 
 @router.post("/register")
-def register(user: UserCreate):
-    created = create_user(user.email, user.password, user.role)
-    return {"email": created["email"], "role": created["role"]}
-
-@router.post("/login")
-def login(user: UserLogin):
-    auth = authenticate_user(user.email, user.password)
-    if not auth:
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-    token = create_access_token({"sub": auth["email"], "role": auth["role"]})
-
-    return {"access_token": token, "token_type": "bearer"}
+def register(user: UserCreate, db: Session = Depends(get_db)):
+    created = create_auth_user(user.email, user.password, user.role, user.plan, db)
+    return {"email": created.email, "role": created.role}
 
 @router.post("/")
-def create_user(
-    user=Depends(require_permission("users: create", module="users"))
+def create_user_endpoint(
+    user: UserCreate,
+    current_user=Depends(require_permission("users.create")),
+    db: Session = Depends(get_db)
 ):
-    return {"message": "User created"}
+    created = create_auth_user(user.email, user.password, user.role, user.plan, db)
+    return {"message": "User created", "email": created.email}
