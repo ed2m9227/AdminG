@@ -1,5 +1,6 @@
 from datetime import datetime
-from sqlalchemy import Column, DateTime, Integer, String, Boolean
+from sqlalchemy import Column, DateTime, Integer, String, Boolean, ForeignKey
+from sqlalchemy.orm import relationship
 from app.db.base import Base
 
 class User(Base):
@@ -11,5 +12,13 @@ class User(Base):
     role = Column(String(30), default="viewer", nullable=False)
     plan = Column(String(30), default="free", nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
+    
+    # Multi-tenancy fields
+    business_type = Column(String(50), default="general", nullable=False)
+    parent_user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    
+    # Relationships
+    sub_users = relationship("User", remote_side=[id], backref="parent_user")
+    
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
