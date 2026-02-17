@@ -11,6 +11,9 @@ from app.modules.users.router import router as users_router
 from app.modules.customers.router import router as customers_router
 from app.modules.appointments.router import router as appointments_router
 from app.modules.plans.router import router as plans_router
+from app.modules.inventory.router import router as inventory_router
+from app.modules.payments.router import router as payments_router
+from app.modules.reports.router import router as reports_router
 from app.modules.plans.service import seed_plans
 
 # Configurar logging
@@ -53,7 +56,11 @@ def startup_event():
     """Seed initial data on startup"""
     db = SessionLocal()
     try:
+        logger.info("Seeding plans...")
         seed_plans(db)
+        logger.info("Plans seeded successfully")
+    except Exception as e:
+        logger.error(f"Error seeding plans: {e}")
     finally:
         db.close()
 
@@ -62,15 +69,37 @@ app.include_router(users_router)
 app.include_router(customers_router)
 app.include_router(appointments_router)
 app.include_router(plans_router)
+app.include_router(inventory_router)
+app.include_router(payments_router)
+app.include_router(reports_router)
 
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    return {"status": "ok", "version": "1.0.0"}
+
+@app.get("/api/version")
+def get_version():
+    return {
+        "name": "AdminG / AdminPro",
+        "version": "1.0.0",
+        "features": [
+            "Multi-tenancy",
+            "Plan gating",
+            "Inventory management",
+            "Payment processing",
+            "Advanced reporting",
+            "MontelibanoGen integration"
+        ]
+    }
 
 # Servir archivos estáticos del frontend
 frontend_dist = Path(__file__).parent.parent / "frontend-dist"
 if frontend_dist.exists():
-    app.mount("/assets", StaticFiles(directory=str(frontend_dist / "assets")), name="assets")
+    try:
+        app.mount("/assets", StaticFiles(directory=str(frontend_dist / "assets")), name="assets")
+        logger.info("Static files mounted successfully")
+    except Exception as e:
+        logger.warning(f"Could not mount static files: {e}")
     
     @app.get("/{full_path:path}")
     async def serve_spa(full_path: str):
