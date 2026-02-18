@@ -43,7 +43,6 @@ frontend/yarn-debug.log*
 frontend/yarn-error.log*
 frontend/pnpm-debug.log*
 frontend-cdn-backup/
-frontend-dist/
 
 # Build outputs
 *.egg-info/
