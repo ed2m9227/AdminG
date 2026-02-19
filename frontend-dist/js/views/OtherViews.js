@@ -259,15 +259,6 @@ export class PaymentsView {
                 }
             }
         });
-                    const option = document.createElement('option');
-                    option.value = c.id;
-                    option.textContent = c.full_name || 'Sin nombre';
-                    select.appendChild(option);
-                });
-            }
-        } catch (error) {
-            console.error('Error loading customers:', error);
-        }
     }
 }
 
