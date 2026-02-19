@@ -36,7 +36,7 @@ export class InventoryView {
             { key: 'name', label: 'Nombre' },
             { key: 'category', label: 'Categoría' },
             { key: 'quantity', label: 'Stock' },
-            { key: 'price', label: 'Precio', type: 'currency' },
+            { key: 'unit_price', label: 'Precio', type: 'currency' },
             {
                 key: 'actions',
                 label: 'Acciones',
@@ -149,7 +149,7 @@ export class InventoryView {
                 <div class="form-row">
                     <div class="form-group">
                         <label>Precio *</label>
-                        <input type="number" step="0.01" name="price" value="${product?.price || ''}" required>
+                        <input type="number" step="0.01" name="unit_price" value="${product?.unit_price || ''}" required>
                     </div>
                     <div class="form-group">
                         <label>Costo</label>
@@ -197,7 +197,7 @@ export class InventoryView {
             description: formData.get('description') || null,
             category_id: formData.get('category_id') ? parseInt(formData.get('category_id')) : null,
             quantity: parseInt(formData.get('quantity')),
-            price: parseFloat(formData.get('price')),
+            unit_price: parseFloat(formData.get('unit_price')),
             cost: formData.get('cost') ? parseFloat(formData.get('cost')) : null
         };
 
@@ -212,7 +212,18 @@ export class InventoryView {
                 message: 'Producto guardado correctamente'
             });
         } catch (error) {
-            const errorMsg = error.message || (typeof error === 'object' ? JSON.stringify(error) : String(error));
+            console.error('Error guardando producto:', error);
+            let errorMsg = error.message || 'Error desconocido';
+            
+            // Si el error tiene detalles de validación (422), mostrarlos
+            if (error.detail) {
+                if (Array.isArray(error.detail)) {
+                    errorMsg = error.detail.map(err => `${err.loc?.join('.')}: ${err.msg}`).join(', ');
+                } else if (typeof error.detail === 'string') {
+                    errorMsg = error.detail;
+                }
+            }
+            
             modal.alert({
                 type: 'error',
                 title: 'Error',

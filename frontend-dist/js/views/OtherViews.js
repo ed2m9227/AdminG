@@ -29,9 +29,9 @@ export class AppointmentsView {
 
     renderTable() {
         const columns = [
-            { key: 'appointment_date', label: 'Fecha', type: 'datetime' },
+            { key: 'scheduled_at', label: 'Fecha', type: 'datetime' },
             { key: 'customer.name', label: 'Cliente', formatter: (v) => v || 'N/A' },
-            { key: 'service_type', label: 'Servicio' },
+            { key: 'notes', label: 'Servicio' },
             { key: 'status', label: 'Estado', type: 'badge' }
         ];
 
@@ -112,17 +112,24 @@ export class AppointmentsView {
         }).then(async (confirmed) => {
             if (confirmed) {
                 const appointmentData = {
-                    customer_id: document.getElementById('appointmentCustomer').value,
-                    appointment_date: document.getElementById('appointmentDate').value,
-                    service_type: document.getElementById('appointmentService').value,
-                    status: document.getElementById('appointmentStatus').value
+                    customer_id: parseInt(document.getElementById('appointmentCustomer').value),
+                    scheduled_at: document.getElementById('appointmentDate').value,
+                    service_id: null,  // Optional: use null for now since services table might not be populated
+                    duration_minutes: 60,  // Default duration
+                    status: document.getElementById('appointmentStatus').value,
+                    notes: document.getElementById('appointmentService').value  // Store service type in notes
                 };
                 try {
                     await apiService.post('/appointments/', appointmentData);
                     await this.init();
                     await modal.alert({ title: 'Éxito', message: 'Cita creada correctamente' });
                 } catch (error) {
-                    await modal.alert({ title: 'Error', message: error.message, type: 'error' });
+                    console.error('Error creating appointment:', error);
+                    let errorMsg = error.message || 'Error desconocido';
+                    if (error.detail) {
+                        errorMsg = typeof error.detail === 'string' ? error.detail : JSON.stringify(error.detail);
+                    }
+                    await modal.alert({ title: 'Error', message: errorMsg, type: 'error' });
                 }
             }
         });
@@ -151,10 +158,10 @@ export class PaymentsView {
 
     renderTable() {
         const columns = [
-            { key: 'payment_date', label: 'Fecha', type: 'date' },
+            { key: 'created_at', label: 'Fecha', type: 'datetime' },
             { key: 'customer.name', label: 'Cliente', formatter: (v) => v || 'N/A' },
-            { key: 'payment_method', label: 'Método' },
-            { key: 'amount', label: 'Monto', type: 'currency' },
+            { key: 'method', label: 'Método' },
+            { key: 'final_amount', label: 'Monto', type: 'currency' },
             { key: 'status', label: 'Estado', type: 'badge', badgeClass: 'success' }
         ];
 
@@ -244,18 +251,22 @@ export class PaymentsView {
         }).then(async (confirmed) => {
             if (confirmed) {
                 const paymentData = {
-                    customer_id: document.getElementById('paymentCustomer').value,
+                    customer_id: parseInt(document.getElementById('paymentCustomer').value),
                     amount: parseFloat(document.getElementById('paymentAmount').value),
-                    payment_method: document.getElementById('paymentMethod').value,
-                    description: document.getElementById('paymentConcept').value,
-                    status: document.getElementById('paymentStatus').value
+                    method: document.getElementById('paymentMethod').value,
+                    notes: document.getElementById('paymentConcept').value
                 };
                 try {
                     await apiService.post('/payments/', paymentData);
                     await this.init();
                     await modal.alert({ title: 'Éxito', message: 'Pago registrado correctamente' });
                 } catch (error) {
-                    await modal.alert({ title: 'Error', message: error.message, type: 'error' });
+                    console.error('Error creating payment:', error);
+                    let errorMsg = error.message || 'Error desconocido';
+                    if (error.detail) {
+                        errorMsg = typeof error.detail === 'string' ? error.detail : JSON.stringify(error.detail);
+                    }
+                    await modal.alert({ title: 'Error', message: errorMsg, type: 'error' });
                 }
             }
         });
