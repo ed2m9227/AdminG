@@ -60,12 +60,29 @@ export class AppointmentsView {
     }
 
     async showNewAppointmentModal() {
+        // Cargar clientes PRIMERO
+        let customersOptions = '<option value="">Cargando clientes...</option>';
+        try {
+            const customers = await apiService.getCustomers();
+            if (Array.isArray(customers) && customers.length > 0) {
+                customersOptions = '<option value="">Seleccionar cliente...</option>';
+                customers.forEach(c => {
+                    customersOptions += `<option value="${c.id}">${c.full_name || 'Sin nombre'}</option>`;
+                });
+            } else {
+                customersOptions = '<option value="">No hay clientes registrados</option>';
+            }
+        } catch (error) {
+            console.error('Error loading customers:', error);
+            customersOptions = '<option value="">Error al cargar clientes</option>';
+        }
+
         const html = `
             <form id="appointmentForm">
                 <div class="form-group">
                     <label>Cliente</label>
                     <select id="appointmentCustomer" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
-                        <option value="">Seleccionar cliente...</option>
+                        ${customersOptions}
                     </select>
                 </div>
                 <div class="form-group">
@@ -109,22 +126,6 @@ export class AppointmentsView {
                 }
             }
         });
-
-        // Cargar clientes en el select
-        try {
-            const customers = await apiService.getCustomers();
-            const select = document.getElementById('appointmentCustomer');
-            if (select && Array.isArray(customers)) {
-                customers.forEach(c => {
-                    const option = document.createElement('option');
-                    option.value = c.id;
-                    option.textContent = c.full_name || 'Sin nombre';
-                    select.appendChild(option);
-                });
-            }
-        } catch (error) {
-            console.error('Error loading customers:', error);
-        }
     }
 }
 
@@ -182,12 +183,29 @@ export class PaymentsView {
     }
 
     async showNewPaymentModal() {
+        // Cargar clientes PRIMERO
+        let customersOptions = '<option value="">Cargando clientes...</option>';
+        try {
+            const customers = await apiService.getCustomers();
+            if (Array.isArray(customers) && customers.length > 0) {
+                customersOptions = '<option value="">Seleccionar cliente...</option>';
+                customers.forEach(c => {
+                    customersOptions += `<option value="${c.id}">${c.full_name || 'Sin nombre'}</option>`;
+                });
+            } else {
+                customersOptions = '<option value="">No hay clientes registrados</option>';
+            }
+        } catch (error) {
+            console.error('Error loading customers:', error);
+            customersOptions = '<option value="">Error al cargar clientes</option>';
+        }
+
         const html = `
             <form id="paymentForm">
                 <div class="form-group">
                     <label>Cliente</label>
                     <select id="paymentCustomer" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
-                        <option value="">Seleccionar cliente...</option>
+                        ${customersOptions}
                     </select>
                 </div>
                 <div class="form-group">
@@ -241,13 +259,6 @@ export class PaymentsView {
                 }
             }
         });
-
-        // Cargar clientes en el select
-        try {
-            const customers = await apiService.getCustomers();
-            const select = document.getElementById('paymentCustomer');
-            if (select && Array.isArray(customers)) {
-                customers.forEach(c => {
                     const option = document.createElement('option');
                     option.value = c.id;
                     option.textContent = c.full_name || 'Sin nombre';

@@ -5,6 +5,7 @@
  */
 
 import apiService from '../services/api.service.js';
+import authService from '../services/auth.service.js';
 import table from '../components/Table.js';
 import modal from '../components/Modal.js';
 
@@ -93,16 +94,33 @@ export class InventoryView {
         });
     }
 
-    showProductModal(product = null) {
+    async showProductModal(product = null) {
         const isEdit = !!product;
         const title = isEdit ? 'Editar Producto' : 'Nuevo Producto';
+
+        // Cargar categorías ANTES de mostrar modal
+        let categoriesOptions = '<option value="">Sin categoría</option>';
+        try {
+            const categories = await apiService.getInventoryCategories();
+            if (Array.isArray(categories) && categories.length > 0) {
+                categories.forEach(cat => {
+                    const selected = product?.category_id === cat.id ? 'selected' : '';
+                    categoriesOptions += `<option value="${cat.id}" ${selected}>${cat.name}</option>`;
+                });
+            }
+        } catch (error) {
+            console.log('Categorías no disponibles:', error);
+        }
 
         const content = `
             <form id="productForm" class="modal-form">
                 <div class="form-row">
                     <div class="form-group">
-                        <label>SKU</label>
-                        <input type="text" name="sku" value="${product?.sku || ''}">
+                        <label>
+                            SKU 
+                            <span class="help-icon" title="Código único del producto (Stock Keeping Unit). Ejemplo: ALM-001, PROD-001" style="cursor: help; color: #667eea; font-weight: bold; margin-left: 4px;">ℹ️</span>
+                        </label>
+                        <input type="text" name="sku" value="${product?.sku || ''}" placeholder="Ej: PROD-001">
                     </div>
                     <div class="form-group">
                         <label>Nombre *</label>
@@ -118,7 +136,9 @@ export class InventoryView {
                 <div class="form-row">
                     <div class="form-group">
                         <label>Categoría</label>
-                        <input type="text" name="category" value="${product?.category || ''}">
+                        <select name="category_id" id="productCategory" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            ${categoriesOptions}
+                        </select>
                     </div>
                     <div class="form-group">
                         <label>Cantidad *</label>
@@ -157,11 +177,25 @@ export class InventoryView {
         const form = e.target;
         const formData = new FormData(form);
 
+        // Validar permiso ANTES de enviar al servidor
+        const user = authService.getCurrentUser();
+        const features = authService.getFeatures();
+        
+        // Si no es admin y no tiene la característica, bloquear
+        if (user && user.role !== 'admin' && !features.includes('create_products')) {
+            modal.alert({
+                type: 'warning',
+                title: 'Aumenta tu plan',
+                message: 'No puedes añadir productos con tu plan actual. Aumenta tu plan para acceder a esta función.'
+            });
+            return;
+        }
+
         const productData = {
             sku: formData.get('sku') || null,
             name: formData.get('name'),
             description: formData.get('description') || null,
-            category: formData.get('category') || null,
+            category_id: formData.get('category_id') ? parseInt(formData.get('category_id')) : null,
             quantity: parseInt(formData.get('quantity')),
             price: parseFloat(formData.get('price')),
             cost: formData.get('cost') ? parseFloat(formData.get('cost')) : null

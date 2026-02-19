@@ -93,6 +93,14 @@ export class ApiService {
         return this.post('/inventory/items', item);
     }
 
+    async getInventoryCategories() {
+        return this.get('/inventory/categories');
+    }
+
+    async createInventoryCategory(category) {
+        return this.post('/inventory/categories', category);
+    }
+
     async getPayments() {
         return this.get('/payments/');
     }
