@@ -1,6 +1,13 @@
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict
 
+class CustomerInfo(BaseModel):
+    id: int
+    full_name: str
+    
+    class Config:
+        from_attributes = True
+
 class AppointmentBase(BaseModel):
     customer_id: int
     service_id: int | None = None
@@ -21,6 +28,7 @@ class AppointmentUpdate(BaseModel):
 
 class AppointmentOut(AppointmentBase):
     id: int
+    customer: CustomerInfo | None = None
     created_at: datetime
     updated_at: datetime
 

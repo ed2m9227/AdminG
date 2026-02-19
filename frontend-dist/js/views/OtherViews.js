@@ -28,12 +28,25 @@ export class AppointmentsView {
     }
 
     renderTable() {
+        const user = authService.getCurrentUser();
+        const isAdmin = user && user.role === 'admin';
+        
         const columns = [
             { key: 'scheduled_at', label: 'Fecha', type: 'datetime' },
-            { key: 'customer.name', label: 'Cliente', formatter: (v) => v || 'N/A' },
+            { key: 'customer.full_name', label: 'Cliente', formatter: (v) => v || 'N/A' },
             { key: 'notes', label: 'Servicio' },
             { key: 'status', label: 'Estado', type: 'badge' }
         ];
+        
+        if (isAdmin) {
+            columns.push({
+                key: 'actions',
+                label: 'Acciones',
+                formatter: (_, row) => `
+                    <button class="btn btn-sm btn-danger" data-delete-appointment="${row.id}">Eliminar</button>
+                `
+            });
+        }
 
         return table.render({
             columns,
@@ -52,11 +65,35 @@ export class AppointmentsView {
             console.error('Error loading appointments:', error);
         }
 
-        // Agregar event listener al botón
+        // Event listeners
         const btnNew = document.getElementById('btnNewAppointment');
         if (btnNew) {
             btnNew.addEventListener('click', () => this.showNewAppointmentModal());
         }
+        
+        // Delete appointment listener
+        document.addEventListener('click', async (e) => {
+            const deleteBtn = e.target.closest('[data-delete-appointment]');
+            if (deleteBtn) {
+                const appointmentId = deleteBtn.dataset.deleteAppointment;
+                const confirmed = await modal.confirm({
+                    title: 'Confirmar eliminación',
+                    message: '¿Estás seguro de que quieres eliminar esta cita?',
+                    confirmText: 'Eliminar',
+                    cancelText: 'Cancelar'
+                });
+                
+                if (confirmed) {
+                    try {
+                        await apiService.delete(`/appointments/${appointmentId}`);
+                        await this.init();
+                        await modal.alert({ title: 'Éxito', message: 'Cita eliminada', type: 'success' });
+                    } catch (error) {
+                        await modal.alert({ title: 'Error', message: error.message, type: 'error' });
+                    }
+                }
+            }
+        });
     }
 
     async showNewAppointmentModal() {
@@ -167,13 +204,26 @@ export class PaymentsView {
     }
 
     renderTable() {
+        const user = authService.getCurrentUser();
+        const isAdmin = user && user.role === 'admin';
+        
         const columns = [
             { key: 'created_at', label: 'Fecha', type: 'datetime' },
-            { key: 'customer.name', label: 'Cliente', formatter: (v) => v || 'N/A' },
+            { key: 'customer.full_name', label: 'Cliente', formatter: (v) => v || 'N/A' },
             { key: 'method', label: 'Método' },
             { key: 'final_amount', label: 'Monto', type: 'currency' },
             { key: 'status', label: 'Estado', type: 'badge', badgeClass: 'success' }
         ];
+        
+        if (isAdmin) {
+            columns.push({
+                key: 'actions',
+                label: 'Acciones',
+                formatter: (_, row) => `
+                    <button class="btn btn-sm btn-danger" data-delete-payment="${row.id}">Eliminar</button>
+                `
+            });
+        }
 
         return table.render({
             columns,
@@ -192,11 +242,35 @@ export class PaymentsView {
             console.error('Error loading payments:', error);
         }
 
-        // Agregar event listener al botón
+        // Event listeners
         const btnNew = document.getElementById('btnNewPayment');
         if (btnNew) {
             btnNew.addEventListener('click', () => this.showNewPaymentModal());
         }
+        
+        // Delete payment listener
+        document.addEventListener('click', async (e) => {
+            const deleteBtn = e.target.closest('[data-delete-payment]');
+            if (deleteBtn) {
+                const paymentId = deleteBtn.dataset.deletePayment;
+                const confirmed = await modal.confirm({
+                    title: 'Confirmar eliminación',
+                    message: '¿Estás seguro de que quieres eliminar este pago?',
+                    confirmText: 'Eliminar',
+                    cancelText: 'Cancelar'
+                });
+                
+                if (confirmed) {
+                    try {
+                        await apiService.delete(`/payments/${paymentId}`);
+                        await this.init();
+                        await modal.alert({ title: 'Éxito', message: 'Pago eliminado', type: 'success' });
+                    } catch (error) {
+                        await modal.alert({ title: 'Error', message: error.message, type: 'error' });
+                    }
+                }
+            }
+        });
     }
 
     async showNewPaymentModal() {

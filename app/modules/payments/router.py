@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from datetime import datetime
 from decimal import Decimal
 from app.db.session import get_db
@@ -84,7 +84,7 @@ def list_payments(
     Optional filters:
     - status_filter: "pending", "completed", "failed", etc
     """
-    query = db.query(Payment).filter(Payment.user_id == current_user["id"])
+    query = db.query(Payment).options(joinedload(Payment.customer)).filter(Payment.user_id == current_user["id"])
     
     if status_filter:
         query = query.filter(Payment.status == status_filter)
@@ -198,6 +198,25 @@ def upgrade_plan(
         payment_id=upgrade_payment.id,
         upgrade_date=datetime.utcnow(),
     )
+
+@router.delete("/{payment_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_payment(
+    payment_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Delete payment (admin only)"""
+    payment = db.query(Payment).filter(
+        Payment.id == payment_id,
+        Payment.user_id == current_user["id"]
+    ).first()
+    
+    if not payment:
+        raise HTTPException(status_code=404, detail="Payment not found")
+    
+    db.delete(payment)
+    db.commit()
+    return None
 
 @router.get("/montelibano/validate-promo")
 def validate_montelibano_promo(

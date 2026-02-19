@@ -2,6 +2,13 @@ from pydantic import BaseModel
 from datetime import datetime
 from decimal import Decimal
 
+class CustomerInfo(BaseModel):
+    id: int
+    full_name: str
+    
+    class Config:
+        from_attributes = True
+
 class PaymentCreate(BaseModel):
     customer_id: int
     appointment_id: int | None = None
@@ -17,6 +24,7 @@ class PaymentUpdate(BaseModel):
 class PaymentOut(BaseModel):
     id: int
     customer_id: int
+    customer: CustomerInfo | None = None
     appointment_id: int | None
     amount: Decimal
     discount_amount: Decimal | None = None

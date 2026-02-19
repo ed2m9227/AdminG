@@ -15,13 +15,19 @@ export class InventoryView {
     }
 
     render() {
+        const user = authService.getCurrentUser();
+        const isAdmin = user && user.role === 'admin';
+        
         return `
             <div class="card">
                 <div class="card-header">
                     <h2 class="card-title">Inventario de Productos</h2>
-                    <button class="btn btn-success" id="btnNewProduct">
-                        + Nuevo Producto
-                    </button>
+                    <div style="display: flex; gap: 10px;">
+                        ${isAdmin ? '<button class="btn btn-primary" id="btnNewCategory">+ Nueva Categoría</button>' : ''}
+                        <button class="btn btn-success" id="btnNewProduct">
+                            + Nuevo Producto
+                        </button>
+                    </div>
                 </div>
                 <div class="card-body" id="inventoryTableContainer">
                     ${this.renderTable()}
@@ -31,6 +37,9 @@ export class InventoryView {
     }
 
     renderTable() {
+        const user = authService.getCurrentUser();
+        const isAdmin = user && user.role === 'admin';
+        
         const columns = [
             { key: 'sku', label: 'SKU' },
             { key: 'name', label: 'Nombre' },
@@ -40,9 +49,13 @@ export class InventoryView {
             {
                 key: 'actions',
                 label: 'Acciones',
-                formatter: (_, row) => `
-                    <button class="btn btn-sm" data-edit="${row.id}">Editar</button>
-                `
+                formatter: (_, row) => {
+                    let buttons = `<button class="btn btn-sm" data-edit="${row.id}">Editar</button>`;
+                    if (isAdmin) {
+                        buttons += ` <button class="btn btn-sm btn-danger" data-delete-item="${row.id}">Eliminar</button>`;
+                    }
+                    return buttons;
+                }
             }
         ];
 
@@ -84,12 +97,22 @@ export class InventoryView {
         document.getElementById('btnNewProduct')?.addEventListener('click', () => {
             this.showProductModal();
         });
+        
+        document.getElementById('btnNewCategory')?.addEventListener('click', () => {
+            this.showCategoryModal();
+        });
 
         document.addEventListener('click', (e) => {
             const editBtn = e.target.closest('[data-edit]');
             if (editBtn) {
                 const productId = editBtn.dataset.edit;
                 this.editProduct(productId);
+            }
+            
+            const deleteBtn = e.target.closest('[data-delete-item]');
+            if (deleteBtn) {
+                const itemId = deleteBtn.dataset.deleteItem;
+                this.deleteItem(itemId);
             }
         });
     }
@@ -237,6 +260,85 @@ export class InventoryView {
         if (product) {
             this.showProductModal(product);
         }
+    }
+    
+    async deleteItem(itemId) {
+        const confirmed = await modal.confirm({
+            title: 'Confirmar eliminación',
+            message: '¿Estás seguro de que quieres eliminar este producto?',
+            confirmText: 'Eliminar',
+            cancelText: 'Cancelar'
+        });
+        
+        if (confirmed) {
+            try {
+                await apiService.delete(`/inventory/items/${itemId}`);
+                await this.loadInventory();
+                await modal.alert({ 
+                    title: 'Éxito', 
+                    message: 'Producto eliminado correctamente',
+                    type: 'success'
+                });
+            } catch (error) {
+                await modal.alert({ 
+                    title: 'Error', 
+                    message: error.message,
+                    type: 'error'
+                });
+            }
+        }
+    }
+    
+    async showCategoryModal() {
+        const content = `
+            <form id="categoryForm" class="modal-form">
+                <div class="form-group">
+                    <label>Nombre *</label>
+                    <input type="text" name="name" required placeholder="Ej: Alimentos">
+                </div>
+                <div class="form-group">
+                    <label>Descripción</label>
+                    <textarea name="description" rows="3" placeholder="Descripción opcional..."></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="submit" class="btn btn-success">Guardar</button>
+                    <button type="button" class="btn" data-close>Cancelar</button>
+                </div>
+            </form>
+        `;
+        
+        const categoryModal = modal.show({ 
+            title: 'Nueva Categoría', 
+            content, 
+            size: 'medium' 
+        });
+        
+        const form = document.getElementById('categoryForm');
+        form?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
+            
+            const categoryData = {
+                name: formData.get('name'),
+                description: formData.get('description') || null
+            };
+            
+            try {
+                await apiService.createInventoryCategory(categoryData);
+                modal.close(categoryModal);
+                await modal.alert({
+                    type: 'success',
+                    title: 'Éxito',
+                    message: 'Categoría creada correctamente'
+                });
+            } catch (error) {
+                await modal.alert({
+                    type: 'error',
+                    title: 'Error',
+                    message: error.message || 'Error al crear categoría'
+                });
+            }
+        });
     }
 }
 
