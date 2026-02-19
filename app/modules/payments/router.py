@@ -14,7 +14,6 @@ from app.modules.payments.schemas import (
     PlanUpgradeResponse,
 )
 from app.core.security import get_current_user
-from app.core.plan_permissions import check_feature_access
 
 router = APIRouter(
     prefix="/payments",
@@ -119,7 +118,7 @@ def update_payment(
     """Update payment status (admin only)"""
     payment = db.query(Payment).filter(
         Payment.id == payment_id,
-        Payment.user_id == current_user[\"id\"]
+        Payment.user_id == current_user["id"]
     ).first()
     
     if not payment:
