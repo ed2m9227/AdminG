@@ -20,13 +20,23 @@ router = APIRouter(
     tags=["Inventory"],
 )
 
+
+def resolve_user(
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    user = db.query(User).filter(User.id == int(current_user["id"])).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
 # ============ CATEGORIES ============
 
 @router.post("/categories", response_model=InventoryCategoryOut, status_code=status.HTTP_201_CREATED)
 def create_category(
     payload: InventoryCategoryCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(resolve_user),
 ):
     """Create inventory category - Only AdminPro Start/Max"""
     if current_user.plan not in ["start", "max"]:
@@ -47,7 +57,7 @@ def list_categories(
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(resolve_user),
 ):
     """List all inventory categories - Only AdminPro Start/Max"""
     if current_user.plan not in ["start", "max"]:
@@ -63,7 +73,7 @@ def list_categories(
 def create_item(
     payload: InventoryItemCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(resolve_user),
 ):
     """Create inventory item - Only AdminPro Start/Max"""
     if current_user.plan not in ["start", "max"]:
@@ -102,7 +112,7 @@ def list_items(
     limit: int = 100,
     low_stock: bool = False,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(resolve_user),
 ):
     """List inventory items - Only AdminPro Start/Max
     
@@ -123,7 +133,7 @@ def list_items(
 def get_item(
     item_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(resolve_user),
 ):
     """Get inventory item by ID - Only AdminPro Start/Max"""
     if current_user.plan not in ["start", "max"]:
@@ -144,7 +154,7 @@ def update_item(
     item_id: int,
     payload: InventoryItemUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(resolve_user),
 ):
     """Update inventory item - Only AdminPro Start/Max"""
     if current_user.plan not in ["start", "max"]:

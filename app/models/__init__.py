@@ -5,6 +5,7 @@ from app.models.appointment import Appointment
 from app.models.payment import Payment
 from app.models.plan import Plan, PlanLimit, PlanFeature
 from app.models.inventory import InventoryItem, InventoryCategory, InventoryMovement
+from app.models.team_user import TeamUser
 
 __all__ = [
     "User", 
@@ -17,5 +18,6 @@ __all__ = [
     "PlanFeature",
     "InventoryItem",
     "InventoryCategory", 
-    "InventoryMovement"
+    "InventoryMovement",
+    "TeamUser"
 ]

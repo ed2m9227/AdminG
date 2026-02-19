@@ -24,10 +24,20 @@ router = APIRouter(
     tags=["Reports"],
 )
 
+
+def resolve_user(
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    user = db.query(User).filter(User.id == int(current_user["id"])).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
 @router.get("/dashboard", response_model=DashboardMetrics)
 def get_dashboard_metrics(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(resolve_user),
 ):
     """Get dashboard metrics for current user
     
@@ -94,7 +104,7 @@ def get_dashboard_metrics(
 def get_revenue_report(
     request: ReportRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(resolve_user),
 ):
     """Generate revenue report for date range
     
@@ -151,7 +161,7 @@ def get_revenue_report(
 def get_customer_report(
     request: ReportRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(resolve_user),
 ):
     """Generate customer report for date range
     
@@ -188,7 +198,7 @@ def get_customer_report(
 def get_appointment_report(
     request: ReportRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(resolve_user),
 ):
     """Generate appointment report for date range
     
@@ -222,7 +232,7 @@ def get_appointment_report(
 def get_inventory_report(
     request: ReportRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(resolve_user),
 ):
     """Generate inventory report for date range
     
@@ -257,7 +267,7 @@ def export_report(
     start_date: str,
     end_date: str,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(resolve_user),
 ):
     """Export report as CSV
     

@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, Request, Response, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -59,6 +59,7 @@ def startup_event():
     try:
         from app.db.base import Base
         from app.db.session import engine
+        import sqlite3
         
         # Ensure all tables exist
         logger.info("Creating database tables...")
@@ -73,6 +74,20 @@ def startup_event():
             logger.info("Plans seeded successfully")
         finally:
             db.close()
+
+        # Ensure customers table has user_id (SQLite)
+        try:
+            conn = sqlite3.connect("app.db")
+            cur = conn.cursor()
+            cur.execute("PRAGMA table_info(customers)")
+            columns = [row[1] for row in cur.fetchall()]
+            if "user_id" not in columns:
+                cur.execute("ALTER TABLE customers ADD COLUMN user_id INTEGER")
+                conn.commit()
+                logger.info("Added user_id column to customers table")
+            conn.close()
+        except Exception as e:
+            logger.warning(f"Could not update customers table: {e}")
     except Exception as e:
         logger.error(f"Error in startup: {e}", exc_info=True)
 
@@ -150,15 +165,29 @@ def reset_database():
 frontend_dist = Path(__file__).parent.parent / "frontend-dist"
 if frontend_dist.exists():
     try:
-        app.mount("/assets", StaticFiles(directory=str(frontend_dist / "assets")), name="assets")
-        logger.info("Static files mounted successfully")
+        # Montar CSS
+        css_dir = frontend_dist / "css"
+        if css_dir.exists():
+            app.mount("/css", StaticFiles(directory=str(css_dir)), name="css")
+        
+        # Montar JS
+        js_dir = frontend_dist / "js"
+        if js_dir.exists():
+            app.mount("/js", StaticFiles(directory=str(js_dir)), name="js")
+        
+        # Montar Assets (imágenes, etc)
+        assets_dir = frontend_dist / "assets"
+        if assets_dir.exists():
+            app.mount("/assets", StaticFiles(directory=str(assets_dir)), name="assets")
+        
+        logger.info("✓ Static files mounted successfully (CSS, JS, Assets)")
     except Exception as e:
         logger.warning(f"Could not mount static files: {e}")
     
     # Serve index.html for SPA routes (not actual files and not APIs)
     @app.get("/{full_path:path}")
     async def serve_spa(full_path: str):
-        """Serve React SPA for client-side routes"""
+        """Serve index.html for client-side routes"""
         # Skip if it's an API endpoint
         api_prefixes = ("auth/", "api/", "users/", "customers/", "appointments/", 
                        "plans/", "inventory/", "payments/", "reports/", "admin/", "docs", "openapi.json")
@@ -166,12 +195,16 @@ if frontend_dist.exists():
         if any(full_path.startswith(p) for p in api_prefixes):
             raise HTTPException(status_code=404, detail="Not found")
         
-        # Try to serve actual file first (CSS, JS, images, etc. in assets/)
-        file_path = frontend_dist / full_path
-        if file_path.is_file() and file_path.exists():
-            return FileResponse(file_path)
+        # Skip static file extensions
+        static_extensions = (".css", ".js", ".png", ".jpg", ".jpeg", ".gif", ".svg", ".ico", ".woff", ".woff2")
+        if any(full_path.endswith(ext) for ext in static_extensions):
+            # Try to serve actual file
+            file_path = frontend_dist / full_path
+            if file_path.is_file() and file_path.exists():
+                return FileResponse(file_path)
+            raise HTTPException(status_code=404, detail="File not found")
         
-        # Otherwise serve index.html for React SPA routing (/login, /register, /dashboard, etc.)
+        # Serve index.html for SPA routing (/login, /register, /dashboard, etc.)
         index_path = frontend_dist / "index.html"
         if index_path.exists():
             return FileResponse(index_path)
