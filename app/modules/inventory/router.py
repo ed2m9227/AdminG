@@ -48,7 +48,7 @@ def create_category(
     check_inventory_access(current_user)
     
     category = InventoryCategory(
-        user_id=current_user.id,
+        user_id=current_user["id"],
         name=payload.name,
         description=payload.description,
     )
@@ -68,7 +68,7 @@ def list_categories(
     check_inventory_access(current_user)
     
     return db.query(InventoryCategory).filter(
-        InventoryCategory.user_id == current_user.id
+        InventoryCategory.user_id == current_user["id"]
     ).offset(skip).limit(limit).all()
 
 # ============ ITEMS ============
@@ -90,11 +90,11 @@ def create_item(
     # Validate category if provided
     if payload.category_id:
         category = db.get(InventoryCategory, payload.category_id)
-        if not category or category.user_id != current_user.id:
+        if not category or category.user_id != current_user["id"]:
             raise HTTPException(status_code=404, detail="Category not found")
     
     item = InventoryItem(
-        user_id=current_user.id,
+        user_id=current_user["id"],
         category_id=payload.category_id,
         name=payload.name,
         sku=payload.sku,
@@ -124,7 +124,7 @@ def list_items(
     """
     check_inventory_access(current_user)
     
-    query = db.query(InventoryItem).filter(InventoryItem.user_id == current_user.id)
+    query = db.query(InventoryItem).filter(InventoryItem.user_id == current_user["id"])
     
     if low_stock:
         query = query.filter(InventoryItem.quantity <= InventoryItem.min_quantity)
@@ -142,7 +142,7 @@ def get_item(
     
     item = db.query(InventoryItem).filter(
         InventoryItem.id == item_id,
-        InventoryItem.user_id == current_user.id
+        InventoryItem.user_id == current_user["id"]
     ).first()
     
     if not item:
@@ -162,7 +162,7 @@ def update_item(
     
     item = db.query(InventoryItem).filter(
         InventoryItem.id == item_id,
-        InventoryItem.user_id == current_user.id
+        InventoryItem.user_id == current_user["id"]
     ).first()
     
     if not item:
@@ -195,7 +195,7 @@ def delete_item(
     
     item = db.query(InventoryItem).filter(
         InventoryItem.id == item_id,
-        InventoryItem.user_id == current_user.id
+        InventoryItem.user_id == current_user["id"]
     ).first()
     
     if not item:
@@ -218,7 +218,7 @@ def create_movement(
     
     item = db.query(InventoryItem).filter(
         InventoryItem.id == payload.item_id,
-        InventoryItem.user_id == current_user.id
+        InventoryItem.user_id == current_user["id"]
     ).first()
     
     if not item:
@@ -262,7 +262,7 @@ def list_movements(
     
     item = db.query(InventoryItem).filter(
         InventoryItem.id == item_id,
-        InventoryItem.user_id == current_user.id
+        InventoryItem.user_id == current_user["id"]
     ).first()
     
     if not item:

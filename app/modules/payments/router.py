@@ -47,13 +47,13 @@ def create_payment(
     # Calculate discount if MontelibanoGen method
     discount_amount = Decimal(0)
     if payload.method.lower() == "montelibano_gen":
-        if current_user.plan in APPLICABLE_PLANS_FOR_DISCOUNT:
+        if current_user["plan"] in APPLICABLE_PLANS_FOR_DISCOUNT:
             discount_amount = payload.amount * Decimal(str(MONTELIBANO_GEN_DISCOUNT))
     
     final_amount = payload.amount - discount_amount
     
     payment = Payment(
-        user_id=current_user.id,
+        user_id=current_user["id"],
         customer_id=payload.customer_id,
         appointment_id=payload.appointment_id,
         amount=payload.amount,
@@ -85,7 +85,7 @@ def list_payments(
     Optional filters:
     - status_filter: "pending", "completed", "failed", etc
     """
-    query = db.query(Payment).filter(Payment.user_id == current_user.id)
+    query = db.query(Payment).filter(Payment.user_id == current_user["id"])
     
     if status_filter:
         query = query.filter(Payment.status == status_filter)
@@ -101,7 +101,7 @@ def get_payment(
     """Get payment details"""
     payment = db.query(Payment).filter(
         Payment.id == payment_id,
-        Payment.user_id == current_user.id
+        Payment.user_id == current_user["id"]
     ).first()
     
     if not payment:
@@ -119,7 +119,7 @@ def update_payment(
     """Update payment status (admin only)"""
     payment = db.query(Payment).filter(
         Payment.id == payment_id,
-        Payment.user_id == current_user.id
+        Payment.user_id == current_user[\"id\"]
     ).first()
     
     if not payment:
@@ -168,23 +168,27 @@ def upgrade_plan(
     # Create payment record for upgrade
     amount = PLAN_PRICES[request.new_plan]
     
-    payment = Payment(
-        user_id=current_user.id,
-        customer_id=current_user.id,
+    upgrade_payment = Payment(
+        user_id=current_user["id"],
+        customer_id=current_user["id"],
         amount=amount,
         discount_amount=Decimal(0),
         final_amount=amount,
         method=request.payment_method,
         status="pending",
-        notes=f"Plan upgrade from {current_user.plan} to {request.new_plan}",
+        notes=f"Plan upgrade from {current_user['plan']} to {request.new_plan}",
     )
     
-    db.add(payment)
+    db.add(upgrade_payment)
     db.flush()
     
-    # Update user plan (in real app, would wait for payment confirmation)
-    current_user.plan = request.new_plan
-    db.add(current_user)
+    # Update user plan (get User object from DB)
+    user = db.query(User).filter(User.id == current_user["id"]).first()
+    if user:
+        user.plan = request.new_plan
+        db.add(user)
+    else:
+        raise HTTPException(status_code=404, detail="User not found")
     
     db.commit()
     
@@ -192,7 +196,7 @@ def upgrade_plan(
         success=True,
         message=f"Plan upgraded to {request.new_plan}",
         new_plan=request.new_plan,
-        payment_id=payment.id,
+        payment_id=upgrade_payment.id,
         upgrade_date=datetime.utcnow(),
     )
 
@@ -207,11 +211,12 @@ def validate_montelibano_promo(
     - AdminG Plus
     - Discount: 7%
     """
-    is_eligible = current_user.plan in APPLICABLE_PLANS_FOR_DISCOUNT
+    user_plan = current_user["plan"] if isinstance(current_user, dict) else current_user.plan
+    is_eligible = user_plan in APPLICABLE_PLANS_FOR_DISCOUNT
     
     return {
         "is_eligible": is_eligible,
-        "current_plan": current_user.plan,
+        "current_plan": user_plan,
         "discount_percentage": MONTELIBANO_GEN_DISCOUNT * 100 if is_eligible else 0,
         "promo_code": MONTELIBANO_PROMO_CODE if is_eligible else None,
         "message": "7% discount available with MontelibanoGen payment method" if is_eligible else "Upgrade your plan to get MontelibanoGen discounts",

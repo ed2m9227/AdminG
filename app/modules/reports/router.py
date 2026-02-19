@@ -58,20 +58,22 @@ def get_dashboard_metrics(
     now = datetime.utcnow()
     month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     
+    user_id = current_user["id"] if isinstance(current_user, dict) else current_user.id
+    
     # Total customers
     total_customers = db.query(Customer).filter(
-        Customer.user_id == current_user.id
+        Customer.user_id == user_id
     ).count()
     
     # Appointments this month
     appointments_month = db.query(Appointment).filter(
-        Appointment.user_id == current_user.id,
+        Appointment.user_id == user_id,
         Appointment.appointment_date >= month_start
     ).count()
     
     # Revenue this month
     revenue_query = db.query(Payment).filter(
-        Payment.user_id == current_user.id,
+        Payment.user_id == user_id,
         Payment.created_at >= month_start,
         Payment.status == "completed"
     )
@@ -84,7 +86,7 @@ def get_dashboard_metrics(
     
     # Pending payments
     pending = db.query(Payment).filter(
-        Payment.user_id == current_user.id,
+        Payment.user_id == user_id,
         Payment.status == "pending"
     )
     pending_amount = sum(p.final_amount for p in pending.all()) or Decimal(0)
@@ -117,11 +119,14 @@ def get_revenue_report(
     - AdminG Plus+ 
     - AdminPro Start+
     """
-    if current_user.plan not in ["plus", "start", "max"]:
+    user_plan = current_user["plan"] if isinstance(current_user, dict) else current_user.plan
+    user_id = current_user["id"] if isinstance(current_user, dict) else current_user.id
+    
+    if user_plan not in ["plus", "start", "max"]:
         raise HTTPException(status_code=403, detail="Feature not available in your plan")
     
     payments = db.query(Payment).filter(
-        Payment.user_id == current_user.id,
+        Payment.user_id == user_id,
         Payment.created_at >= request.start_date,
         Payment.created_at <= request.end_date,
     ).all()
@@ -174,17 +179,20 @@ def get_customer_report(
     - AdminG Plus+
     - AdminPro Start+
     """
-    if current_user.plan not in ["plus", "start", "max"]:
+    user_plan = current_user["plan"] if isinstance(current_user, dict) else current_user.plan
+    user_id = current_user["id"] if isinstance(current_user, dict) else current_user.id
+    
+    if user_plan not in ["plus", "start", "max"]:
         raise HTTPException(status_code=403, detail="Feature not available in your plan")
     
     # Total customers
     total_customers = db.query(Customer).filter(
-        Customer.user_id == current_user.id
+        Customer.user_id == user_id
     ).count()
     
     # New customers in period
     new_customers = db.query(Customer).filter(
-        Customer.user_id == current_user.id,
+        Customer.user_id == user_id,
         Customer.created_at >= request.start_date,
         Customer.created_at <= request.end_date,
     ).count()
@@ -211,11 +219,14 @@ def get_appointment_report(
     - AdminG Plus+
     - AdminPro Start+
     """
-    if current_user.plan not in ["plus", "start", "max"]:
+    user_plan = current_user["plan"] if isinstance(current_user, dict) else current_user.plan
+    user_id = current_user["id"] if isinstance(current_user, dict) else current_user.id
+    
+    if user_plan not in ["plus", "start", "max"]:
         raise HTTPException(status_code=403, detail="Feature not available in your plan")
     
     appointments = db.query(Appointment).filter(
-        Appointment.user_id == current_user.id,
+        Appointment.user_id == user_id,
         Appointment.appointment_date >= request.start_date,
         Appointment.appointment_date <= request.end_date,
     ).all()
@@ -244,11 +255,14 @@ def get_inventory_report(
     Available for:
     - AdminPro Start+ (with inventory)
     """
-    if current_user.plan not in ["start", "max"]:
+    user_plan = current_user["plan"] if isinstance(current_user, dict) else current_user.plan
+    user_id = current_user["id"] if isinstance(current_user, dict) else current_user.id
+    
+    if user_plan not in ["start", "max"]:
         raise HTTPException(status_code=403, detail="Feature not available in your plan")
     
     items = db.query(InventoryItem).filter(
-        InventoryItem.user_id == current_user.id
+        InventoryItem.user_id == user_id
     ).all()
     
     low_stock = len([i for i in items if i.quantity <= i.min_quantity])
