@@ -31,7 +31,7 @@ export class CustomersView {
 
     renderTable() {
         const columns = [
-            { key: 'name', label: 'Nombre' },
+            { key: 'full_name', label: 'Nombre' },
             { key: 'email', label: 'Email' },
             { key: 'phone', label: 'Teléfono' },
             { 
@@ -66,7 +66,7 @@ export class CustomersView {
     async loadCustomers() {
         try {
             const response = await apiService.getCustomers();
-            this.customers = response.items || [];
+            this.customers = Array.isArray(response) ? response : (response.items || []);
             this.updateTable();
         } catch (error) {
             console.error('Error loading customers:', error);
@@ -109,7 +109,7 @@ export class CustomersView {
             <form id="customerForm" class="modal-form">
                 <div class="form-group">
                     <label>Nombre *</label>
-                    <input type="text" name="name" value="${customer?.name || ''}" required>
+                    <input type="text" name="full_name" value="${customer?.full_name || ''}" required>
                 </div>
                 
                 <div class="form-row">
@@ -124,8 +124,8 @@ export class CustomersView {
                 </div>
                 
                 <div class="form-group">
-                    <label>Dirección</label>
-                    <textarea name="address" rows="3">${customer?.address || ''}</textarea>
+                    <label>Notas</label>
+                    <textarea name="notes" rows="3">${customer?.notes || ''}</textarea>
                 </div>
                 
                 <div class="modal-actions">
@@ -149,10 +149,10 @@ export class CustomersView {
         const formData = new FormData(form);
         
         const customerData = {
-            name: formData.get('name'),
+            full_name: formData.get('full_name'),
             email: formData.get('email') || null,
             phone: formData.get('phone') || null,
-            address: formData.get('address') || null
+            notes: formData.get('notes') || null
         };
 
         try {

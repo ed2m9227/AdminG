@@ -101,6 +101,10 @@ export class ApiService {
         return this.get('/users/me');
     }
 
+    async getFeatures() {
+        return this.get('/admin/features');
+    }
+
     async getVersion() {
         return this.get('/api/version', false);
     }

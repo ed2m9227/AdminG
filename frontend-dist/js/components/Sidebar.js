@@ -1,6 +1,6 @@
 /**
  * Sidebar Component
- * Responsabilidad: Renderizar barra lateral de navegación
+ * Responsabilidad: Renderizar barra lateral de navegación con role-based menu
  * Principio SOLID: Single Responsibility, Open/Closed
  */
 
@@ -9,33 +9,52 @@ import authService from '../services/auth.service.js';
 
 export class Sidebar {
     constructor() {
-        this.menuItems = [
+        this.allMenuItems = [
+            // Core
             { id: 'dashboard', icon: '📊', label: 'Dashboard', route: 'dashboard' },
+
+            // Main modules
             { id: 'customers', icon: '👥', label: 'Clientes', route: 'customers' },
             { id: 'appointments', icon: '📅', label: 'Citas', route: 'appointments' },
             { id: 'inventory', icon: '📦', label: 'Inventario', route: 'inventory' },
             { id: 'payments', icon: '💳', label: 'Pagos', route: 'payments' },
-            { id: 'cashregister', icon: '💰', label: 'Caja', route: 'cashregister' },
             { id: 'reports', icon: '📈', label: 'Reportes', route: 'reports' },
-            { id: 'admin', icon: '⚙️', label: 'Admin', route: 'admin', roleRequired: 'admin' },
+
+            // Advanced
+            { id: 'cashregister', icon: '💰', label: 'Caja', route: 'cashregister' },
+
+            // Team & Admin
+            { id: 'team', icon: '👫', label: 'Mi Equipo', route: 'team' },
+            { id: 'admin', icon: '⚙️', label: 'Administración', route: 'admin', roleRequired: 'admin' },
         ];
     }
 
     /**
-     * Renderizar el sidebar
+     * Renderizar el sidebar con items filtrados por plan y rol
      * @returns {string} HTML del sidebar
      */
     render() {
         const user = authService.getCurrentUser();
-        const filteredItems = this.menuItems.filter(item => 
-            !item.roleRequired || user?.role === item.roleRequired
-        );
+        
+        // Filtrar items solo por rol (admin)
+        const filteredItems = this.allMenuItems.filter(item => {
+            if (item.roleRequired && user?.role !== item.roleRequired) {
+                return false;
+            }
+            return true;
+        });
+
+        const userPlan = user?.plan || 'free';
+        const userEmail = user?.email || 'Usuario';
 
         return `
             <div class="sidebar" id="sidebar">
                 <div class="sidebar-header">
                     <h2>AdminG</h2>
-                    <p class="sidebar-user">${user?.email || 'Usuario'}</p>
+                    <p class="sidebar-user">${userEmail}</p>
+                    <div class="sidebar-plan" title="Plan: ${userPlan}">
+                        <span class="plan-badge">${userPlan.toUpperCase()}</span>
+                    </div>
                 </div>
                 <nav class="sidebar-menu">
                     ${filteredItems.map(item => this.renderMenuItem(item)).join('')}
@@ -45,7 +64,7 @@ export class Sidebar {
     }
 
     /**
-     * Renderizar un item del menú
+     * Renderizar un item del menú con validación visual
      * @param {object} item 
      * @returns {string}
      */
@@ -53,7 +72,8 @@ export class Sidebar {
         const isActive = router.getCurrentRoute() === item.route;
         return `
             <div class="menu-item ${isActive ? 'active' : ''}" 
-                 data-route="${item.route}">
+                 data-route="${item.route}"
+                 title="${item.label}">
                 <span class="menu-icon">${item.icon}</span>
                 <span class="menu-label">${item.label}</span>
             </div>

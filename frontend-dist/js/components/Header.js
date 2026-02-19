@@ -32,7 +32,12 @@ export class Header {
 
         return `
             <div class="topbar">
-                <h1 class="page-title">${title}</h1>
+                <div class="topbar-left">
+                    <button class="btn btn-sm btn-light" id="sidebarToggle" title="Ocultar barra lateral">
+                        ☰
+                    </button>
+                    <h1 class="page-title">${title}</h1>
+                </div>
                 <div class="user-info">
                     <span class="user-email">${user?.email || ''}</span>
                     <span class="user-badge">${user?.plan?.toUpperCase() || ''}</span>
@@ -63,6 +68,9 @@ export class Header {
             if (e.target.id === 'logoutBtn') {
                 this.handleLogout();
             }
+            if (e.target.id === 'sidebarToggle') {
+                document.body.classList.toggle('sidebar-collapsed');
+            }
         });
     }
 
@@ -70,10 +78,8 @@ export class Header {
      * Manejar logout
      */
     handleLogout() {
-        if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
-            authService.logout();
-            router.navigate('login');
-        }
+        authService.logout();
+        router.navigate('login');
     }
 }
 

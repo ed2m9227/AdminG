@@ -42,6 +42,15 @@ export class DashboardView {
             
             <div class="card">
                 <div class="card-header">
+                    <h2 class="card-title">Funciones disponibles por plan</h2>
+                </div>
+                <div class="card-body" id="planFeaturesBox">
+                    <div style="padding: 12px; color: #7f8c8d;">Cargando funciones disponibles...</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
                     <h2 class="card-title">Información de la Cuenta</h2>
                 </div>
                 <div class="card-body">
@@ -70,6 +79,7 @@ export class DashboardView {
 
     async init() {
         await this.loadStats();
+        await this.loadFeatures();
     }
 
     async loadStats() {
@@ -97,6 +107,44 @@ export class DashboardView {
         const element = document.getElementById(elementId);
         if (element) {
             element.textContent = value;
+        }
+    }
+
+    async loadFeatures() {
+        try {
+            const response = await apiService.getFeatures();
+            const features = response.features || [];
+            const limits = response.limits || {};
+            const plan = response.plan || 'free';
+
+            const featureLabels = features.map(f => f.replace(/_/g, ' '));
+            const container = document.getElementById('planFeaturesBox');
+
+            if (container) {
+                container.innerHTML = `
+                    <div style="margin-bottom: 12px;">
+                        <span class="badge badge-info">PLAN ${plan.toUpperCase()}</span>
+                        <span style="margin-left: 8px; color: #7f8c8d;">Funciones activas</span>
+                    </div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                        ${featureLabels.map(label => `
+                            <span style="background: #f0f8ff; border: 1px solid #d9e8ff; color: #2c3e50; padding: 6px 10px; border-radius: 16px; font-size: 12px;">
+                                ${label}
+                            </span>
+                        `).join('')}
+                    </div>
+                    <div style="margin-top: 12px; color: #7f8c8d; font-size: 12px;">
+                        Límite de equipo: ${limits.team_members || 1} | Clientes: ${limits.customers || 0}
+                    </div>
+                `;
+            }
+        } catch (error) {
+            const container = document.getElementById('planFeaturesBox');
+            if (container) {
+                container.innerHTML = `
+                    <div style="color: #e74c3c;">Error cargando funciones: ${error.message}</div>
+                `;
+            }
         }
     }
 }

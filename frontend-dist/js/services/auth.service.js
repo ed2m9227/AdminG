@@ -9,6 +9,8 @@ import apiService from './api.service.js';
 export class AuthService {
     constructor() {
         this.currentUser = null;
+        this.features = [];
+        this.limits = {};
         this.listeners = [];
     }
 
@@ -73,6 +75,21 @@ export class AuthService {
     }
 
     /**
+     * Cargar features y limites del plan actual
+     */
+    async loadFeatures() {
+        try {
+            const data = await apiService.getFeatures();
+            this.features = data.features || [];
+            this.limits = data.limits || {};
+            return data;
+        } catch (error) {
+            console.error('Error loading features:', error);
+            return { features: [], limits: {} };
+        }
+    }
+
+    /**
      * Verificar si hay una sesión activa
      * @returns {boolean}
      */
@@ -86,6 +103,17 @@ export class AuthService {
      */
     getCurrentUser() {
         return this.currentUser;
+    }
+
+    /**
+     * Obtener features actuales
+     */
+    getFeatures() {
+        return this.features || [];
+    }
+
+    getLimits() {
+        return this.limits || {};
     }
 
     /**
