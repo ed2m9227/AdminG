@@ -45,7 +45,8 @@ export class CustomersView {
                 key: 'actions',
                 label: 'Acciones',
                 formatter: (_, row) => `
-                    <button class="btn btn-sm" data-edit="${row.id}">Editar</button>
+                    <button class="btn btn-sm" data-edit="${row.id}">✏️ Editar</button>
+                    <button class="btn btn-sm btn-danger" data-delete="${row.id}">🗑️ Eliminar</button>
                 `
             }
         ];
@@ -98,6 +99,12 @@ export class CustomersView {
                 const customerId = editBtn.dataset.edit;
                 this.editCustomer(customerId);
             }
+            
+            const deleteBtn = e.target.closest('[data-delete]');
+            if (deleteBtn) {
+                const customerId = deleteBtn.dataset.delete;
+                this.deleteCustomer(customerId);
+            }
         });
     }
 
@@ -106,7 +113,7 @@ export class CustomersView {
         const title = isEdit ? 'Editar Cliente' : 'Nuevo Cliente';
 
         const content = `
-            <form id="customerForm" class="modal-form">
+            <form id="customerForm" class="modal-form" data-customer-id="${customer?.id || ''}">
                 <div class="form-group">
                     <label>Nombre *</label>
                     <input type="text" name="full_name" value="${customer?.full_name || ''}" required>
@@ -147,6 +154,8 @@ export class CustomersView {
     async saveCustomer(e, modalElement) {
         const form = e.target;
         const formData = new FormData(form);
+        const customerId = form.dataset.customerId;
+        const isEdit = customerId && customerId !== '';
         
         const customerData = {
             full_name: formData.get('full_name'),
@@ -156,14 +165,18 @@ export class CustomersView {
         };
 
         try {
-            await apiService.createCustomer(customerData);
+            if (isEdit) {
+                await apiService.put(`/customers/${customerId}`, customerData);
+            } else {
+                await apiService.createCustomer(customerData);
+            }
             modal.close(modalElement);
             await this.loadCustomers();
             
             modal.alert({
                 type: 'success',
                 title: 'Éxito',
-                message: 'Cliente guardado correctamente'
+                message: `Cliente ${isEdit ? 'actualizado' : 'guardado'} correctamente`
             });
         } catch (error) {
             modal.alert({
@@ -178,6 +191,37 @@ export class CustomersView {
         const customer = this.customers.find(c => c.id == customerId);
         if (customer) {
             this.showCustomerModal(customer);
+        }
+    }
+    
+    async deleteCustomer(customerId) {
+        const customer = this.customers.find(c => c.id == customerId);
+        if (!customer) return;
+        
+        const confirmed = await modal.confirm({
+            title: 'Confirmar eliminación',
+            message: `¿Estás seguro de eliminar al cliente "${customer.full_name}"? Esta acción no se puede deshacer.`,
+            okText: 'Eliminar',
+            cancelText: 'Cancelar'
+        });
+        
+        if (confirmed) {
+            try {
+                await apiService.delete(`/customers/${customerId}`);
+                await this.loadCustomers();
+                
+                modal.alert({
+                    type: 'success',
+                    title: 'Éxito',
+                    message: 'Cliente eliminado correctamente'
+                });
+            } catch (error) {
+                modal.alert({
+                    type: 'error',
+                    title: 'Error',
+                    message: 'Error al eliminar cliente: ' + error.message
+                });
+            }
         }
     }
 }
