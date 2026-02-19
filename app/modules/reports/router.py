@@ -58,7 +58,7 @@ def get_dashboard_metrics(
     now = datetime.utcnow()
     month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     
-    user_id = current_user["id"] if isinstance(current_user, dict) else current_user.id
+    user_id = current_user.id
     
     # Total customers
     total_customers = db.query(Customer).filter(
@@ -119,8 +119,8 @@ def get_revenue_report(
     - AdminG Plus+ 
     - AdminPro Start+
     """
-    user_plan = current_user["plan"] if isinstance(current_user, dict) else current_user.plan
-    user_id = current_user["id"] if isinstance(current_user, dict) else current_user.id
+    user_plan = current_user.plan
+    user_id = current_user.id
     
     if user_plan not in ["plus", "start", "max"]:
         raise HTTPException(status_code=403, detail="Feature not available in your plan")
@@ -179,8 +179,8 @@ def get_customer_report(
     - AdminG Plus+
     - AdminPro Start+
     """
-    user_plan = current_user["plan"] if isinstance(current_user, dict) else current_user.plan
-    user_id = current_user["id"] if isinstance(current_user, dict) else current_user.id
+    user_plan = current_user.plan
+    user_id = current_user.id
     
     if user_plan not in ["plus", "start", "max"]:
         raise HTTPException(status_code=403, detail="Feature not available in your plan")
@@ -219,8 +219,8 @@ def get_appointment_report(
     - AdminG Plus+
     - AdminPro Start+
     """
-    user_plan = current_user["plan"] if isinstance(current_user, dict) else current_user.plan
-    user_id = current_user["id"] if isinstance(current_user, dict) else current_user.id
+    user_plan = current_user.plan
+    user_id = current_user.id
     
     if user_plan not in ["plus", "start", "max"]:
         raise HTTPException(status_code=403, detail="Feature not available in your plan")
@@ -255,8 +255,8 @@ def get_inventory_report(
     Available for:
     - AdminPro Start+ (with inventory)
     """
-    user_plan = current_user["plan"] if isinstance(current_user, dict) else current_user.plan
-    user_id = current_user["id"] if isinstance(current_user, dict) else current_user.id
+    user_plan = current_user.plan
+    user_id = current_user.id
     
     if user_plan not in ["start", "max"]:
         raise HTTPException(status_code=403, detail="Feature not available in your plan")

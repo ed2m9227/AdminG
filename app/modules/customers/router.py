@@ -25,7 +25,7 @@ def create_customer(
     current_user: User = Depends(resolve_user)
 ):
     customer = Customer(
-        user_id=current_user["id"] if isinstance(current_user, dict) else current_user.id,
+        user_id=current_user.id,
         full_name=payload.full_name,
         phone=payload.phone,
         email=payload.email,
@@ -43,9 +43,8 @@ def list_customers(
     db: Session = Depends(get_db),
     current_user: User = Depends(resolve_user)
 ):
-    user_id = current_user["id"] if isinstance(current_user, dict) else current_user.id
     return db.query(Customer).filter(
-        Customer.user_id == user_id
+        Customer.user_id == current_user.id
     ).offset(skip).limit(limit).all()
 
 @router.get("/{customer_id}", response_model=CustomerOut)
@@ -54,10 +53,9 @@ def get_customer(
     db: Session = Depends(get_db),
     current_user: User = Depends(resolve_user)
 ):
-    user_id = current_user["id"] if isinstance(current_user, dict) else current_user.id
     customer = db.query(Customer).filter(
         Customer.id == customer_id,
-        Customer.user_id == user_id
+        Customer.user_id == current_user.id
     ).first()
     if not customer:
         raise HTTPException(status_code=404, detail="Customer not found")
@@ -70,10 +68,9 @@ def update_customer(
     db: Session = Depends(get_db),
     current_user: User = Depends(resolve_user)
 ):
-    user_id = current_user["id"] if isinstance(current_user, dict) else current_user.id
     customer = db.query(Customer).filter(
         Customer.id == customer_id,
-        Customer.user_id == user_id
+        Customer.user_id == current_user.id
     ).first()
     if not customer:
         raise HTTPException(status_code=404, detail="Customer not found")
@@ -93,10 +90,9 @@ def delete_customer(
     db: Session = Depends(get_db),
     current_user: User = Depends(resolve_user)
 ):
-    user_id = current_user["id"] if isinstance(current_user, dict) else current_user.id
     customer = db.query(Customer).filter(
         Customer.id == customer_id,
-        Customer.user_id == user_id
+        Customer.user_id == current_user.id
     ).first()
     if not customer:
         raise HTTPException(status_code=404, detail="Customer not found")
