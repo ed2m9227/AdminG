@@ -80,57 +80,67 @@ export class AppointmentsView {
         const html = `
             <form id="appointmentForm">
                 <div class="form-group">
-                    <label>Cliente</label>
-                    <select id="appointmentCustomer" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
+                    <label>Cliente *</label>
+                    <select name="customer_id" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
                         ${customersOptions}
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Fecha y Hora</label>
-                    <input type="datetime-local" id="appointmentDate" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
+                    <label>Fecha y Hora *</label>
+                    <input type="datetime-local" name="scheduled_at" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
                 </div>
                 <div class="form-group">
-                    <label>Servicio</label>
-                    <input type="text" id="appointmentService" placeholder="Ej: Corte de cabello" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
+                    <label>Servicio *</label>
+                    <input type="text" name="notes" placeholder="Ej: Corte de cabello" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
                 </div>
                 <div class="form-group">
                     <label>Status</label>
-                    <select id="appointmentStatus" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
-                        <option value="pending">Pendiente</option>
+                    <select name="status" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
+                        <option value="scheduled">Programada</option>
                         <option value="confirmed">Confirmada</option>
+                        <option value="completed">Completada</option>
                         <option value="canceled">Cancelada</option>
                     </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="submit" class="btn btn-success">Guardar</button>
+                    <button type="button" class="btn" data-close>Cancelar</button>
                 </div>
             </form>
         `;
 
-        await modal.confirm({
-            title: 'Nueva Cita',
-            message: html,
-            okText: 'Guardar',
-            cancelText: 'Cancelar'
-        }).then(async (confirmed) => {
-            if (confirmed) {
-                const appointmentData = {
-                    customer_id: parseInt(document.getElementById('appointmentCustomer').value),
-                    scheduled_at: document.getElementById('appointmentDate').value,
-                    service_id: null,  // Optional: use null for now since services table might not be populated
-                    duration_minutes: 60,  // Default duration
-                    status: document.getElementById('appointmentStatus').value,
-                    notes: document.getElementById('appointmentService').value  // Store service type in notes
-                };
-                try {
-                    await apiService.post('/appointments/', appointmentData);
-                    await this.init();
-                    await modal.alert({ title: 'Éxito', message: 'Cita creada correctamente' });
-                } catch (error) {
-                    console.error('Error creating appointment:', error);
-                    let errorMsg = error.message || 'Error desconocido';
-                    if (error.detail) {
-                        errorMsg = typeof error.detail === 'string' ? error.detail : JSON.stringify(error.detail);
-                    }
-                    await modal.alert({ title: 'Error', message: errorMsg, type: 'error' });
+        const appointmentModal = modal.show({ 
+            title: 'Nueva Cita', 
+            content: html, 
+            size: 'medium' 
+        });
+
+        const form = document.getElementById('appointmentForm');
+        form?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
+            
+            const appointmentData = {
+                customer_id: parseInt(formData.get('customer_id')),
+                scheduled_at: formData.get('scheduled_at'),
+                service_id: null,
+                duration_minutes: 60,
+                status: formData.get('status') || 'scheduled',
+                notes: formData.get('notes')
+            };
+            
+            try {
+                await apiService.post('/appointments/', appointmentData);
+                modal.close(appointmentModal);
+                await this.init();
+                await modal.alert({ title: 'Éxito', message: 'Cita creada correctamente', type: 'success' });
+            } catch (error) {
+                console.error('Error creating appointment:', error);
+                let errorMsg = error.message || 'Error desconocido';
+                if (error.detail) {
+                    errorMsg = typeof error.detail === 'string' ? error.detail : JSON.stringify(error.detail);
                 }
+                await modal.alert({ title: 'Error', message: errorMsg, type: 'error' });
             }
         });
     }
@@ -210,18 +220,18 @@ export class PaymentsView {
         const html = `
             <form id="paymentForm">
                 <div class="form-group">
-                    <label>Cliente</label>
-                    <select id="paymentCustomer" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
+                    <label>Cliente *</label>
+                    <select name="customer_id" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
                         ${customersOptions}
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Monto</label>
-                    <input type="number" id="paymentAmount" step="0.01" placeholder="0.00" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
+                    <label>Monto *</label>
+                    <input type="number" name="amount" step="0.01" placeholder="0.00" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
                 </div>
                 <div class="form-group">
-                    <label>Método de Pago</label>
-                    <select id="paymentMethod" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
+                    <label>Método de Pago *</label>
+                    <select name="method" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
                         <option value="cash">Efectivo</option>
                         <option value="card">Tarjeta</option>
                         <option value="transfer">Transferencia</option>
@@ -230,44 +240,45 @@ export class PaymentsView {
                 </div>
                 <div class="form-group">
                     <label>Concepto</label>
-                    <input type="text" id="paymentConcept" placeholder="Descripción..." required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
+                    <input type="text" name="notes" placeholder="Descripción..." style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
                 </div>
-                <div class="form-group">
-                    <label>Status</label>
-                    <select id="paymentStatus" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
-                        <option value="pending">Pendiente</option>
-                        <option value="completed">Completado</option>
-                        <option value="failed">Falló</option>
-                    </select>
+                <div class="modal-actions">
+                    <button type="submit" class="btn btn-success">Guardar</button>
+                    <button type="button" class="btn" data-close>Cancelar</button>
                 </div>
             </form>
         `;
 
-        await modal.confirm({
-            title: 'Nuevo Pago',
-            message: html,
-            okText: 'Guardar',
-            cancelText: 'Cancelar'
-        }).then(async (confirmed) => {
-            if (confirmed) {
-                const paymentData = {
-                    customer_id: parseInt(document.getElementById('paymentCustomer').value),
-                    amount: parseFloat(document.getElementById('paymentAmount').value),
-                    method: document.getElementById('paymentMethod').value,
-                    notes: document.getElementById('paymentConcept').value
-                };
-                try {
-                    await apiService.post('/payments/', paymentData);
-                    await this.init();
-                    await modal.alert({ title: 'Éxito', message: 'Pago registrado correctamente' });
-                } catch (error) {
-                    console.error('Error creating payment:', error);
-                    let errorMsg = error.message || 'Error desconocido';
-                    if (error.detail) {
-                        errorMsg = typeof error.detail === 'string' ? error.detail : JSON.stringify(error.detail);
-                    }
-                    await modal.alert({ title: 'Error', message: errorMsg, type: 'error' });
+        const paymentModal = modal.show({ 
+            title: 'Nuevo Pago', 
+            content: html, 
+            size: 'medium' 
+        });
+
+        const form = document.getElementById('paymentForm');
+        form?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
+            
+            const paymentData = {
+                customer_id: parseInt(formData.get('customer_id')),
+                amount: parseFloat(formData.get('amount')),
+                method: formData.get('method'),
+                notes: formData.get('notes') || null
+            };
+            
+            try {
+                await apiService.post('/payments/', paymentData);
+                modal.close(paymentModal);
+                await this.init();
+                await modal.alert({ title: 'Éxito', message: 'Pago registrado correctamente', type: 'success' });
+            } catch (error) {
+                console.error('Error creating payment:', error);
+                let errorMsg = error.message || 'Error desconocido';
+                if (error.detail) {
+                    errorMsg = typeof error.detail === 'string' ? error.detail : JSON.stringify(error.detail);
                 }
+                await modal.alert({ title: 'Error', message: errorMsg, type: 'error' });
             }
         });
     }
