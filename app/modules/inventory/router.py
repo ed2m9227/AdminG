@@ -30,6 +30,12 @@ def resolve_user(
         raise HTTPException(status_code=404, detail="User not found")
     return user
 
+def check_inventory_access(user: User):
+    """Check if user has access to inventory features"""
+    if user.role == 'admin' or user.plan in ["start", "max", "admin"]:
+        return True
+    raise HTTPException(status_code=403, detail="Feature not available in your plan")
+
 # ============ CATEGORIES ============
 
 @router.post("/categories", response_model=InventoryCategoryOut, status_code=status.HTTP_201_CREATED)
@@ -39,8 +45,7 @@ def create_category(
     current_user: User = Depends(resolve_user),
 ):
     """Create inventory category - Only AdminPro Start/Max"""
-    if current_user.plan not in ["start", "max"]:
-        raise HTTPException(status_code=403, detail="Feature not available in your plan")
+    check_inventory_access(current_user)
     
     category = InventoryCategory(
         user_id=current_user.id,
@@ -60,8 +65,7 @@ def list_categories(
     current_user: User = Depends(resolve_user),
 ):
     """List all inventory categories - Only AdminPro Start/Max"""
-    if current_user.plan not in ["start", "max"]:
-        raise HTTPException(status_code=403, detail="Feature not available in your plan")
+    check_inventory_access(current_user)
     
     return db.query(InventoryCategory).filter(
         InventoryCategory.user_id == current_user.id
@@ -76,8 +80,7 @@ def create_item(
     current_user: User = Depends(resolve_user),
 ):
     """Create inventory item - Only AdminPro Start/Max"""
-    if current_user.plan not in ["start", "max"]:
-        raise HTTPException(status_code=403, detail="Feature not available in your plan")
+    check_inventory_access(current_user)
     
     # Validate SKU uniqueness
     existing = db.query(InventoryItem).filter(InventoryItem.sku == payload.sku).first()
@@ -119,8 +122,7 @@ def list_items(
     Args:
         low_stock: If True, only return items with quantity <= min_quantity
     """
-    if current_user.plan not in ["start", "max"]:
-        raise HTTPException(status_code=403, detail="Feature not available in your plan")
+    check_inventory_access(current_user)
     
     query = db.query(InventoryItem).filter(InventoryItem.user_id == current_user.id)
     
@@ -136,8 +138,7 @@ def get_item(
     current_user: User = Depends(resolve_user),
 ):
     """Get inventory item by ID - Only AdminPro Start/Max"""
-    if current_user.plan not in ["start", "max"]:
-        raise HTTPException(status_code=403, detail="Feature not available in your plan")
+    check_inventory_access(current_user)
     
     item = db.query(InventoryItem).filter(
         InventoryItem.id == item_id,
@@ -157,8 +158,7 @@ def update_item(
     current_user: User = Depends(resolve_user),
 ):
     """Update inventory item - Only AdminPro Start/Max"""
-    if current_user.plan not in ["start", "max"]:
-        raise HTTPException(status_code=403, detail="Feature not available in your plan")
+    check_inventory_access(current_user)
     
     item = db.query(InventoryItem).filter(
         InventoryItem.id == item_id,
@@ -188,11 +188,10 @@ def update_item(
 def delete_item(
     item_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(resolve_user),
 ):
     """Delete inventory item - Only AdminPro Start/Max"""
-    if current_user.plan not in ["start", "max"]:
-        raise HTTPException(status_code=403, detail="Feature not available in your plan")
+    check_inventory_access(current_user)
     
     item = db.query(InventoryItem).filter(
         InventoryItem.id == item_id,
@@ -212,11 +211,10 @@ def delete_item(
 def create_movement(
     payload: InventoryMovementCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(resolve_user),
 ):
     """Record inventory movement (entrada/salida/ajuste)"""
-    if current_user.plan not in ["start", "max"]:
-        raise HTTPException(status_code=403, detail="Feature not available in your plan")
+    check_inventory_access(current_user)
     
     item = db.query(InventoryItem).filter(
         InventoryItem.id == payload.item_id,
@@ -257,11 +255,10 @@ def list_movements(
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(resolve_user),
 ):
     """List movements for an item"""
-    if current_user.plan not in ["start", "max"]:
-        raise HTTPException(status_code=403, detail="Feature not available in your plan")
+    check_inventory_access(current_user)
     
     item = db.query(InventoryItem).filter(
         InventoryItem.id == item_id,

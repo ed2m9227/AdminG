@@ -133,24 +133,50 @@ export class DashboardView {
             const limits = response.limits || {};
             const plan = response.plan || 'free';
 
-            const featureLabels = features.map(f => f.replace(/_/g, ' '));
+            const featureTranslations = {
+                'view inventory': 'Ver inventario',
+                'view reports': 'Ver reportes',
+                'view customers': 'Ver clientes',
+                'create products': 'Crear productos',
+                'edit products': 'Editar productos',
+                'edit appointments': 'Editar citas',
+                'create appointments': 'Crear citas',
+                'view team': 'Ver equipo',
+                'edit customers': 'Editar clientes',
+                'manage team users': 'Gestionar equipo',
+                'view appointments': 'Ver citas',
+                'create payments': 'Crear pagos',
+                'create customers': 'Crear clientes',
+                'view payments': 'Ver pagos',
+                'use cashregister': 'Usar caja registradora'
+            };
+
+            const featureLabels = features.map(f => {
+                const label = f.replace(/_/g, ' ').toLowerCase();
+                return featureTranslations[label] || f.replace(/_/g, ' ');
+            });
+
+            const planName = plan === 'admin' ? 'MAX (Administrador)' : plan.toUpperCase();
             const container = document.getElementById('planFeaturesBox');
 
             if (container) {
                 container.innerHTML = `
-                    <div style="margin-bottom: 12px;">
-                        <span class="badge badge-info">PLAN ${plan.toUpperCase()}</span>
-                        <span style="margin-left: 8px; color: #7f8c8d;">Funciones activas</span>
+                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+                        <div style="color: white; font-size: 14px; margin-bottom: 8px;">Tu plan actual</div>
+                        <div style="color: white; font-size: 24px; font-weight: bold;">${planName}</div>
                     </div>
-                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                    <div style="margin-bottom: 12px;">
+                        <strong style="color: #2c3e50;">✨ Funciones disponibles:</strong>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px;">
                         ${featureLabels.map(label => `
-                            <span style="background: #f0f8ff; border: 1px solid #d9e8ff; color: #2c3e50; padding: 6px 10px; border-radius: 16px; font-size: 12px;">
-                                ${label}
-                            </span>
+                            <div style="background: #f8f9fa; border-left: 3px solid #667eea; padding: 10px; border-radius: 4px; font-size: 13px;">
+                                <span style="color: #28a745;">✓</span> ${label}
+                            </div>
                         `).join('')}
                     </div>
-                    <div style="margin-top: 12px; color: #7f8c8d; font-size: 12px;">
-                        Límite de equipo: ${limits.team_members || 1} | Clientes: ${limits.customers || 0}
+                    <div style="margin-top: 16px; padding: 12px; background: #e3f2fd; border-radius: 4px; font-size: 12px; color: #1976d2;">
+                        <strong>Límites:</strong> Equipo: ${limits.team_members || 1} miembros | Clientes: ${limits.customers === 0 ? 'Ilimitados' : limits.customers}
                     </div>
                 `;
             }

@@ -485,7 +485,7 @@ export class ReportsView {
     }
 
     render() {
-        const user = require('../services/auth.service.js').default.getCurrentUser();
+        const user = authService.getCurrentUser();
         const isAdmin = user?.role === 'admin';
         const plan = user?.plan || 'free';
 

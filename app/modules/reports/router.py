@@ -34,6 +34,12 @@ def resolve_user(
         raise HTTPException(status_code=404, detail="User not found")
     return user
 
+def check_reports_access(user: User, required_plans: list[str] = ["plus", "start", "max"]):
+    """Check if user has access to reports features"""
+    if user.role == 'admin' or user.plan in required_plans + ["admin"]:
+        return True
+    raise HTTPException(status_code=403, detail="Feature not available in your plan")
+
 @router.get("/dashboard", response_model=DashboardMetrics)
 def get_dashboard_metrics(
     db: Session = Depends(get_db),
@@ -46,8 +52,7 @@ def get_dashboard_metrics(
     - AdminPro Start+ (with advanced metrics)
     """
     # Check plan permissions
-    if current_user.plan not in ["plus", "start", "max"]:
-        raise HTTPException(status_code=403, detail="Feature not available in your plan")
+    check_reports_access(current_user)
     
     # Metrics for current month
     now = datetime.utcnow()

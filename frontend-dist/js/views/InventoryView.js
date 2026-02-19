@@ -178,10 +178,11 @@ export class InventoryView {
                 message: 'Producto guardado correctamente'
             });
         } catch (error) {
+            const errorMsg = error.message || (typeof error === 'object' ? JSON.stringify(error) : String(error));
             modal.alert({
                 type: 'error',
                 title: 'Error',
-                message: 'Error al guardar producto: ' + error.message
+                message: 'Error al guardar producto: ' + errorMsg
             });
         }
     }

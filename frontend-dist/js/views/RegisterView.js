@@ -66,15 +66,6 @@ export class RegisterView {
                             </select>
                         </div>
                         
-                        <div class="form-group">
-                            <label for="regRole">Rol</label>
-                            <select id="regRole" name="role" required>
-                                <option value="viewer">Viewer</option>
-                                <option value="manager">Manager</option>
-                                <option value="admin" selected>Admin</option>
-                            </select>
-                        </div>
-                        
                         <button type="submit" class="btn btn-primary btn-full" id="regBtn">
                             Crear Cuenta
                         </button>
@@ -117,7 +108,7 @@ export class RegisterView {
         const password = form.password.value;
         const confirmPassword = form.confirmPassword.value;
         const plan = form.plan.value;
-        const role = form.role.value;
+        const role = 'user'; // Default role for new accounts
 
         // Validar contraseñas
         if (password !== confirmPassword) {
