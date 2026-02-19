@@ -84,19 +84,35 @@ export class DashboardView {
 
     async loadStats() {
         try {
-            const [customersData, inventoryData] = await Promise.allSettled([
+            const [customersData, inventoryData, appointmentsData, paymentsData] = await Promise.allSettled([
                 apiService.getCustomers(),
-                apiService.getInventoryItems()
+                apiService.getInventoryItems(),
+                apiService.getAppointments(),
+                apiService.getPayments()
             ]);
 
-            if (customersData.status === 'fulfilled') {
-                this.stats.customers = customersData.value.items?.length || 0;
+            // Customers
+            if (customersData.status === 'fulfilled' && Array.isArray(customersData.value)) {
+                this.stats.customers = customersData.value.length || 0;
                 this.updateStat('statCustomers', this.stats.customers);
             }
 
-            if (inventoryData.status === 'fulfilled') {
+            // Inventory
+            if (inventoryData.status === 'fulfilled' && Array.isArray(inventoryData.value)) {
                 this.stats.inventory = inventoryData.value.length || 0;
                 this.updateStat('statInventory', this.stats.inventory);
+            }
+
+            // Appointments (count for today)
+            if (appointmentsData.status === 'fulfilled' && Array.isArray(appointmentsData.value)) {
+                this.stats.appointments = appointmentsData.value.length || 0;
+                this.updateStat('statAppointments', this.stats.appointments);
+            }
+
+            // Revenue calculation
+            if (paymentsData.status === 'fulfilled' && Array.isArray(paymentsData.value)) {
+                this.stats.revenue = paymentsData.value.reduce((sum, p) => sum + (p.amount || 0), 0);
+                this.updateStat('statRevenue', this.stats.revenue.toFixed(2));
             }
         } catch (error) {
             console.error('Error loading dashboard stats:', error);

@@ -134,26 +134,30 @@ class App {
                     await authService.loadFeatures();
                 }
 
-                const routeFeatureMap = {
-                    customers: 'view_customers',
-                    appointments: 'view_appointments',
-                    inventory: 'view_inventory',
-                    payments: 'view_payments',
-                    reports: 'view_reports',
-                    cashregister: 'use_cashregister',
-                    team: 'manage_team_users'
-                };
+                // Admin users have access to all features
+                const user = authService.getCurrentUser();
+                if (user && user.role !== 'admin') {
+                    const routeFeatureMap = {
+                        customers: 'view_customers',
+                        appointments: 'view_appointments',
+                        inventory: 'view_inventory',
+                        payments: 'view_payments',
+                        reports: 'view_reports',
+                        cashregister: 'use_cashregister',
+                        team: 'manage_team_users'
+                    };
 
-                const requiredFeature = routeFeatureMap[path];
-                const features = authService.getFeatures();
-                if (requiredFeature && !features.includes(requiredFeature)) {
-                    await modal.alert({
-                        title: 'Aumenta tu plan',
-                        message: 'Esta funcion no esta disponible en tu plan actual.',
-                        type: 'warning'
-                    });
-                    await router.navigate('dashboard');
-                    return false;
+                    const requiredFeature = routeFeatureMap[path];
+                    const features = authService.getFeatures();
+                    if (requiredFeature && !features.includes(requiredFeature)) {
+                        await modal.alert({
+                            title: 'Aumenta tu plan',
+                            message: 'Esta funcion no esta disponible en tu plan actual.',
+                            type: 'warning'
+                        });
+                        await router.navigate('dashboard');
+                        return false;
+                    }
                 }
             }
 
