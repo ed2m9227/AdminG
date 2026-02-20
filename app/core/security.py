@@ -5,14 +5,17 @@ from fastapi.security import OAuth2PasswordBearer
 from datetime import datetime, timedelta
 from app.core.config import SECRET_KEY, ALGORITHM
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Use argon2 instead of bcrypt to avoid 72-byte password limit
+pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 
 def hash_password(password: str) -> str:
+    """Hash password using argon2 (no 72-byte limit)"""
     return pwd_context.hash(password)
 
 def verify_password(password: str, hashed: str) -> bool:
+    """Verify password against hash"""
     return pwd_context.verify(password, hashed)
 
 def create_access_token(data: dict, expires_minutes: int = 60):

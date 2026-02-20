@@ -13,7 +13,7 @@ def create_master_admin(email: str, password: str):
         if user:
             user.hashed_password = hash_password(password)
             user.role = "admin"
-            user.plan = "admin"
+            user.plan = "max"  # AdminPro 100k
             user.is_active = True
             db.commit()
             db.refresh(user)
@@ -23,7 +23,7 @@ def create_master_admin(email: str, password: str):
             email=email,
             hashed_password=hash_password(password),
             role="admin",
-            plan="admin",
+            plan="max",  # AdminPro 100k
             is_active=True,
             business_type="master",
             parent_user_id=None

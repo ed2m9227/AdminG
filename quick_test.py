@@ -60,7 +60,7 @@ try:
             r = requests.post(f"{BASE}/auth/login", json=login_data, timeout=5)
             print(f"    Status: {r.status_code}")
             if r.status_code == 200:
-                print(f"    ✅ Login successful")
+                print("    ✅ Login successful")
                 token = r.json().get("access_token", "")
             else:
                 print(f"    ❌ Login failed: {r.text}")
@@ -105,7 +105,7 @@ try:
                         data = r.json()
                         print(f"    ✅ Categories found: {len(data)}")
                     elif r.status_code == 403:
-                        print(f"    ℹ️  Feature not available for this plan")
+                        print("    ℹ️  Feature not available for this plan")
                 except Exception as e:
                     print(f"    ERROR: {e}")
                 
@@ -116,11 +116,11 @@ try:
                     print(f"    Status: {r.status_code}")
                     if r.status_code == 200:
                         data = r.json()
-                        print(f"    ✅ Dashboard metrics retrieved")
+                        print("    ✅ Dashboard metrics retrieved")
                         print(f"       Total customers: {data.get('total_customers')}")
                         print(f"       Revenue: ${data.get('total_revenue_month')}")
                     elif r.status_code == 403:
-                        print(f"    ℹ️  Feature not available for this plan")
+                        print("    ℹ️  Feature not available for this plan")
                 except Exception as e:
                     print(f"    ERROR: {e}")
         else:

@@ -17,4 +17,5 @@ class Customer(Base):
 
     appointments = relationship("Appointment", back_populates="customer", cascade="all, delete-orphan")
     payments = relationship("Payment", back_populates="customer", cascade="all, delete-orphan")
+    pets = relationship("Pet", back_populates="customer", cascade="all, delete-orphan")
     user = relationship("User", foreign_keys=[user_id])
