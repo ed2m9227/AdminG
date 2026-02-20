@@ -105,6 +105,38 @@ export class ApiService {
         return this.get('/payments/');
     }
 
+    async getBusinessTypes() {
+        return this.get('/business/types');
+    }
+
+    async getBusinessConfig() {
+        return this.get('/business/config');
+    }
+
+    async createBusinessConfig(payload) {
+        return this.post('/business/config', payload);
+    }
+
+    async updateBusinessConfig(payload) {
+        return this.put('/business/config', payload);
+    }
+
+    async resetBusinessConfig(businessType) {
+        return this.post(`/business/config/reset/${businessType}`, {});
+    }
+
+    async getPets(customerId) {
+        return this.get(`/customers/${customerId}/pets/`);
+    }
+
+    async createPet(customerId, payload) {
+        return this.post(`/customers/${customerId}/pets/`, payload);
+    }
+
+    async updatePet(customerId, petId, payload) {
+        return this.put(`/customers/${customerId}/pets/${petId}`, payload);
+    }
+
     async getCurrentUser() {
         return this.get('/users/me');
     }

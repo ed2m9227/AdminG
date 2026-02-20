@@ -6,6 +6,16 @@
 import table from '../components/Table.js';
 import apiService from '../services/api.service.js';
 import modal from '../components/Modal.js';
+import authService from '../services/auth.service.js';
+
+// Utility function to extract error message
+function getErrorMessage(error) {
+    if (typeof error === 'string') return error;
+    if (error.message) return error.message;
+    if (error.detail) return error.detail;
+    if (error.response && error.response.message) return error.response.message;
+    return 'Error desconocido. Por favor intenta de nuevo.';
+}
 
 // Appointments View
 export class AppointmentsView {
@@ -43,6 +53,7 @@ export class AppointmentsView {
                 key: 'actions',
                 label: 'Acciones',
                 formatter: (_, row) => `
+                    <button class="btn btn-sm btn-primary" data-edit-appointment="${row.id}">Editar</button>
                     <button class="btn btn-sm btn-danger" data-delete-appointment="${row.id}">Eliminar</button>
                 `
             });
@@ -87,10 +98,23 @@ export class AppointmentsView {
                     try {
                         await apiService.delete(`/appointments/${appointmentId}`);
                         await this.init();
-                        await modal.alert({ title: 'Éxito', message: 'Cita eliminada', type: 'success' });
+                        await modal.alert({ title: 'Éxito', message: 'Cita eliminada correctamente', type: 'success' });
                     } catch (error) {
-                        await modal.alert({ title: 'Error', message: error.message, type: 'error' });
+                        const errorMsg = getErrorMessage(error);
+                        await modal.alert({ title: 'Error', message: 'Error al eliminar cita: ' + errorMsg, type: 'error' });
                     }
+                }
+            }
+        });
+
+        // Edit appointment listener
+        document.addEventListener('click', async (e) => {
+            const editBtn = e.target.closest('[data-edit-appointment]');
+            if (editBtn) {
+                const appointmentId = editBtn.dataset.editAppointment;
+                const appointment = this.appointments.find(a => a.id === parseInt(appointmentId));
+                if (appointment) {
+                    this.showEditAppointmentModal(appointment);
                 }
             }
         });
@@ -181,6 +205,94 @@ export class AppointmentsView {
             }
         });
     }
+
+    async showEditAppointmentModal(appointment) {
+        // Cargar clientes
+        let customersOptions = '<option value="">Cargando clientes...</option>';
+        try {
+            const customers = await apiService.getCustomers();
+            if (Array.isArray(customers) && customers.length > 0) {
+                customersOptions = '';
+                customers.forEach(c => {
+                    const selected = c.id === appointment.customer_id ? 'selected' : '';
+                    customersOptions += `<option value="${c.id}" ${selected}>${c.full_name || 'Sin nombre'}</option>`;
+                });
+            }
+        } catch (error) {
+            console.error('Error loading customers:', error);
+        }
+
+        // Format the datetime-local input from ISO string
+        const scheduledDate = new Date(appointment.scheduled_at);
+        const isoString = scheduledDate.toISOString().slice(0, 16);
+
+        const html = `
+            <form id="appointmentForm">
+                <div class="form-group">
+                    <label>Cliente *</label>
+                    <select name="customer_id" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
+                        ${customersOptions}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Fecha y Hora *</label>
+                    <input type="datetime-local" name="scheduled_at" value="${isoString}" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
+                </div>
+                <div class="form-group">
+                    <label>Servicio *</label>
+                    <input type="text" name="notes" placeholder="Ej: Corte de cabello" value="${appointment.notes || ''}" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select name="status" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
+                        <option value="scheduled" ${appointment.status === 'scheduled' ? 'selected' : ''}>Programada</option>
+                        <option value="confirmed" ${appointment.status === 'confirmed' ? 'selected' : ''}>Confirmada</option>
+                        <option value="completed" ${appointment.status === 'completed' ? 'selected' : ''}>Completada</option>
+                        <option value="canceled" ${appointment.status === 'canceled' ? 'selected' : ''}>Cancelada</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="submit" class="btn btn-success">Actualizar</button>
+                    <button type="button" class="btn" data-close>Cancelar</button>
+                </div>
+            </form>
+        `;
+
+        const appointmentModal = modal.show({ 
+            title: 'Editar Cita', 
+            content: html, 
+            size: 'medium' 
+        });
+
+        const form = document.getElementById('appointmentForm');
+        form?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
+            
+            const appointmentData = {
+                customer_id: parseInt(formData.get('customer_id')),
+                scheduled_at: formData.get('scheduled_at'),
+                service_id: null,
+                duration_minutes: 60,
+                status: formData.get('status') || 'scheduled',
+                notes: formData.get('notes')
+            };
+            
+            try {
+                await apiService.put(`/appointments/${appointment.id}`, appointmentData);
+                modal.close(appointmentModal);
+                await this.init();
+                await modal.alert({ title: 'Éxito', message: 'Cita actualizada correctamente', type: 'success' });
+            } catch (error) {
+                console.error('Error updating appointment:', error);
+                let errorMsg = error.message || 'Error desconocido';
+                if (error.detail) {
+                    errorMsg = typeof error.detail === 'string' ? error.detail : JSON.stringify(error.detail);
+                }
+                await modal.alert({ title: 'Error', message: errorMsg, type: 'error' });
+            }
+        });
+    }
 }
 
 // Payments View
@@ -220,6 +332,7 @@ export class PaymentsView {
                 key: 'actions',
                 label: 'Acciones',
                 formatter: (_, row) => `
+                    <button class="btn btn-sm btn-primary" data-edit-payment="${row.id}">Editar</button>
                     <button class="btn btn-sm btn-danger" data-delete-payment="${row.id}">Eliminar</button>
                 `
             });
@@ -264,10 +377,23 @@ export class PaymentsView {
                     try {
                         await apiService.delete(`/payments/${paymentId}`);
                         await this.init();
-                        await modal.alert({ title: 'Éxito', message: 'Pago eliminado', type: 'success' });
+                        await modal.alert({ title: 'Éxito', message: 'Pago eliminado correctamente', type: 'success' });
                     } catch (error) {
-                        await modal.alert({ title: 'Error', message: error.message, type: 'error' });
+                        const errorMsg = getErrorMessage(error);
+                        await modal.alert({ title: 'Error', message: 'Error al eliminar pago: ' + errorMsg, type: 'error' });
                     }
+                }
+            }
+        });
+
+        // Edit payment listener
+        document.addEventListener('click', async (e) => {
+            const editBtn = e.target.closest('[data-edit-payment]');
+            if (editBtn) {
+                const paymentId = editBtn.dataset.editPayment;
+                const payment = this.payments.find(p => p.id === parseInt(paymentId));
+                if (payment) {
+                    this.showEditPaymentModal(payment);
                 }
             }
         });
@@ -348,6 +474,89 @@ export class PaymentsView {
                 await modal.alert({ title: 'Éxito', message: 'Pago registrado correctamente', type: 'success' });
             } catch (error) {
                 console.error('Error creating payment:', error);
+                let errorMsg = error.message || 'Error desconocido';
+                if (error.detail) {
+                    errorMsg = typeof error.detail === 'string' ? error.detail : JSON.stringify(error.detail);
+                }
+                await modal.alert({ title: 'Error', message: errorMsg, type: 'error' });
+            }
+        });
+    }
+
+    async showEditPaymentModal(payment) {
+        // Cargar clientes
+        let customersOptions = '<option value="">Cargando clientes...</option>';
+        try {
+            const customers = await apiService.getCustomers();
+            if (Array.isArray(customers) && customers.length > 0) {
+                customersOptions = '';
+                customers.forEach(c => {
+                    const selected = c.id === payment.customer_id ? 'selected' : '';
+                    customersOptions += `<option value="${c.id}" ${selected}>${c.full_name || 'Sin nombre'}</option>`;
+                });
+            }
+        } catch (error) {
+            console.error('Error loading customers:', error);
+        }
+
+        const html = `
+            <form id="paymentForm">
+                <div class="form-group">
+                    <label>Cliente *</label>
+                    <select name="customer_id" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
+                        ${customersOptions}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Monto *</label>
+                    <input type="number" name="amount" placeholder="0.00" value="${payment.amount}" step="0.01" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
+                </div>
+                <div class="form-group">
+                    <label>Método *</label>
+                    <select name="method" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
+                        <option value="cash" ${payment.method === 'cash' ? 'selected' : ''}>Efectivo</option>
+                        <option value="card" ${payment.method === 'card' ? 'selected' : ''}>Tarjeta</option>
+                        <option value="transfer" ${payment.method === 'transfer' ? 'selected' : ''}>Transferencia</option>
+                        <option value="check" ${payment.method === 'check' ? 'selected' : ''}>Cheque</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Notas</label>
+                    <textarea name="notes" placeholder="Información adicional" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">${payment.notes || ''}</textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="submit" class="btn btn-success">Actualizar</button>
+                    <button type="button" class="btn" data-close>Cancelar</button>
+                </div>
+            </form>
+        `;
+
+        const paymentModal = modal.show({ 
+            title: 'Editar Pago', 
+            content: html, 
+            size: 'medium' 
+        });
+
+        const form = document.getElementById('paymentForm');
+        form?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
+            
+            const paymentData = {
+                customer_id: parseInt(formData.get('customer_id')),
+                amount: parseFloat(formData.get('amount')),
+                method: formData.get('method'),
+                notes: formData.get('notes') || null,
+                status: payment.status
+            };
+            
+            try {
+                await apiService.put(`/payments/${payment.id}`, paymentData);
+                modal.close(paymentModal);
+                await this.init();
+                await modal.alert({ title: 'Éxito', message: 'Pago actualizado correctamente', type: 'success' });
+            } catch (error) {
+                console.error('Error updating payment:', error);
                 let errorMsg = error.message || 'Error desconocido';
                 if (error.detail) {
                     errorMsg = typeof error.detail === 'string' ? error.detail : JSON.stringify(error.detail);
@@ -488,15 +697,18 @@ export class CashRegisterView {
         const container = document.getElementById('productsList');
         if (!container) return;
 
-        container.innerHTML = filtered.map(item => `
-            <div style="padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <strong>${item.name || item.product_name}</strong>
-                    <p style="color: #7f8c8d; font-size: 12px; margin: 4px 0;">$${item.price || 0} (Stock: ${item.quantity || 0})</p>
+        container.innerHTML = filtered.map(item => {
+            const unitPrice = item.unit_price || item.price || 0;
+            return `
+                <div style="padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <strong>${item.name || item.product_name}</strong>
+                        <p style="color: #7f8c8d; font-size: 12px; margin: 4px 0;">$${parseFloat(unitPrice).toFixed(2)} (Stock: ${item.quantity || 0})</p>
+                    </div>
+                    <button class="btn btn-primary" data-add-to-cart data-product-id="${item.id}" data-product-name="${(item.name || item.product_name).replace(/"/g, '&quot;')}" data-product-price="${unitPrice}">+</button>
                 </div>
-                <button class="btn btn-primary" data-add-to-cart data-product-id="${item.id}" data-product-name="${(item.name || item.product_name).replace(/"/g, '&quot;')}" data-product-price="${item.price || 0}">+</button>
-            </div>
-        `).join('');
+            `;
+        }).join('');
     }
 
     filterProducts(query) {
@@ -504,11 +716,12 @@ export class CashRegisterView {
     }
 
     addToCart(productId, productName, price) {
+        const priceNum = parseFloat(price) || 0;
         const existing = this.cart.find(item => item.id === productId);
         if (existing) {
             existing.quantity++;
         } else {
-            this.cart.push({ id: productId, name: productName, price, quantity: 1 });
+            this.cart.push({ id: productId, name: productName, price: priceNum, quantity: 1 });
         }
         this.updateCart();
     }
@@ -554,19 +767,19 @@ export class CashRegisterView {
 
         const customerId = document.getElementById('cashCustomer')?.value;
         const paymentData = {
-            customer_id: customerId || null,
+            customer_id: customerId ? parseInt(customerId) : null,
             amount: this.total,
-            payment_method: 'cash',
-            description: `Venta POS: ${this.cart.map(i => i.name).join(', ')}`,
-            status: 'completed'
+            method: 'cash',
+            notes: `Venta POS: ${this.cart.map(i => i.name).join(', ')}`
         };
 
         try {
-            await apiService.post('/payments/', paymentData);
-            await modal.alert({ title: 'Éxito', message: `Pago de $${this.total.toFixed(2)} procesado correctamente` });
+          const response = await apiService.post('/payments/', paymentData);
+            await modal.alert({ title: 'Éxito', message: `Pago de $${this.total.toFixed(2)} procesado correctamente`, type: 'success' });
             this.clearCart();
         } catch (error) {
-            await modal.alert({ title: 'Error', message: error.message, type: 'error' });
+            const errorMsg = typeof error === 'string' ? error : (error.message || error.detail || 'Error desconocido');
+            await modal.alert({ title: 'Error', message: 'Error al procesar pago: ' + errorMsg, type: 'error' });
         }
     }
 }

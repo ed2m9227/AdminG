@@ -108,7 +108,7 @@ export class RegisterView {
         const password = form.password.value;
         const confirmPassword = form.confirmPassword.value;
         const plan = form.plan.value;
-        const role = 'user'; // Default role for new accounts
+        const role = 'viewer'; // Default role for new accounts (non-admin)
 
         // Validar contraseñas
         if (password !== confirmPassword) {
