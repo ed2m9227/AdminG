@@ -12,12 +12,14 @@ from app.modules.customers.router import router as customers_router
 from app.modules.customers.pet_router import router as pet_router
 from app.modules.business.router import router as business_router
 from app.modules.appointments.router import router as appointments_router
+from app.modules.services.router import router as services_router
 from app.modules.plans.router import router as plans_router
 from app.modules.inventory.router import router as inventory_router
 from app.modules.payments.router import router as payments_router
 from app.modules.reports.router import router as reports_router
 from app.modules.cashregister.router import router as cashregister_router
 from app.modules.admin.router import router as admin_router
+from app.modules.admin.routers.business_types import router as business_types_router
 from app.modules.plans.service import seed_plans
 
 # Configurar logging
@@ -99,12 +101,14 @@ app.include_router(customers_router)
 app.include_router(pet_router)
 app.include_router(business_router)
 app.include_router(appointments_router)
+app.include_router(services_router)
 app.include_router(plans_router)
 app.include_router(inventory_router)
 app.include_router(payments_router)
 app.include_router(reports_router)
 app.include_router(cashregister_router)
 app.include_router(admin_router)
+app.include_router(business_types_router)
 
 @app.get("/health")
 def health():

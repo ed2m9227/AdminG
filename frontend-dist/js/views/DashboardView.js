@@ -39,8 +39,38 @@ export class DashboardView {
 
     render() {
         const user = authService.getCurrentUser();
+        const greeting = this.getGreeting();
+        const businessConfig = this.businessConfig;
 
         return `
+            <!-- Personalized Greeting Header -->
+            <div class="mb-8 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 border border-blue-100">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h1 class="text-3xl font-bold text-gray-800">${greeting}</h1>
+                        <p class="text-gray-600 mt-1">Bienvenido de vuelta a AdminG</p>
+                        ${businessConfig?.business_name ? `
+                            <div class="mt-3 flex items-center gap-2">
+                                <span class="text-2xl">${businessConfig.business_type || '📋'}</span>
+                                <div>
+                                    <p class="text-sm text-gray-600">Negocio</p>
+                                    <p class="font-semibold text-gray-800">${businessConfig.business_name}</p>
+                                </div>
+                            </div>
+                        ` : ''}
+                        <div class="mt-4 flex gap-4">
+                            <div class="bg-white px-3 py-2 rounded text-sm border border-gray-200">
+                                <span class="text-gray-600">Plan:</span> <span class="font-semibold text-blue-600">${user?.plan?.toUpperCase() || '-'}</span>
+                            </div>
+                            <div class="bg-white px-3 py-2 rounded text-sm border border-gray-200">
+                                <span class="text-gray-600">Rol:</span> <span class="font-semibold text-green-600">${user?.role?.toUpperCase() || '-'}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-6xl">${this.getEmojiForBusinessType(businessConfig?.business_type)}</div>
+                </div>
+            </div>
+
             <div class="stats-grid">
                 <div class="stat-card">
                     <h3>Clientes Totales</h3>
@@ -393,6 +423,42 @@ export class DashboardView {
                 `);
             }
         }
+    }
+
+    getGreeting() {
+        const user = authService.getCurrentUser();
+        const hour = new Date().getHours();
+        let greeting = '';
+
+        if (hour < 12) {
+            greeting = 'Buenos días';
+        } else if (hour < 18) {
+            greeting = 'Buenas tardes';
+        } else {
+            greeting = 'Buenas noches';
+        }
+
+        const firstName = user?.email?.split('@')[0]?.split('.')[0] || 'Usuario';
+        const capitalizedName = firstName.charAt(0).toUpperCase() + firstName.slice(1);
+
+        return `${greeting}, ${capitalizedName}`;
+    }
+
+    getEmojiForBusinessType(businessType) {
+        const emojiMap = {
+            'veterinaria': '🏥',
+            'barberia': '💈',
+            'spa': '💆',
+            'clinica': '⚕️',
+            'salon': '💅',
+            'peluqueria': '✂️',
+            'farmacia': '💊',
+            'dental': '🦷',
+            'odontologia': '🦷',
+            'otro': '📋'
+        };
+
+        return emojiMap[businessType?.toLowerCase()] || '📋';
     }
 }
 

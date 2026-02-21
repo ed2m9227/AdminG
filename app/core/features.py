@@ -60,28 +60,57 @@ class Feature(str, Enum):
 # Plan Features Mapping
 PLAN_FEATURES: Dict[str, Set[Feature]] = {
     "free": {
+        # Free plan is READ-ONLY demo mode with very limited access
         Feature.VIEW_CUSTOMERS,
-        Feature.CREATE_CUSTOMERS,
         Feature.VIEW_APPOINTMENTS,
-        Feature.VIEW_INVENTORY,
-        Feature.VIEW_PAYMENTS,
-        Feature.VIEW_REPORTS,
     },
     "basic": {
+        # Basic plan (AdminG_Basic) has full CRUD for customers, appointments, payments, basic reports
+        # Basic plan (AdminG_Basic) has full CRUD for customers, appointments, payments, basic reports
         Feature.VIEW_CUSTOMERS,
         Feature.CREATE_CUSTOMERS,
         Feature.EDIT_CUSTOMERS,
+        Feature.DELETE_CUSTOMERS,
         Feature.VIEW_APPOINTMENTS,
         Feature.CREATE_APPOINTMENTS,
         Feature.EDIT_APPOINTMENTS,
-        Feature.VIEW_INVENTORY,
-        Feature.CREATE_PRODUCTS,
-        Feature.EDIT_PRODUCTS,
+        Feature.DELETE_APPOINTMENTS,
         Feature.VIEW_PAYMENTS,
         Feature.CREATE_PAYMENTS,
         Feature.VIEW_REPORTS,
+        # NO inventory, NO advanced features, 1 team member only
+    },
+    "AdminG_Basic": {  # Explicit mapping
+        Feature.VIEW_CUSTOMERS,
+        Feature.CREATE_CUSTOMERS,
+        Feature.EDIT_CUSTOMERS,
+        Feature.DELETE_CUSTOMERS,
+        Feature.VIEW_APPOINTMENTS,
+        Feature.CREATE_APPOINTMENTS,
+        Feature.EDIT_APPOINTMENTS,
+        Feature.DELETE_APPOINTMENTS,
+        Feature.VIEW_PAYMENTS,
+        Feature.CREATE_PAYMENTS,
+        Feature.VIEW_REPORTS,
+    },
+    "AdminG_Plus": {  # Explicit mapping
+        Feature.VIEW_CUSTOMERS,
+        Feature.CREATE_CUSTOMERS,
+        Feature.EDIT_CUSTOMERS,
+        Feature.DELETE_CUSTOMERS,
+        Feature.EXPORT_CUSTOMERS,
+        Feature.VIEW_APPOINTMENTS,
+        Feature.CREATE_APPOINTMENTS,
+        Feature.EDIT_APPOINTMENTS,
+        Feature.DELETE_APPOINTMENTS,
+        Feature.CANCEL_APPOINTMENTS,
+        Feature.VIEW_PAYMENTS,
+        Feature.CREATE_PAYMENTS,
+        Feature.REFUND_PAYMENTS,
+        Feature.VIEW_REPORTS,
+        Feature.EXPORT_REPORTS,
         Feature.VIEW_TEAM,
-        Feature.MANAGE_TEAM_USERS,  # Can manage their own team
+        Feature.MANAGE_TEAM_USERS,
     },
     "plus": {
         Feature.VIEW_CUSTOMERS,
@@ -260,18 +289,37 @@ def get_plan_limits(plan: str) -> Dict[str, int]:
     """
     limits = {
         "free": {
+            # Free is very limited - demo mode only
             "team_members": 1,
-            "customers": 50,
-            "appointments": 100,
-            "reports": 5,
-            "storage_gb": 1,
+            "customers": 10,
+            "appointments": 20,
+            "reports": 0,  # No reports
+            "storage_gb": 0,
+            "services": 5,
         },
         "basic": {
-            "team_members": 3,
+            "team_members": 1,
             "customers": 500,
-            "appointments": 1000,
-            "reports": 25,
-            "storage_gb": 10,
+            "appointments": 500,
+            "reports": 10,
+            "storage_gb": 5,
+            "services": 50,
+        },
+        "AdminG_Basic": {
+            "team_members": 1,
+            "customers": 500,
+            "appointments": 500,
+            "reports": 10,
+            "storage_gb": 5,
+            "services": 50,
+        },
+        "AdminG_Plus": {
+            "team_members": 3,
+            "customers": 2000,
+            "appointments": 2000,
+            "reports": 50,
+            "storage_gb": 25,
+            "services": 200,
         },
         "plus": {
             "team_members": 5,

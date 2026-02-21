@@ -12,6 +12,7 @@ import header from './components/Header.js';
 // Vistas
 import loginView from './views/LoginView.js';
 import registerView from './views/RegisterView.js';
+import onboardingWizard from './views/OnboardingWizard.js';
 import dashboardView from './views/DashboardView.js';
 import customersView from './views/CustomersView.js';
 import inventoryView from './views/InventoryView.js';
@@ -65,7 +66,17 @@ class App {
             this.renderAuthView(registerView);
         });
 
-        // Rutas protegidas (requieren autenticación)
+        // Ruta de onboarding (requiere autenticación pero no requiere onboarding completado)
+        router.register('onboarding', async () => {
+            if (!authService.isAuthenticated()) {
+                await router.navigate('login');
+                return;
+            }
+            this.appRoot.innerHTML = await onboardingWizard.render();
+            onboardingWizard.attachEvents();
+        });
+
+        // Rutas protegidas (requieren autenticación y onboarding completado)
         router.register('dashboard', async () => {
             await this.renderProtectedView(dashboardView);
         });
@@ -179,7 +190,14 @@ class App {
             try {
                 await authService.loadCurrentUser();
                 await authService.loadFeatures();
-                await router.navigate('dashboard');
+                
+                // Check if onboarding is completed
+                const onboardingCompleted = localStorage.getItem('onboarding_completed');
+                if (!onboardingCompleted) {
+                    await router.navigate('onboarding');
+                } else {
+                    await router.navigate('dashboard');
+                }
             } catch (error) {
                 console.error('Error loading user:', error);
                 await router.navigate('login');
@@ -203,6 +221,15 @@ class App {
      * @param {object} view 
      */
     async renderProtectedView(view) {
+        // Check if onboarding is completed
+        const onboardingCompleted = localStorage.getItem('onboarding_completed');
+        
+        if (!onboardingCompleted) {
+            console.log('⚠️ Onboarding not completed, redirecting...');
+            await router.navigate('onboarding');
+            return;
+        }
+
         // Renderizar layout de dashboard
         this.appRoot.innerHTML = `
             <div class="dashboard-layout">
