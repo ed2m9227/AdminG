@@ -373,15 +373,17 @@ textarea:focus {
 .btn {
     padding: 10px 20px;
     border: none;
-    border-radius: var(--radius-sm);
+    border-radius: 8px;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s;
+    transition: all 0.2s ease-in-out;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
+    text-decoration: none;
+    white-space: nowrap;
 }
 
 .btn:disabled {
@@ -389,36 +391,60 @@ textarea:focus {
     cursor: not-allowed;
 }
 
+.btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
 .btn-primary {
-    background: var(--primary);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
     color: white;
 }
 
 .btn-primary:hover:not(:disabled) {
-    background: var(--primary-dark);
+    background: linear-gradient(135deg, var(--primary-dark) 0%, #5568d3 100%);
 }
 
 .btn-success {
-    background: var(--success);
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
     color: white;
 }
 
 .btn-success:hover:not(:disabled) {
-    background: var(--success-dark);
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
 }
 
 .btn-danger {
-    background: var(--danger);
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
     color: white;
 }
 
 .btn-danger:hover:not(:disabled) {
-    background: var(--danger-dark);
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+}
+
+.btn-secondary {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background: #d1d5db;
 }
 
 .btn-sm {
-    padding: 8px 16px;
-    font-size: 13px;
+    padding: 8px 14px;
+    font-size: 12px;
+}
+
+.btn-xs {
+    padding: 6px 12px;
+    font-size: 11px;
 }
 
 .btn-full {
@@ -633,4 +659,166 @@ code {
 
 .btn-danger:hover {
     background: #a81f1f;
+}
+
+/* ========== RESPONSIVE DESIGN ========== */
+
+/* Tablets y móviles grandes (max-width: 1024px) */
+@media (max-width: 1024px) {
+    .dashboard-layout {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+        overflow-y: visible;
+    }
+
+    .main-content {
+        margin-left: 0 !important;
+        width: 100%;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+
+    .admin-header h2 {
+        font-size: 22px;
+    }
+}
+
+/* Tablets pequeñas (max-width: 768px) */
+@media (max-width: 768px) {
+    .auth-box {
+        padding: var(--spacing-lg);
+        max-width: 100%;
+    }
+
+    .auth-title {
+        font-size: 24px;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr !important;
+        gap: 12px;
+    }
+
+    .card {
+        padding: 16px;
+    }
+
+    .card-header {
+        flex-direction: column;
+        gap: 12px;
+        align-items: flex-start;
+    }
+
+    .btn-full {
+        width: 100%;
+    }
+
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    table {
+        min-width: 600px;
+    }
+
+    .topbar {
+        padding: 12px;
+    }
+
+    .topbar-title {
+        font-size: 18px;
+    }
+}
+
+/* Móviles (max-width: 576px) */
+@media (max-width: 576px) {
+    .auth-container {
+        padding: var(--spacing-md);
+    }
+
+    .auth-box {
+        padding: var(--spacing-md);
+    }
+
+    .auth-title {
+        font-size: 20px;
+    }
+
+    .btn {
+        padding: 10px 14px;
+        font-size: 13px;
+    }
+
+    .card-title {
+        font-size: 18px;
+    }
+
+    .sidebar-header h2 {
+        font-size: 20px;
+    }
+
+    .menu-item {
+        padding: 10px var(--spacing-md);
+        font-size: 13px;
+    }
+
+    .form-group label {
+        font-size: 13px;
+    }
+
+    input, select, textarea {
+        font-size: 14px;
+    }
+
+    .modal-content {
+        padding: 16px;
+        width: 95%;
+    }
+
+    .modal-title {
+        font-size: 18px;
+    }
+}
+
+/* Orientación landscape en móviles */
+@media (max-width: 768px) and (orientation: landscape) {
+    .sidebar {
+        display: none;
+    }
+
+    .main-content {
+        margin-left: 0 !important;
+    }
+}
+
+/* Ajustes para pantallas muy pequeñas */
+@media (max-width: 375px) {
+    .stats-grid {
+        gap: 8px;
+    }
+
+    .stat-card {
+        padding: 12px;
+    }
+
+    .stat-value {
+        font-size: 20px;
+    }
+
+    .card {
+        padding: 12px;
+    }
+
+    .btn {
+        padding: 8px 12px;
+        font-size: 12px;
+    }
 }
