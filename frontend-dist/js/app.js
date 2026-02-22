@@ -24,7 +24,13 @@ import {
     adminView 
 } from './views/OtherViews.js';
 import { masterAdminView, teamManagementView } from './views/AdminPanelView.js';
+import { BusinessTypesView } from './views/BusinessTypesView.js';
 import modal from './components/Modal.js';
+
+if (typeof window !== 'undefined' && typeof window.newUrlFound !== 'function') {
+    // Guard for injected launcher scripts that expect this global.
+    window.newUrlFound = () => {};
+}
 
 class App {
     constructor() {
@@ -123,13 +129,24 @@ class App {
         router.register('team', async () => {
             await this.renderProtectedView(teamManagementView);
         });
+
+        // Ruta para gestión de tipos de negocio
+        router.register('businesstypes', async () => {
+            const user = await authService.loadCurrentUser();
+            if (user.role === 'admin') {
+                await this.renderProtectedView(new BusinessTypesView());
+            } else {
+                modal.showError('Solo administradores pueden acceder a esta sección');
+                await router.navigate('dashboard');
+            }
+        });
     }
 
     /**
      * Configurar hooks de navegación
      */
     setupNavigationHooks() {
-        // Hook antes de navegar - verificar autenticación
+        // Hook antes de navegar - verificar autenticación y onboarding
         router.beforeNavigate(async (path) => {
             const publicRoutes = ['login', 'register'];
             const isPublicRoute = publicRoutes.includes(path);
@@ -138,6 +155,16 @@ class App {
                 console.log('⚠️ Redirecting to login - not authenticated');
                 await router.navigate('login');
                 return false; // Cancelar navegación original
+            }
+
+            // Check onboarding completion for protected routes
+            if (!isPublicRoute && path !== 'onboarding') {
+                const onboardingCompleted = localStorage.getItem('onboarding_completed');
+                if (!onboardingCompleted) {
+                    console.log('⚠️ Onboarding not completed, redirecting...');
+                    await router.navigate('onboarding');
+                    return false;
+                }
             }
 
             if (!isPublicRoute) {
@@ -188,10 +215,18 @@ class App {
     async loadInitialView() {
         if (authService.isAuthenticated()) {
             try {
-                await authService.loadCurrentUser();
+                const user = await authService.loadCurrentUser();
                 await authService.loadFeatures();
                 
-                // Check if onboarding is completed
+                // Admin accounts bypass onboarding and get full access
+                if (user.plan === 'admin') {
+                    console.log('🔑 Admin account detected - bypassing onboarding');
+                    localStorage.setItem('onboarding_completed', 'true');
+                    await router.navigate('dashboard');
+                    return;
+                }
+                
+                // Check if onboarding is completed for regular users
                 const onboardingCompleted = localStorage.getItem('onboarding_completed');
                 if (!onboardingCompleted) {
                     await router.navigate('onboarding');
@@ -221,6 +256,12 @@ class App {
      * @param {object} view 
      */
     async renderProtectedView(view) {
+        // Admin accounts always have full access
+        const user = authService.getCurrentUser();
+        if (user && user.plan === 'admin') {
+            localStorage.setItem('onboarding_completed', 'true');
+        }
+        
         // Check if onboarding is completed
         const onboardingCompleted = localStorage.getItem('onboarding_completed');
         
