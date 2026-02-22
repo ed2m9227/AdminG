@@ -12,6 +12,8 @@ export class MasterAdminView {
     constructor() {
         this.statistics = {};
         this.users = [];
+        this.tableClickHandler = null;
+        this.searchHandler = null;
     }
 
     render() {
@@ -158,8 +160,17 @@ export class MasterAdminView {
     }
 
     attachEventListeners() {
-        // Cambiar rol
-        document.addEventListener('click', async (e) => {
+        // Limpiar listeners previos
+        if (this.tableClickHandler) {
+            document.removeEventListener('click', this.tableClickHandler);
+        }
+        if (this.searchHandler) {
+            document.getElementById('userSearch')?.removeEventListener('keyup', this.searchHandler);
+        }
+
+        // Crear handler de click (único)
+        this.tableClickHandler = async (e) => {
+            // Cambiar rol
             if (e.target.classList.contains('change-role-btn')) {
                 const userId = e.target.dataset.userId;
                 const user = this.users.find(u => u.id == userId);
@@ -207,17 +218,30 @@ export class MasterAdminView {
                     }
                 }
             }
-        });
+        };
 
-        // Búsqueda de usuarios
-        document.getElementById('userSearch')?.addEventListener('keyup', (e) => {
+        // Crear handler de búsqueda (único)
+        this.searchHandler = (e) => {
             const term = e.target.value.toLowerCase();
             this.users = this.usersAll.filter(u =>
                 u.email.toLowerCase().includes(term) ||
                 u.plan.toLowerCase().includes(term)
             );
             this.renderUsersTable();
-        });
+            // Re-adjuntar listeners después de re-renderizar tabla
+            this.attachSearchListener();
+        };
+
+        // Adjuntar handlers
+        document.addEventListener('click', this.tableClickHandler);
+        this.attachSearchListener();
+    }
+
+    attachSearchListener() {
+        const searchInput = document.getElementById('userSearch');
+        if (searchInput && this.searchHandler) {
+            searchInput.addEventListener('keyup', this.searchHandler);
+        }
     }
 }
 
@@ -226,6 +250,9 @@ export class TeamManagementView {
     constructor() {
         this.teamData = {};
         this.members = [];
+        this.inviteHandler = null;
+        this.createHandler = null;
+        this.removeHandler = null;
     }
 
     render() {
@@ -348,8 +375,19 @@ export class TeamManagementView {
     }
 
     attachEventListeners() {
+        // Limpiar listeners previos
+        if (this.inviteHandler) {
+            document.getElementById('inviteUserBtn')?.removeEventListener('click', this.inviteHandler);
+        }
+        if (this.createHandler) {
+            document.getElementById('createUserBtn')?.removeEventListener('click', this.createHandler);
+        }
+        if (this.removeHandler) {
+            document.removeEventListener('click', this.removeHandler);
+        }
+
         // Invitar miembro
-        document.getElementById('inviteUserBtn')?.addEventListener('click', async () => {
+        this.inviteHandler = async () => {
             const email = prompt('Ingresa el email del usuario a invitar:');
             if (!email) return;
 
@@ -367,10 +405,10 @@ export class TeamManagementView {
             } catch (error) {
                 modal.alert({ title: 'Error', message: error.message, type: 'error' });
             }
-        });
+        };
 
         // Crear usuario directo
-        document.getElementById('createUserBtn')?.addEventListener('click', async () => {
+        this.createHandler = async () => {
             const email = prompt('Email del nuevo usuario:');
             if (!email) return;
             const password = prompt('Password temporal (min 6 caracteres):');
@@ -393,10 +431,10 @@ export class TeamManagementView {
             } catch (error) {
                 modal.alert({ title: 'Error', message: error.message, type: 'error' });
             }
-        });
+        };
 
         // Remover miembro
-        document.addEventListener('click', async (e) => {
+        this.removeHandler = async (e) => {
             if (e.target.classList.contains('remove-member-btn')) {
                 const memberId = e.target.dataset.memberId;
                 const member = this.members.find(m => m.id == memberId);
@@ -419,7 +457,12 @@ export class TeamManagementView {
                     }
                 }
             }
-        });
+        };
+
+        // Adjuntar handlers
+        document.getElementById('inviteUserBtn')?.addEventListener('click', this.inviteHandler);
+        document.getElementById('createUserBtn')?.addEventListener('click', this.createHandler);
+        document.addEventListener('click', this.removeHandler);
     }
 }
 
