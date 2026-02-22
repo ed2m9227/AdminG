@@ -27,8 +27,8 @@ export class AppointmentsView {
         return `
             <div class="card">
                 <div class="card-header">
-                    <h2 class="card-title">Agenda de Citas</h2>
-                    <button class="btn btn-success" id="btnNewAppointment">+ Nueva Cita</button>
+                    <h2 class="card-title">Citas</h2>
+                    <button class="btn btn-success" id="btnNewAppointment">+ 📅 Nueva Cita</button>
                 </div>
                 <div class="card-body" id="appointmentsContainer">
                     ${this.renderTable()}
@@ -53,8 +53,8 @@ export class AppointmentsView {
                 key: 'actions',
                 label: 'Acciones',
                 formatter: (_, row) => `
-                    <button class="btn btn-sm btn-primary" data-edit-appointment="${row.id}">Editar</button>
-                    <button class="btn btn-sm btn-danger" data-delete-appointment="${row.id}">Eliminar</button>
+                    <button class="btn btn-sm btn-primary" data-edit-appointment="${row.id}">✏️ Editar</button>
+                    <button class="btn btn-sm btn-danger" data-delete-appointment="${row.id}">🗑️ Eliminar</button>
                 `
             });
         }
@@ -301,12 +301,21 @@ export class PaymentsView {
         this.payments = [];
     }
 
+    formatCurrency(value) {
+        return new Intl.NumberFormat('es-CO', { 
+            style: 'currency', 
+            currency: 'COP',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        }).format(value);
+    }
+
     render() {
         return `
             <div class="card">
                 <div class="card-header">
-                    <h2 class="card-title">Registro de Pagos</h2>
-                    <button class="btn btn-success" id="btnNewPayment">+ Nuevo Pago</button>
+                    <h2 class="card-title">Pagos</h2>
+                    <button class="btn btn-success" id="btnNewPayment">+ 💳 Nuevo Pago</button>
                 </div>
                 <div class="card-body" id="paymentsContainer">
                     ${this.renderTable()}
@@ -323,7 +332,7 @@ export class PaymentsView {
             { key: 'created_at', label: 'Fecha', type: 'datetime' },
             { key: 'customer.full_name', label: 'Cliente', formatter: (v) => v || 'N/A' },
             { key: 'method', label: 'Método' },
-            { key: 'final_amount', label: 'Monto', type: 'currency' },
+            { key: 'final_amount', label: 'Monto', formatter: (v) => this.formatCurrency(v || 0) },
             { key: 'status', label: 'Estado', type: 'badge', badgeClass: 'success' }
         ];
         
@@ -332,8 +341,8 @@ export class PaymentsView {
                 key: 'actions',
                 label: 'Acciones',
                 formatter: (_, row) => `
-                    <button class="btn btn-sm btn-primary" data-edit-payment="${row.id}">Editar</button>
-                    <button class="btn btn-sm btn-danger" data-delete-payment="${row.id}">Eliminar</button>
+                    <button class="btn btn-sm btn-primary" data-edit-payment="${row.id}">✏️ Editar</button>
+                    <button class="btn btn-sm btn-danger" data-delete-payment="${row.id}">🗑️ Eliminar</button>
                 `
             });
         }
@@ -573,11 +582,23 @@ export class CashRegisterView {
         this.cart = [];
         this.total = 0;
         this.inventory = [];
+        this.movements = [];
+    }
+
+    formatCurrency(value) {
+        // Formato colombiano: xxx.xxx,xx
+        return new Intl.NumberFormat('es-CO', { 
+            style: 'currency', 
+            currency: 'COP',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        }).format(value);
     }
 
     render() {
         return `
-            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 20px;">
+                <!-- Punto de Venta -->
                 <div class="card">
                     <div class="card-header">
                         <h2 class="card-title">Punto de Venta</h2>
@@ -587,12 +608,13 @@ export class CashRegisterView {
                             <label>Buscar Producto</label>
                             <input type="text" id="searchProduct" placeholder="Buscar en inventario..." style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
                         </div>
-                        <div id="productsList" style="max-height: 400px; overflow-y: auto; border: 1px solid #eee; border-radius: 4px; padding: 10px;">
+                        <div id="productsList" style="max-height: 500px; overflow-y: auto; border: 1px solid #eee; border-radius: 4px; padding: 10px;">
                             <!-- Productos aquí -->
                         </div>
                     </div>
                 </div>
 
+                <!-- Carrito -->
                 <div style="display: flex; flex-direction: column; gap: 20px;">
                     <div class="card">
                         <div class="card-header">
@@ -604,10 +626,10 @@ export class CashRegisterView {
                             </div>
                             <hr style="margin: 12px 0;">
                             <div style="font-size: 18px; font-weight: bold; margin-bottom: 12px;">
-                                Total: <span id="totalAmount">$0.00</span>
+                                Total: <span id="totalAmount" style="color: #667eea;">${this.formatCurrency(0)}</span>
                             </div>
-                            <button class="btn btn-success" id="btnCheckout" style="width: 100%; margin-bottom: 8px;">Procesar Pago</button>
-                            <button class="btn btn-light" id="btnClearCart">Limpiar Carrito</button>
+                            <button class="btn btn-success" id="btnCheckout" style="width: 100%; margin-bottom: 8px;">💳 Procesar Pago</button>
+                            <button class="btn btn-secondary" id="btnClearCart">🗑️ Limpiar Carrito</button>
                         </div>
                     </div>
 
@@ -619,6 +641,30 @@ export class CashRegisterView {
                             <select id="cashCustomer" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
                                 <option value="">Sin cliente</option>
                             </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Operaciones Caja -->
+                <div style="display: flex; flex-direction: column; gap: 20px;">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Operaciones</h2>
+                        </div>
+                        <div class="card-body">
+                            <button class="btn btn-full" id="btnAddExpense" style="margin-bottom: 8px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white;">📊 Agregar Gasto</button>
+                            <button class="btn btn-full" id="btnAddBase" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white;">💰 Agregar Base</button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Movimientos</h2>
+                        </div>
+                        <div class="card-body">
+                            <div id="movementsList" style="max-height: 300px; overflow-y: auto; font-size: 12px;">
+                                <p style="color: #7f8c8d; text-align: center;">Sin movimientos</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -659,6 +705,12 @@ export class CashRegisterView {
         const btnClear = document.getElementById('btnClearCart');
         if (btnClear) btnClear.addEventListener('click', () => this.clearCart());
 
+        const btnAddExpense = document.getElementById('btnAddExpense');
+        if (btnAddExpense) btnAddExpense.addEventListener('click', () => this.addExpense());
+
+        const btnAddBase = document.getElementById('btnAddBase');
+        if (btnAddBase) btnAddBase.addEventListener('click', () => this.addBase());
+
         const searchInput = document.getElementById('searchProduct');
         if (searchInput) {
             searchInput.addEventListener('input', (e) => this.filterProducts(e.target.value));
@@ -677,11 +729,17 @@ export class CashRegisterView {
             });
         }
 
-        // Event delegation para quitar del carrito
+        // Event delegation para cambiar cantidad y quitar del carrito
         const cartItems = document.getElementById('cartItems');
         if (cartItems) {
             cartItems.addEventListener('click', (e) => {
-                if (e.target.hasAttribute('data-remove-item')) {
+                if (e.target.hasAttribute('data-decrease-qty')) {
+                    const index = parseInt(e.target.getAttribute('data-item-index'));
+                    this.decreaseQuantity(index);
+                } else if (e.target.hasAttribute('data-increase-qty')) {
+                    const index = parseInt(e.target.getAttribute('data-item-index'));
+                    this.increaseQuantity(index);
+                } else if (e.target.hasAttribute('data-remove-item')) {
                     const index = parseInt(e.target.getAttribute('data-item-index'));
                     this.removeFromCart(index);
                 }
@@ -703,9 +761,9 @@ export class CashRegisterView {
                 <div style="padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
                     <div>
                         <strong>${item.name || item.product_name}</strong>
-                        <p style="color: #7f8c8d; font-size: 12px; margin: 4px 0;">$${parseFloat(unitPrice).toFixed(2)} (Stock: ${item.quantity || 0})</p>
+                        <p style="color: #7f8c8d; font-size: 12px; margin: 4px 0;">${this.formatCurrency(parseFloat(unitPrice))} (Stock: ${item.quantity || 0})</p>
                     </div>
-                    <button class="btn btn-primary" data-add-to-cart data-product-id="${item.id}" data-product-name="${(item.name || item.product_name).replace(/"/g, '&quot;')}" data-product-price="${unitPrice}">+</button>
+                    <button class="btn btn-primary btn-sm" data-add-to-cart data-product-id="${item.id}" data-product-name="${(item.name || item.product_name).replace(/"/g, '&quot;')}" data-product-price="${unitPrice}">+</button>
                 </div>
             `;
         }).join('');
@@ -726,37 +784,117 @@ export class CashRegisterView {
         this.updateCart();
     }
 
-    updateCart() {
-        this.total = this.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-        
-        const container = document.getElementById('cartItems');
-        if (container) {
-            container.innerHTML = this.cart.map((item, idx) => `
-                <div style="padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <strong>${item.name}</strong>
-                        <p style="color: #7f8c8d; font-size: 12px; margin: 4px 0;">$${item.price} x ${item.quantity} = $${(item.price * item.quantity).toFixed(2)}</p>
-                    </div>
-                    <button class="btn btn-danger" data-remove-item data-item-index="${idx}">Quitar</button>
-                </div>
-            `).join('');
+    decreaseQuantity(index) {
+        if (this.cart[index]) {
+            this.cart[index].quantity--;
+            if (this.cart[index].quantity <= 0) {
+                this.cart.splice(index, 1);
+            }
+            this.updateCart();
         }
+    }
 
-        const totalEl = document.getElementById('totalAmount');
-        if (totalEl) {
-            totalEl.textContent = '$' + this.total.toFixed(2);
+    increaseQuantity(index) {
+        if (this.cart[index]) {
+            this.cart[index].quantity++;
+            this.updateCart();
         }
     }
 
     removeFromCart(index) {
-        this.cart.splice(index, 1);
-        this.updateCart();
+        if (this.cart[index]) {
+            this.cart.splice(index, 1);
+            this.updateCart();
+        }
     }
 
     clearCart() {
         this.cart = [];
         this.total = 0;
         this.updateCart();
+    }
+
+    updateCart() {
+        this.total = this.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        
+        const container = document.getElementById('cartItems');
+        if (container) {
+            if (this.cart.length === 0) {
+                container.innerHTML = '<p style="color: #7f8c8d; text-align: center;">Carrito vacío</p>';
+            } else {
+                container.innerHTML = this.cart.map((item, idx) => `
+                    <div style="padding: 10px; border-bottom: 1px solid #eee;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <strong>${item.name}</strong>
+                            <button class="btn btn-danger btn-xs" data-remove-item data-item-index="${idx}">🗑️</button>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; color: #6b7280; font-size: 12px;">
+                            <span>${this.formatCurrency(item.price)}</span>
+                            <div style="display: flex; gap: 4px; align-items: center;">
+                                <button class="btn btn-xs" style="background: #e5e7eb; color: #1f2937;" data-decrease-qty data-item-index="${idx}">−</button>
+                                <span style="min-width: 20px; text-align: center;">${item.quantity}</span>
+                                <button class="btn btn-xs" style="background: #e5e7eb; color: #1f2937;" data-increase-qty data-item-index="${idx}">+</button>
+                            </div>
+                            <span style="font-weight: 600;">${this.formatCurrency(item.price * item.quantity)}</span>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        const totalEl = document.getElementById('totalAmount');
+        if (totalEl) {
+            totalEl.textContent = this.formatCurrency(this.total);
+        }
+    }
+
+    addExpense() {
+        const amount = prompt('Monto del gasto:');
+        if (amount && !isNaN(amount)) {
+            const movement = {
+                type: 'expense',
+                amount: parseFloat(amount),
+                timestamp: new Date().toLocaleTimeString('es-CO')
+            };
+            this.movements.unshift(movement);
+            this.updateMovements();
+        }
+    }
+
+    addBase() {
+        const amount = prompt('Monto de la base:');
+        if (amount && !isNaN(amount)) {
+            const movement = {
+                type: 'base',
+                amount: parseFloat(amount),
+                timestamp: new Date().toLocaleTimeString('es-CO')
+            };
+            this.movements.unshift(movement);
+            this.updateMovements();
+        }
+    }
+
+    updateMovements() {
+        const container = document.getElementById('movementsList');
+        if (!container) return;
+
+        if (this.movements.length === 0) {
+            container.innerHTML = '<p style="color: #7f8c8d; text-align: center;">Sin movimientos</p>';
+        } else {
+            container.innerHTML = this.movements.map(movement => {
+                const isExpense = movement.type === 'expense';
+                const icon = isExpense ? '📊' : '💰';
+                const label = isExpense ? 'Gasto' : 'Base';
+                const color = isExpense ? '#ef4444' : '#10b981';
+                return `
+                    <div style="padding: 8px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; font-size: 11px;">
+                        <span>${icon} ${label}</span>
+                        <span style="color: ${color}; font-weight: 600;">${this.formatCurrency(movement.amount)}</span>
+                        <span style="color: #9ca3af;">${movement.timestamp}</span>
+                    </div>
+                `;
+            }).join('');
+        }
     }
 
     async processPayment() {
@@ -770,12 +908,26 @@ export class CashRegisterView {
             customer_id: customerId ? parseInt(customerId) : null,
             amount: this.total,
             method: 'cash',
-            notes: `Venta POS: ${this.cart.map(i => i.name).join(', ')}`
+            notes: `Venta POS: ${this.cart.map(i => `${i.name} (${i.quantity})`).join(', ')}`
         };
 
         try {
-          const response = await apiService.post('/payments/', paymentData);
-            await modal.alert({ title: 'Éxito', message: `Pago de $${this.total.toFixed(2)} procesado correctamente`, type: 'success' });
+            const response = await apiService.post('/payments/', paymentData);
+            
+            // Agregar movimiento de venta
+            const movement = {
+                type: 'sale',
+                amount: this.total,
+                timestamp: new Date().toLocaleTimeString('es-CO')
+            };
+            this.movements.unshift(movement);
+            this.updateMovements();
+
+            await modal.alert({ 
+                title: 'Pago Procesado', 
+                message: `Venta de ${this.formatCurrency(this.total)} procesada correctamente`, 
+                type: 'success' 
+            });
             this.clearCart();
         } catch (error) {
             const errorMsg = typeof error === 'string' ? error : (error.message || error.detail || 'Error desconocido');
@@ -795,6 +947,15 @@ export class ReportsView {
         };
     }
 
+    formatCurrency(value) {
+        return new Intl.NumberFormat('es-CO', { 
+            style: 'currency', 
+            currency: 'COP',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        }).format(value);
+    }
+
     render() {
         const user = authService.getCurrentUser();
         const isAdmin = user?.role === 'admin';
@@ -809,12 +970,12 @@ export class ReportsView {
             <div class="stats-grid">
                 <div class="stat-card">
                     <h3>Ventas del Mes</h3>
-                    <div class="value">$${this.stats.sales.toFixed(2)}</div>
+                    <div class="value">${this.formatCurrency(this.stats.sales)}</div>
                 </div>
                 ${canViewExpenses ? `
                 <div class="stat-card">
                     <h3>Gastos del Mes</h3>
-                    <div class="value">$${this.stats.expenses.toFixed(2)}</div>
+                    <div class="value">${this.formatCurrency(this.stats.expenses)}</div>
                 </div>
                 ` : `
                 <div class="stat-card" style="opacity: 0.5;">
@@ -826,7 +987,7 @@ export class ReportsView {
                 ${canViewProfit ? `
                 <div class="stat-card">
                     <h3>Ganancia Neta</h3>
-                    <div class="value">$${this.stats.profit.toFixed(2)}</div>
+                    <div class="value">${this.formatCurrency(this.stats.profit)}</div>
                 </div>
                 ` : `
                 <div class="stat-card" style="opacity: 0.5;">
@@ -912,13 +1073,32 @@ export class AdminView {
     render() {
         return `
             <div class="card">
-                <h2 class="card-title">Panel de Administración</h2>
-                <p style="color: #7f8c8d; margin-top: 10px;">
-                    Gestión de usuarios, planes y configuración del sistema.
-                </p>
-                <div class="empty-state">
-                    <div class="empty-state-icon">⚙️</div>
-                    <p>Módulo de administración en desarrollo</p>
+                <div class="card-header">
+                    <h2 class="card-title">⚙️ Panel de Administración</h2>
+                </div>
+                <div class="card-body">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px;">
+                            <div style="font-size: 32px; margin-bottom: 10px;">👥</div>
+                            <div style="font-weight: 600; margin-bottom: 8px;">Gestione Usuarios</div>
+                            <div style="font-size: 12px; opacity: 0.9;">Crear, editar y eliminar usuarios</div>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 20px; border-radius: 8px;">
+                            <div style="font-size: 32px; margin-bottom: 10px;">📋</div>
+                            <div style="font-weight: 600; margin-bottom: 8px;">Gestione Planes</div>
+                            <div style="font-size: 12px; opacity: 0.9;">Configurar planes y suscripciones</div>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 20px; border-radius: 8px;">
+                            <div style="font-size: 32px; margin-bottom: 10px;">🔧</div>
+                            <div style="font-weight: 600; margin-bottom: 8px;">Configuración</div>
+                            <div style="font-size: 12px; opacity: 0.9;">Ajustes del sistema y negocio</div>
+                        </div>
+                    </div>
+                    <div style="background: #f0f8ff; padding: 16px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #667eea;">
+                        <p style="margin: 0; color: #2c3e50; font-size: 13px;">
+                            📌 Los módulos de administración avanzada estarán disponibles próximamente. Por ahora, el uso está restringido al manejo de usuarios autenticados.
+                        </p>
+                    </div>
                 </div>
             </div>
         `;

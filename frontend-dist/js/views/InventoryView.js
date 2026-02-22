@@ -14,6 +14,15 @@ export class InventoryView {
         this.items = [];
     }
 
+    formatCurrency(value) {
+        return new Intl.NumberFormat('es-CO', { 
+            style: 'currency', 
+            currency: 'COP',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        }).format(value);
+    }
+
     render() {
         const user = authService.getCurrentUser();
         const isAdmin = user && user.role === 'admin';
@@ -21,11 +30,11 @@ export class InventoryView {
         return `
             <div class="card">
                 <div class="card-header">
-                    <h2 class="card-title">Inventario de Productos</h2>
+                    <h2 class="card-title">Inventario</h2>
                     <div style="display: flex; gap: 10px;">
-                        ${isAdmin ? '<button class="btn btn-primary" id="btnNewCategory">+ Nueva Categoría</button>' : ''}
+                        ${isAdmin ? '<button class="btn btn-primary" id="btnNewCategory">+ 📂 Nueva Categoría</button>' : ''}
                         <button class="btn btn-success" id="btnNewProduct">
-                            + Nuevo Producto
+                            + 📦 Nuevo Producto
                         </button>
                     </div>
                 </div>
@@ -45,14 +54,14 @@ export class InventoryView {
             { key: 'name', label: 'Nombre' },
             { key: 'category', label: 'Categoría' },
             { key: 'quantity', label: 'Stock' },
-            { key: 'unit_price', label: 'Precio', type: 'currency' },
+            { key: 'unit_price', label: 'Precio', formatter: (v) => this.formatCurrency(v || 0) },
             {
                 key: 'actions',
                 label: 'Acciones',
                 formatter: (_, row) => {
-                    let buttons = `<button class="btn btn-sm" data-edit="${row.id}">Editar</button>`;
+                    let buttons = `<button class="btn btn-sm btn-primary" data-edit="${row.id}">✏️ Editar</button>`;
                     if (isAdmin) {
-                        buttons += ` <button class="btn btn-sm btn-danger" data-delete-item="${row.id}">Eliminar</button>`;
+                        buttons += ` <button class="btn btn-sm btn-danger" data-delete-item="${row.id}">🗑️ Eliminar</button>`;
                     }
                     return buttons;
                 }
