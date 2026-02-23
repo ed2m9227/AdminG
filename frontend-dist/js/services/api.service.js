@@ -106,7 +106,7 @@ export class ApiService {
     }
 
     async getBusinessTypes() {
-        return this.get('/business/types');
+        return this.get('/api/admin/business-types/public/list', false);
     }
 
     async getBusinessConfig() {
