@@ -26,6 +26,7 @@ export class Sidebar {
             // Team & Admin
             { id: 'team', icon: '👫', label: 'Mi Equipo', route: 'team' },
             { id: 'admin', icon: '⚙️', label: 'Administración', route: 'admin', roleRequired: 'admin' },
+            { id: 'businesstypes', icon: '🏢', label: 'Tipos de Negocio', route: 'businesstypes', roleRequired: 'admin' },
         ];
     }
 
@@ -48,6 +49,7 @@ export class Sidebar {
         const userEmail = user?.email || 'Usuario';
 
         return `
+            <div class="sidebar-overlay" id="sidebarOverlay"></div>
             <div class="sidebar" id="sidebar">
                 <div class="sidebar-header">
                     <h2>AdminG</h2>
@@ -85,8 +87,12 @@ export class Sidebar {
      */
     init() {
         const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        const toggleBtn = document.getElementById('sidebarToggle');
+
         if (!sidebar) return;
 
+        // Click en menu items
         sidebar.addEventListener('click', (e) => {
             const menuItem = e.target.closest('.menu-item');
             if (menuItem) {
@@ -94,9 +100,79 @@ export class Sidebar {
                 if (route) {
                     this.setActiveItem(route);
                     router.navigate(route);
+                    
+                    // Cerrar sidebar en móvil después de seleccionar
+                    this.closeSidebar();
                 }
             }
         });
+
+        // Toggle button (hamburger menu)
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', () => {
+                this.toggleSidebar();
+            });
+        }
+
+        // Click en overlay para cerrar
+        if (overlay) {
+            overlay.addEventListener('click', () => {
+                this.closeSidebar();
+            });
+        }
+    }
+
+    /**
+     * Toggle sidebar visibility (expand/collapse drawer)
+     */
+    toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        const isActive = sidebar?.classList.contains('active');
+        
+        if (isActive) {
+            this.closeSidebar();
+        } else {
+            this.openSidebar();
+        }
+    }
+
+    /**
+     * Cerrar sidebar (volver a modo compacto)
+     */
+    closeSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        const mainContent = document.querySelector('.main-content');
+        
+        if (sidebar) {
+            sidebar.classList.remove('active');
+        }
+        if (overlay) {
+            overlay.classList.remove('active');
+        }
+        if (mainContent) {
+            mainContent.style.marginLeft = '80px';
+        }
+    }
+
+    /**
+     * Abrir sidebar (drawer completo)
+     */
+    openSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        const mainContent = document.querySelector('.main-content');
+        
+        if (sidebar) {
+            sidebar.classList.add('active');
+        }
+        if (overlay) {
+            overlay.classList.add('active');
+        }
+        if (mainContent) {
+            mainContent.style.marginLeft = '0';
+        }
     }
 
     /**

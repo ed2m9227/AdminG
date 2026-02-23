@@ -13,11 +13,11 @@ def create_admin():
         existing = db.query(User).filter(User.email == "admin@admingpro.com").first()
         
         if existing:
-            print(f"⚠️  Admin user already exists with:")
+            print("⚠️  Admin user already exists with:")
             print(f"   Email: {existing.email}")
             print(f"   Role: {existing.role}")
             print(f"   Plan: {existing.plan}")
-            print(f"\n🗑️  Deleting old admin...")
+            print("\n🗑️  Deleting old admin...")
             db.delete(existing)
             db.commit()
             print("✅ Old admin deleted")
@@ -38,7 +38,7 @@ def create_admin():
         
         print("\n✅ Admin user created successfully!")
         print(f"   Email: {admin.email}")
-        print(f"   Password: admin123")
+        print("   Password: admin123")
         print(f"   Role: {admin.role}")
         print(f"   Plan: {admin.plan}")
         print(f"   ID: {admin.id}")

@@ -12,22 +12,22 @@ export class CustomersView {
     constructor() {
         this.customers = [];
         this.businessConfig = null;
-        this.petFieldLabels = {
+        const petFieldLabels = {
             name: 'Nombre',
-            animal_type: 'Tipo de animal',
+            animal_type: 'Tipo de Animal',
             breed: 'Raza',
             color_description: 'Color',
-            age_years: 'Edad (anos)',
-            age_months: 'Edad (meses)',
+            age_years: 'Edad (Años)',
+            age_months: 'Edad (Meses)',
             weight_kg: 'Peso (kg)',
-            gender: 'Genero',
-            date_of_birth: 'Fecha de nacimiento',
+            gender: 'Género',
+            date_of_birth: 'Fecha de Nacimiento',
             microchip: 'Microchip',
-            neutered_spayed: 'Esterilizado',
+            neutered_spayed: 'Esterilizado/a',
             allergies: 'Alergias',
             current_medications: 'Medicamentos',
-            last_checkup_date: 'Ultimo control',
-            vaccination_status: 'Vacunas',
+            last_checkup_date: 'Último Control',
+            vaccination_status: 'Estado de Vacunas',
             notes: 'Notas'
         };
     }
@@ -302,9 +302,9 @@ export class CustomersView {
                 const checked = value ? 'checked' : '';
                 return `
                     <div class="form-group">
-                        <label>
-                            <input type="checkbox" name="pet_${key}" ${checked}>
-                            ${this.petFieldLabels[key]}
+                        <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 0; cursor: pointer;">
+                            <input type="checkbox" name="pet_${key}" ${checked} style="width: auto; margin: 0;">
+                            <span>${this.petFieldLabels[key]}</span>
                         </label>
                     </div>
                 `;

@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from typing import List
 
-from app.db.database import get_db
+from app.db.session import get_db
 from app.models.business_type import BusinessType
 from app.modules.admin.schemas.business_type import (
     BusinessTypeCreate,

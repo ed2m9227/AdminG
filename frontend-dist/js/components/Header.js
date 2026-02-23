@@ -6,6 +6,7 @@
 
 import authService from '../services/auth.service.js';
 import router from '../utils/router.js';
+import sidebar from './Sidebar.js';
 
 export class Header {
     constructor() {
@@ -33,7 +34,7 @@ export class Header {
         return `
             <div class="topbar">
                 <div class="topbar-left">
-                    <button class="btn btn-sm btn-light" id="sidebarToggle" title="Ocultar barra lateral">
+                    <button class="btn btn-sm btn-light sidebar-toggle" id="sidebarToggle" title="Ocultar barra lateral">
                         ☰
                     </button>
                     <h1 class="page-title">${title}</h1>
@@ -68,8 +69,8 @@ export class Header {
             if (e.target.id === 'logoutBtn') {
                 this.handleLogout();
             }
-            if (e.target.id === 'sidebarToggle') {
-                document.body.classList.toggle('sidebar-collapsed');
+            if (e.target.id === 'sidebarToggle' || e.target.closest('#sidebarToggle')) {
+                sidebar.toggleSidebar();
             }
         });
     }

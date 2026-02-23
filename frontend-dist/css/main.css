@@ -114,6 +114,9 @@ body {
     height: 100vh;
     overflow-y: auto;
     z-index: 100;
+    left: 0;
+    top: 0;
+    transition: transform 0.3s ease-in-out;
 }
 
 .sidebar-header {
@@ -177,6 +180,44 @@ body {
 
 .btn-light:hover {
     background: var(--gray-300);
+}
+
+/* Hamburger Menu Toggle */
+.sidebar-toggle {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--gray-800);
+    font-size: 24px;
+    cursor: pointer;
+    padding: 8px;
+    transition: transform 0.2s ease-in-out;
+}
+
+.sidebar-toggle:hover {
+    transform: scale(1.1);
+}
+
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 99;
+}
+
+.sidebar-overlay.active {
+    display: block;
+}
+
+.main-content {
+    margin-left: 250px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 .sidebar-collapsed .sidebar {
@@ -665,20 +706,102 @@ code {
 
 /* Tablets y móviles grandes (max-width: 1024px) */
 @media (max-width: 1024px) {
-    .dashboard-layout {
-        flex-direction: column;
+    /* Sidebar compacto por defecto: solo iconos */
+    .sidebar {
+        width: 80px;
+        padding: var(--spacing-md) 0;
+        position: fixed;
+        left: 0;
+        top: 0;
+        height: 100vh;
+        z-index: 100;
+        overflow-y: auto;
     }
 
-    .sidebar {
-        width: 100%;
-        height: auto;
-        position: relative;
-        overflow-y: visible;
+    /* Drawer completo al expandir */
+    .sidebar.active {
+        width: 250px;
+        z-index: 101;
+    }
+
+    .sidebar-header {
+        text-align: center;
+        padding: 0 var(--spacing-sm) var(--spacing-lg);
+        border-bottom: 1px solid var(--sidebar-hover);
+    }
+
+    .sidebar-header h2 {
+        display: none;
+    }
+
+    .sidebar.active .sidebar-header h2 {
+        display: block;
+        font-size: 20px;
+        margin-bottom: var(--spacing-xs);
+    }
+
+    .sidebar-user,
+    .sidebar-plan {
+        display: none;
+    }
+
+    .sidebar.active .sidebar-user,
+    .sidebar.active .sidebar-plan {
+        display: block;
+    }
+
+    .menu-item {
+        justify-content: center;
+        padding: 12px var(--spacing-sm);
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .sidebar.active .menu-item {
+        justify-content: flex-start;
+        padding: 12px var(--spacing-lg);
+        flex-direction: row;
+        gap: 10px;
+    }
+
+    .menu-label {
+        display: none;
+    }
+
+    .sidebar.active .menu-label {
+        display: inline;
+    }
+
+    .menu-icon {
+        width: 24px;
+        font-size: 20px;
+    }
+
+    .sidebar-toggle {
+        display: block;
+    }
+
+    .sidebar-overlay {
+        display: none;
+    }
+
+    .sidebar-overlay.active {
+        display: block;
+        z-index: 100;
     }
 
     .main-content {
-        margin-left: 0 !important;
+        margin-left: 80px;
+        width: calc(100% - 80px);
+    }
+
+    .sidebar.active ~ .main-content {
+        margin-left: 0;
         width: 100%;
+    }
+
+    .dashboard-layout {
+        flex-direction: row;
     }
 
     .stats-grid {
@@ -736,6 +859,15 @@ code {
     .topbar-title {
         font-size: 18px;
     }
+
+    .sidebar-header h2 {
+        font-size: 20px;
+    }
+
+    .sidebar-toggle {
+        display: block;
+        margin-right: 12px;
+    }
 }
 
 /* Móviles (max-width: 576px) */
@@ -762,7 +894,7 @@ code {
     }
 
     .sidebar-header h2 {
-        font-size: 20px;
+        font-size: 18px;
     }
 
     .menu-item {
@@ -786,16 +918,17 @@ code {
     .modal-title {
         font-size: 18px;
     }
+
+    .topbar {
+        gap: 4px;
+    }
 }
 
 /* Orientación landscape en móviles */
 @media (max-width: 768px) and (orientation: landscape) {
     .sidebar {
-        display: none;
-    }
-
-    .main-content {
-        margin-left: 0 !important;
+        height: auto;
+        max-height: 100vh;
     }
 }
 
@@ -820,5 +953,15 @@ code {
     .btn {
         padding: 8px 12px;
         font-size: 12px;
+    }
+
+    .menu-item {
+        padding: 8px;
+        gap: 6px;
+    }
+
+    .menu-icon {
+        width: 18px;
+        font-size: 16px;
     }
 }
