@@ -238,13 +238,9 @@ class App {
                     return;
                 }
                 
-                // Check if onboarding is completed for regular users
-                const onboardingCompleted = localStorage.getItem('onboarding_completed');
-                if (!onboardingCompleted) {
-                    await router.navigate('onboarding');
-                } else {
-                    await router.navigate('dashboard');
-                }
+                // Non-admin users MUST complete onboarding first
+                console.log('⏳ Non-admin user - directing to onboarding');
+                await router.navigate('onboarding');
             } catch (error) {
                 console.error('Error loading user:', error);
                 await router.navigate('login');
@@ -268,12 +264,6 @@ class App {
      * @param {object} view 
      */
     async renderProtectedView(view) {
-        // Admin accounts always have full access
-        const user = authService.getCurrentUser();
-        if (user && user.plan === 'admin') {
-            localStorage.setItem('onboarding_completed', 'true');
-        }
-        
         // Check if onboarding is completed
         const onboardingCompleted = localStorage.getItem('onboarding_completed');
         
