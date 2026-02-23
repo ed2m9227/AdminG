@@ -201,7 +201,8 @@ export class BusinessTypesView {
                 </div>
 
                 <!-- Botones de Acción -->
-                <div class="preview-actions" style="display: flex; gap: 10px; margin-top: 20px;">
+                <div class="preview-actions" style="display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap;">
+                    <button class="btn btn-info" id="previewUserBtn">👁️ Ver como Usuario</button>
                     <button class="btn btn-primary" id="editBusinessTypeBtn">✏️ Editar</button>
                     <button class="btn btn-danger" id="deleteBusinessTypeBtn">🗑️ Eliminar</button>
                 </div>
@@ -209,6 +210,9 @@ export class BusinessTypesView {
         `;
 
         // Adjuntar eventos a botones de acción
+        document.getElementById('previewUserBtn')?.addEventListener('click', () => {
+            this.showUserPreview(businessType);
+        });
         document.getElementById('editBusinessTypeBtn')?.addEventListener('click', () => {
             this.showEditModal(businessType);
         });
@@ -391,6 +395,67 @@ export class BusinessTypesView {
                 modal.showError(`Error: ${error.message}`);
             }
         }
+    }
+
+    showUserPreview(businessType) {
+        const labelCustomers = businessType.default_label_customers || 'Clientes';
+        const labelAppointments = businessType.default_label_appointments || 'Citas';
+        const labelPets = businessType.default_label_pets || 'Mascotas';
+        const hasPets = !!businessType.supports_pets;
+
+        const content = `
+            <div style="display: grid; gap: 16px;">
+                <div style="display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid #e5e7eb; border-radius: 10px; background: #f8fafc;">
+                    <div style="font-size: 32px;">${businessType.icon || '📋'}</div>
+                    <div>
+                        <div style="font-size: 14px; color: #6b7280;">Tipo de negocio</div>
+                        <div style="font-size: 18px; font-weight: 700; color: #111827;">${businessType.label}</div>
+                        <div style="font-size: 12px; color: #6b7280;">Vista previa del usuario final</div>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div style="background: white; padding: 12px; border-radius: 10px; border: 1px solid #e5e7eb;">
+                        <div style="font-size: 12px; color: #6b7280; margin-bottom: 6px;">Modulo</div>
+                        <div style="font-size: 16px; font-weight: 700;">${labelCustomers}</div>
+                        <div style="font-size: 12px; color: #10b981; margin-top: 6px;">✓ Etiqueta aplicada</div>
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 10px; border: 1px solid #e5e7eb;">
+                        <div style="font-size: 12px; color: #6b7280; margin-bottom: 6px;">Modulo</div>
+                        <div style="font-size: 16px; font-weight: 700;">${labelAppointments}</div>
+                        <div style="font-size: 12px; color: #10b981; margin-top: 6px;">✓ Etiqueta aplicada</div>
+                    </div>
+                </div>
+
+                ${hasPets ? `
+                    <div style="background: white; padding: 12px; border-radius: 10px; border: 1px solid #e5e7eb;">
+                        <div style="font-size: 12px; color: #6b7280; margin-bottom: 6px;">Modulo</div>
+                        <div style="font-size: 16px; font-weight: 700;">${labelPets}</div>
+                        <div style="font-size: 12px; color: #10b981; margin-top: 6px;">✓ Etiqueta aplicada</div>
+                    </div>
+                ` : `
+                    <div style="background: #fef3c7; padding: 12px; border-radius: 10px; border: 1px solid #f59e0b; color: #92400e;">
+                        Mascotas no aplica para ${businessType.label}
+                    </div>
+                `}
+
+                <div style="background: white; padding: 12px; border-radius: 10px; border: 1px solid #e5e7eb;">
+                    <div style="font-size: 13px; font-weight: 700; margin-bottom: 8px;">Ejemplo de formulario</div>
+                    <div style="display: grid; gap: 8px;">
+                        <div style="font-size: 12px; color: #6b7280;">${labelCustomers} *</div>
+                        <div style="height: 34px; border: 1px solid #e5e7eb; border-radius: 6px; background: #f9fafb;"></div>
+                        <div style="font-size: 12px; color: #6b7280;">${labelAppointments} *</div>
+                        <div style="height: 34px; border: 1px solid #e5e7eb; border-radius: 6px; background: #f9fafb;"></div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        modal.show({
+            title: `👁️ Vista de Usuario - ${businessType.label}`,
+            content,
+            size: 'large'
+        });
     }
 
     createDefaultTypes() {

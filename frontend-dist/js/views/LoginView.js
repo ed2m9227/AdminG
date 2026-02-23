@@ -96,32 +96,42 @@ export class LoginView {
             const user = await authService.loadCurrentUser();
             const userEmail = user?.email || '';
 
+            // Admin users bypass onboarding completely
             if (user?.role === 'admin') {
                 localStorage.setItem('onboarding_completed', 'true');
                 localStorage.setItem('onboarding_user_email', userEmail);
-                console.log('🎯 Admin detected, navigating to dashboard...');
+                console.log('🎯 Admin detected, bypassing onboarding...');
                 router.navigate('dashboard');
                 return;
             }
 
+            // For non-admin users, check onboarding status
             const storedEmail = localStorage.getItem('onboarding_user_email');
             const onboardingCompleted = localStorage.getItem('onboarding_completed') === 'true';
-            console.log('📋 Onboarding completed:', onboardingCompleted);
+            
+            console.log('📋 Checking onboarding status:');
+            console.log('   - Current email:', userEmail);
+            console.log('   - Stored email:', storedEmail);
+            console.log('   - Onboarding completed:', onboardingCompleted);
 
-            if (!storedEmail || storedEmail !== userEmail) {
+            // If it's a different user, clear onboarding flags and start fresh
+            if (storedEmail && storedEmail !== userEmail) {
+                console.log('ℹ️ Different user detected, clearing onboarding flags...');
                 localStorage.removeItem('onboarding_completed');
-                localStorage.setItem('onboarding_user_email', userEmail);
-                console.log('🎯 New user, navigating to onboarding...');
-                router.navigate('onboarding');
-                return;
             }
 
-            if (onboardingCompleted) {
-                console.log('🎯 Navigating to dashboard...');
-                router.navigate('dashboard');
-            } else {
-                console.log('🎯 Navigating to onboarding...');
+            // Always set/update the current user email
+            localStorage.setItem('onboarding_user_email', userEmail);
+
+            // Check if onboarding is truly complete for this user
+            const userOnboardingCompleted = localStorage.getItem('onboarding_completed') === 'true';
+            
+            if (!userOnboardingCompleted) {
+                console.log('🎯 User must complete onboarding, redirecting...');
                 router.navigate('onboarding');
+            } else {
+                console.log('🎯 Onboarding already completed, going to dashboard...');
+                router.navigate('dashboard');
             }
         } catch (error) {
             console.error('❌ Login error:', error);

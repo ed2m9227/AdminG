@@ -54,18 +54,6 @@ export class RegisterView {
                                 required
                             >
                         </div>
-
-                        <div class="form-group">
-                            <label for="regRole">¿Cuál es tu rol en el negocio?</label>
-                            <select id="regRole" name="role" class="form-select" required>
-                                <option value="">Selecciona tu rol...</option>
-                                <option value="team">👨‍💼 Empleado (Team) - Uso Restringido</option>
-                                <option value="viewer">👤 Empleado - Solo Ver</option>
-                                <option value="manager">👥 Manager - Gestionar</option>
-                                <option value="admin" selected>🔑 Administrador - Control Total</option>
-                            </select>
-                            <small class="form-help-text" id="regRoleHelpText" style="display: none; color: #666;"></small>
-                        </div>
                         
                         <button type="submit" class="btn btn-primary btn-full" id="regBtn">
                             Crear Cuenta
@@ -98,30 +86,6 @@ export class RegisterView {
             }
         });
 
-        // Help text para rol en registro
-        const roleSelect = document.getElementById('regRole');
-        const helpText = document.getElementById('regRoleHelpText');
-        
-        if (roleSelect) {
-            roleSelect.addEventListener('change', (e) => {
-                const roleTexts = {
-                    'team': '🔹 Cuenta de equipo - creada por el usuario administrador, plan y acceso heredados',
-                    'viewer': '🔹 Acceso de solo lectura - ideal para empleados que consultan información',
-                    'manager': '🔹 Puede crear y editar - ideal para gerentes y supervisores',
-                    'admin': '🔹 Control total del sistema - configuración, usuarios, planes y reportes completos'
-                };
-                
-                if (e.target.value && roleTexts[e.target.value]) {
-                    helpText.textContent = roleTexts[e.target.value];
-                    helpText.style.display = 'block';
-                } else {
-                    helpText.style.display = 'none';
-                }
-            });
-
-            // Mostrar por defecto
-            roleSelect.dispatchEvent(new Event('change'));
-        }
     }
 
     async handleRegister(e) {
@@ -133,17 +97,11 @@ export class RegisterView {
         const email = form.email.value.trim();
         const password = form.password.value;
         const confirmPassword = form.confirmPassword.value;
-        const role = form.role.value;
+        // Rol por defecto para cuentas dueñas del plan
+        const role = 'manager';
         
         // Plan temporal - será elegido en onboarding
         const plan = 'free';
-
-        // Validaciones
-        if (!role) {
-            errorDiv.textContent = 'Por favor selecciona tu rol';
-            errorDiv.classList.remove('hidden');
-            return;
-        }
 
         if (password !== confirmPassword) {
             errorDiv.textContent = 'Las contraseñas no coinciden';
@@ -160,9 +118,6 @@ export class RegisterView {
             
             successDiv.innerHTML = `
                 <p>✅ Registro exitoso</p>
-                <p style="font-size: 12px; margin-top: 8px;">
-                    Rol: <strong>${role}</strong>
-                </p>
                 <p style="font-size: 11px; color: #666; margin-top: 4px;">Seleccionarás tu plan en el próximo paso...</p>
                 <p style="font-size: 11px; color: #666; margin-top: 4px;">Redirigiendo a login...</p>
             `;

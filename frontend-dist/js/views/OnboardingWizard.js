@@ -27,10 +27,31 @@ class OnboardingWizard {
     }
 
     async render() {
-        // Load business types in background (don't block rendering)
-        this.loadBusinessTypes().catch(err => {
-            console.warn('Background loading of business types failed:', err);
-        });
+        // Load business types BEFORE rendering - don't render without them
+        try {
+            await this.loadBusinessTypes();
+            if (!this.businessTypes || this.businessTypes.length === 0) {
+                console.warn('⚠️ No business types available');
+                // Show fallback types if API fails
+                this.businessTypes = [
+                    { code: 'veterinaria', label: 'Veterinaria', icon: '🐾', supports_pets: true },
+                    { code: 'barberia', label: 'Barbería', icon: '✂️', supports_pets: false },
+                    { code: 'spa', label: 'Spa / Estética', icon: '💆', supports_pets: false },
+                    { code: 'clinica', label: 'Clínica', icon: '⚕️', supports_pets: false },
+                    { code: 'otro', label: 'Otro', icon: '📋', supports_pets: false }
+                ];
+            }
+        } catch (error) {
+            console.error('❌ Error loading business types:', error);
+            // Use fallback types
+            this.businessTypes = [
+                { code: 'veterinaria', label: 'Veterinaria', icon: '🐾', supports_pets: true },
+                { code: 'barberia', label: 'Barbería', icon: '✂️', supports_pets: false },
+                { code: 'spa', label: 'Spa / Estética', icon: '💆', supports_pets: false },
+                { code: 'clinica', label: 'Clínica', icon: '⚕️', supports_pets: false },
+                { code: 'otro', label: 'Otro', icon: '📋', supports_pets: false }
+            ];
+        }
         
         // Get current user role (already loaded by authService)
         const user = authService.getCurrentUser();
@@ -46,11 +67,18 @@ class OnboardingWizard {
                 <div class="onboarding-card">
                     <!-- Header -->
                     <div class="onboarding-header">
-                        <h1 class="onboarding-title">¡Bienvenido a AdminG!</h1>
-                        <p class="onboarding-subtitle">${this.formData.role === 'team' ? 'Cuasi-configuración de tu cuenta de equipo' : 'Configuremos tu negocio en 3 pasos simples'}</p>
-                        <small style="color: #666; font-size: 12px;">
-                            Tu rol: <strong>${this.getRoleLabel(this.formData.role)}</strong>
-                        </small>
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                            <div style="flex: 1;">
+                                <h1 class="onboarding-title">¡Bienvenido a AdminG!</h1>
+                                <p class="onboarding-subtitle">${this.formData.role === 'team' ? 'Cuasi-configuración de tu cuenta de equipo' : 'Configuremos tu negocio en 3 pasos simples'}</p>
+                                <small style="color: #666; font-size: 12px;">
+                                    Tu rol: <strong>${this.getRoleLabel(this.formData.role)}</strong>
+                                </small>
+                            </div>
+                            <button id="btn-logout" title="Volver a Login (Cerrar Sesión)" style="background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 4px; padding: 8px 12px; cursor: pointer; color: #6b7280; font-size: 16px; transition: all 0.2s; display: flex; align-items: center; justify-content: center;">
+                                ✕
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Progress Bar -->
@@ -335,6 +363,7 @@ class OnboardingWizard {
     attachEvents() {
         document.getElementById('btn-next')?.addEventListener('click', () => this.handleNext());
         document.getElementById('btn-prev')?.addEventListener('click', () => this.handlePrev());
+        document.getElementById('btn-logout')?.addEventListener('click', () => this.handleLogout());
         
         // Step 1 events - Business info
         document.getElementById('business_type')?.addEventListener('change', (e) => {
@@ -388,7 +417,30 @@ class OnboardingWizard {
         if (this.currentStep > 1) {
             this.currentStep--;
             this.refresh();
+        } else if (this.currentStep === 1) {
+            // En paso 1, "Anterior" significa volver a login (cerrar sesión)
+            this.handleLogout();
         }
+    }
+
+    handleLogout() {
+        // Confirm logout
+        if (!confirm('¿Deseas cerrar sesión y volver a login?')) {
+            return;
+        }
+
+        // Clear auth data and localStorage completely
+        authService.logout();
+        // Remove ALL onboarding-related flags to ensure fresh start
+        localStorage.removeItem('onboarding_completed');
+        localStorage.removeItem('onboarding_user_email');
+        localStorage.removeItem('user_plan');
+        localStorage.removeItem('user_role');
+        localStorage.removeItem('currentBusinessType'); // If any temp data
+        
+        console.log('✓ Session cleared, redirecting to login...');
+        // Navigate to login
+        window.location.hash = '#login';
     }
 
     validateStep1() {
@@ -469,12 +521,13 @@ class OnboardingWizard {
             localStorage.setItem('user_plan', this.formData.plan);
             localStorage.setItem('user_role', this.formData.role);
             
-            // Mark onboarding as complete and redirect
+            // Mark onboarding as complete
             localStorage.setItem('onboarding_completed', 'true');
             
-            setTimeout(() => {
-                window.location.hash = '#dashboard';
-                window.location.reload();
+            // Navigate to dashboard without reloading
+            setTimeout(async () => {
+                const router = (await import('../utils/router.js')).default;
+                await router.navigate('dashboard');
             }, 1500);
 
         } catch (error) {

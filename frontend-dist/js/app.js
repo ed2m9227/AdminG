@@ -245,10 +245,20 @@ class App {
                 const user = await authService.loadCurrentUser();
                 await authService.loadFeatures();
                 
-                // Admin accounts bypass onboarding and get full access
-                if (user.plan === 'admin') {
+                // Check if onboarding was already completed
+                const onboardingCompleted = localStorage.getItem('onboarding_completed') === 'true';
+                
+                // Admin users bypass onboarding completely
+                if (user.role === 'admin') {
                     console.log('🔑 Admin account detected - bypassing onboarding');
                     localStorage.setItem('onboarding_completed', 'true');
+                    await router.navigate('dashboard');
+                    return;
+                }
+                
+                // If onboarding is already completed, go to dashboard
+                if (onboardingCompleted) {
+                    console.log('✓ Onboarding already completed - going to dashboard');
                     await router.navigate('dashboard');
                     return;
                 }

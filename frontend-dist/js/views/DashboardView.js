@@ -601,20 +601,20 @@ export class DashboardView {
 
     getRoleLabel(role) {
         const roleLabels = {
-            'team': '👨‍💼 Empleado (Team)',
-            'viewer': '👁️ Empleado (Solo Ver)',
-            'manager': '👔 Manager (Gestionar)',
-            'admin': '🔑 Administrador'
+            'admin': '🔑 Admin (Cuenta Maestra)',
+            'manager': '👔 Manager (Dueño del Plan)',
+            'team': '👥 Equipo',
+            'viewer': '👥 Equipo'
         };
         return roleLabels[role] || role;
     }
 
     getRoleDescription(role) {
         const roleDescriptions = {
-            'team': '✓ Cuenta de equipo con acceso restringido, plan heredado del administrador',
-            'viewer': '✓ Puedes ver clientes, citas y reportes básicos',
-            'manager': '✓ Puedes crear y editar clientes, citas y pagos',
-            'admin': '✓ Acceso completo: configuración del negocio, tipos de negocio y equipo'
+            'admin': '✓ Cuenta maestra con acceso total y control global',
+            'manager': '✓ Dueño del plan con control de configuración, planes y equipo',
+            'team': '✓ Cuenta de equipo con acceso limitado según permisos',
+            'viewer': '✓ Cuenta de equipo con acceso limitado según permisos'
         };
         return roleDescriptions[role] || 'Rol personalizado';
     }
