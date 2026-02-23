@@ -93,10 +93,29 @@ export class LoginView {
             // Pequeña pausa para asegurar que el token esté guardado
             await new Promise(resolve => setTimeout(resolve, 100));
             
-            // Check if onboarding is completed
-            const onboardingCompleted = localStorage.getItem('onboarding_completed');
+            const user = await authService.loadCurrentUser();
+            const userEmail = user?.email || '';
+
+            if (user?.role === 'admin') {
+                localStorage.setItem('onboarding_completed', 'true');
+                localStorage.setItem('onboarding_user_email', userEmail);
+                console.log('🎯 Admin detected, navigating to dashboard...');
+                router.navigate('dashboard');
+                return;
+            }
+
+            const storedEmail = localStorage.getItem('onboarding_user_email');
+            const onboardingCompleted = localStorage.getItem('onboarding_completed') === 'true';
             console.log('📋 Onboarding completed:', onboardingCompleted);
-            
+
+            if (!storedEmail || storedEmail !== userEmail) {
+                localStorage.removeItem('onboarding_completed');
+                localStorage.setItem('onboarding_user_email', userEmail);
+                console.log('🎯 New user, navigating to onboarding...');
+                router.navigate('onboarding');
+                return;
+            }
+
             if (onboardingCompleted) {
                 console.log('🎯 Navigating to dashboard...');
                 router.navigate('dashboard');

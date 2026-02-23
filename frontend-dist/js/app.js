@@ -113,6 +113,13 @@ class App {
 
         // Nuevas rutas de administración
         router.register('admin', async () => {
+            // Check onboarding first
+            const onboardingCompleted = localStorage.getItem('onboarding_completed');
+            if (!onboardingCompleted) {
+                await router.navigate('onboarding');
+                return;
+            }
+            
             const user = await authService.loadCurrentUser();
             if (user.role === 'admin') {
                 // Panel maestro para admins globales
@@ -132,6 +139,14 @@ class App {
 
         // Ruta para gestión de tipos de negocio
         router.register('businesstypes', async () => {
+            // Check onboarding first, before checking role
+            const onboardingCompleted = localStorage.getItem('onboarding_completed');
+            if (!onboardingCompleted) {
+                console.log('⚠️ Onboarding not completed, cannot access businesstypes');
+                await router.navigate('onboarding');
+                return;
+            }
+            
             const user = await authService.loadCurrentUser();
             if (user.role === 'admin') {
                 await this.renderProtectedView(new BusinessTypesView());
