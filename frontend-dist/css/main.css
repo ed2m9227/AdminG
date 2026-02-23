@@ -704,8 +704,11 @@ code {
 
 /* ========== RESPONSIVE DESIGN ========== */
 
-/* Tablets y móviles grandes (max-width: 1024px) */
-@media (max-width: 1024px) {
+/* Desktop y Tablets (no hacemos nada, mantiene estilo normal) */
+/* El sidebar normal se ve con iconos + labels en 250px */
+
+/* Móviles pequeños (max-width: 576px) */
+@media (max-width: 576px) {
     /* Sidebar compacto por defecto: solo iconos */
     .sidebar {
         width: 80px;
@@ -805,11 +808,7 @@ code {
     }
 
     .stats-grid {
-        grid-template-columns: repeat(2, 1fr) !important;
-    }
-
-    .admin-header h2 {
-        font-size: 22px;
+        grid-template-columns: repeat(1, 1fr) !important;
     }
 }
 
