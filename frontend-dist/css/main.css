@@ -261,7 +261,7 @@ body {
     align-items: center;
     position: sticky;
     top: 0;
-    z-index: 102;
+    z-index: 50;
 }
 
 .page-title {
@@ -796,7 +796,7 @@ code {
     }
 
     .topbar {
-        z-index: 90;
+        z-index: 50;
     }
 
     .main-content {
