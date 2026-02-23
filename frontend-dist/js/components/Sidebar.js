@@ -143,7 +143,7 @@ export class Sidebar {
     closeSidebar() {
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('sidebarOverlay');
-        const mainContent = document.querySelector('.main-content');
+        const dashboardLayout = document.querySelector('.dashboard-layout');
         
         if (sidebar) {
             sidebar.classList.remove('active');
@@ -151,8 +151,8 @@ export class Sidebar {
         if (overlay) {
             overlay.classList.remove('active');
         }
-        if (mainContent) {
-            mainContent.style.marginLeft = '80px';
+        if (dashboardLayout) {
+            dashboardLayout.classList.remove('sidebar-expanded');
         }
     }
 
@@ -162,7 +162,7 @@ export class Sidebar {
     openSidebar() {
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('sidebarOverlay');
-        const mainContent = document.querySelector('.main-content');
+        const dashboardLayout = document.querySelector('.dashboard-layout');
         
         if (sidebar) {
             sidebar.classList.add('active');
@@ -170,8 +170,8 @@ export class Sidebar {
         if (overlay) {
             overlay.classList.add('active');
         }
-        if (mainContent) {
-            mainContent.style.marginLeft = '0';
+        if (dashboardLayout) {
+            dashboardLayout.classList.add('sidebar-expanded');
         }
     }
 

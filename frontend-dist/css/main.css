@@ -192,6 +192,8 @@ body {
     cursor: pointer;
     padding: 8px;
     transition: transform 0.2s ease-in-out;
+    z-index: 102;
+    position: relative;
 }
 
 .sidebar-toggle:hover {
@@ -206,7 +208,7 @@ body {
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.5);
-    z-index: 99;
+    z-index: 100;
 }
 
 .sidebar-overlay.active {
@@ -259,7 +261,7 @@ body {
     align-items: center;
     position: sticky;
     top: 0;
-    z-index: 50;
+    z-index: 102;
 }
 
 .page-title {
@@ -725,6 +727,7 @@ code {
     .sidebar.active {
         width: 250px;
         z-index: 101;
+        box-shadow: var(--shadow-lg);
     }
 
     .sidebar-header {
@@ -790,7 +793,6 @@ code {
 
     .sidebar-overlay.active {
         display: block;
-        z-index: 100;
     }
 
     .main-content {
@@ -798,7 +800,7 @@ code {
         width: calc(100% - 80px);
     }
 
-    .sidebar.active ~ .main-content {
+    .dashboard-layout.sidebar-expanded .main-content {
         margin-left: 0;
         width: 100%;
     }
