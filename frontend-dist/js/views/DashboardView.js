@@ -117,14 +117,16 @@ export class DashboardView {
                 </div>
             </div>
 
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">Configuración del Negocio</h2>
+            ${isAdmin || user?.role === 'manager' ? `
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Configuración del Negocio</h2>
+                    </div>
+                    <div class="card-body" id="businessConfigBox">
+                        <div style="padding: 12px; color: #7f8c8d;">Cargando configuración...</div>
+                    </div>
                 </div>
-                <div class="card-body" id="businessConfigBox">
-                    <div style="padding: 12px; color: #7f8c8d;">Cargando configuración...</div>
-                </div>
-            </div>
+            ` : ''}
 
             <div class="card">
                 <div class="card-header">
@@ -157,7 +159,13 @@ export class DashboardView {
     async init() {
         await this.loadStats();
         await this.loadFeatures();
-        await this.loadBusinessConfig();
+        
+        // Solo cargar configuración de negocio para admin y manager
+        const user = authService.getCurrentUser();
+        if (user?.role === 'admin' || user?.role === 'manager') {
+            await this.loadBusinessConfig();
+        }
+        
         this.attachEventListeners();
     }
 
