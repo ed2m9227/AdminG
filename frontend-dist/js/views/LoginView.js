@@ -86,9 +86,26 @@ export class LoginView {
         errorDiv.classList.add('hidden');
 
         try {
+            console.log('🔐 Attempting login...');
             await authService.login(email, password);
-            router.navigate('dashboard');
+            console.log('✅ Login successful, token saved');
+            
+            // Pequeña pausa para asegurar que el token esté guardado
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            // Check if onboarding is completed
+            const onboardingCompleted = localStorage.getItem('onboarding_completed');
+            console.log('📋 Onboarding completed:', onboardingCompleted);
+            
+            if (onboardingCompleted) {
+                console.log('🎯 Navigating to dashboard...');
+                router.navigate('dashboard');
+            } else {
+                console.log('🎯 Navigating to onboarding...');
+                router.navigate('onboarding');
+            }
         } catch (error) {
+            console.error('❌ Login error:', error);
             errorDiv.textContent = error.message;
             errorDiv.classList.remove('hidden');
         } finally {

@@ -148,18 +148,22 @@ class App {
     setupNavigationHooks() {
         // Hook antes de navegar - verificar autenticación y onboarding
         router.beforeNavigate(async (path) => {
+            console.log(`🔄 beforeNavigate: ${path}`);
+            
             const publicRoutes = ['login', 'register'];
             const isPublicRoute = publicRoutes.includes(path);
 
             if (!isPublicRoute && !authService.isAuthenticated()) {
-                console.log('⚠️ Redirecting to login - not authenticated');
+                console.log('⚠️ Not authenticated, redirecting to login');
                 await router.navigate('login');
-                return false; // Cancelar navegación original
+                return false;
             }
 
-            // Check onboarding completion for protected routes
+            // Check onboarding completion for protected routes (except onboarding itself)
             if (!isPublicRoute && path !== 'onboarding') {
                 const onboardingCompleted = localStorage.getItem('onboarding_completed');
+                console.log(`📋 Onboarding check for ${path}:`, onboardingCompleted);
+                
                 if (!onboardingCompleted) {
                     console.log('⚠️ Onboarding not completed, redirecting...');
                     await router.navigate('onboarding');
@@ -167,12 +171,18 @@ class App {
                 }
             }
 
-            if (!isPublicRoute) {
-                if (!authService.getFeatures().length) {
+            // Load features if not loaded and user exists
+            if (!isPublicRoute && authService.getFeatures().length === 0) {
+                try {
+                    console.log('📦 Loading features...');
                     await authService.loadFeatures();
+                } catch (err) {
+                    console.warn('Could not load features:', err);
                 }
+            }
 
-                // Admin users have access to all features
+            // Check feature access for non-admin users
+            if (!isPublicRoute && path !== 'onboarding') {
                 const user = authService.getCurrentUser();
                 if (user && user.role !== 'admin') {
                     const routeFeatureMap = {
@@ -188,9 +198,10 @@ class App {
                     const requiredFeature = routeFeatureMap[path];
                     const features = authService.getFeatures();
                     if (requiredFeature && !features.includes(requiredFeature)) {
+                        console.warn(`❌ Feature ${requiredFeature} not available`);
                         await modal.alert({
                             title: 'Aumenta tu plan',
-                            message: 'Esta funcion no esta disponible en tu plan actual.',
+                            message: 'Esta función no está disponible en tu plan actual.',
                             type: 'warning'
                         });
                         await router.navigate('dashboard');
@@ -199,6 +210,7 @@ class App {
                 }
             }
 
+            console.log(`✅ beforeNavigate passed for ${path}`);
             return true; // Continuar con la navegación
         });
 
