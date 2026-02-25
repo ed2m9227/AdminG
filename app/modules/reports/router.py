@@ -34,9 +34,15 @@ def resolve_user(
         raise HTTPException(status_code=404, detail="User not found")
     return user
 
-def check_reports_access(user: User, required_plans: list[str] = ["plus", "start", "max"]):
+def check_reports_access(user: User, required_plans: list[str] = ["starter", "pro", "max"]):
     """Check if user has access to reports features"""
-    if user.role == 'admin' or user.plan in required_plans + ["admin"]:
+    legacy_plans = [
+        "basic", "plus", "start",
+        "AdminG_Basic", "AdminG_Plus",
+        "AdminPro_Start", "AdminPro_Max",
+    ]
+
+    if user.role == 'admin' or user.plan in required_plans + legacy_plans + ["admin"]:
         return True
     raise HTTPException(status_code=403, detail="Feature not available in your plan")
 

@@ -26,29 +26,32 @@ def check_services_access(user: User):
 
     # Only paid plans have access to services
     allowed_plans = {
-        "basic", "plus", "start", "max", "admin",
-        "AdminG_Basic", "AdminG_Plus", 
+        "starter", "pro", "max", "admin",
+        "basic", "plus", "start",
+        "AdminG_Basic", "AdminG_Plus",
         "AdminPro_Start", "AdminPro_Max"
     }
     
     if user.plan not in allowed_plans:
         raise HTTPException(
             status_code=403, 
-            detail="Services module not available in free plan. Please upgrade to AdminG Basic or higher."
+            detail="Services module not available in free plan. Please upgrade to Starter or higher."
         )
 
 
 def get_service_limit(user: User) -> int | None:
     limits = {
+        "starter": 50,
+        "pro": 200,
+        "max": 1000,
+        "admin": None,
         "basic": 50,
         "plus": 200,
-        "start": 1000,
-        "max": 10000,
-        "admin": None,
+        "start": 200,
         "AdminG_Basic": 50,
         "AdminG_Plus": 200,
-        "AdminPro_Start": 1000,
-        "AdminPro_Max": 10000,
+        "AdminPro_Start": 200,
+        "AdminPro_Max": 1000,
     }
     return limits.get(user.plan, None)
 

@@ -13,15 +13,15 @@ class OnboardingWizard {
         this.totalSteps = 3;
         this.businessTypes = [];
         this.plans = [
-            { code: 'free', name: 'FREE', price: 0, priceCOP: 0, color: 'gray', features: ['Hasta 10 clientes', 'Hasta 20 citas', 'Ver clientes y citas', 'Ideal para pruebas'], limits: '10 clientes, 20 citas, lectura', nequiLink: null },
-            { code: 'basic', name: 'BASIC', price: 29, priceCOP: 120000, color: 'blue', features: ['Hasta 500 clientes', 'Hasta 500 citas', 'CRUD completo', 'Servicios (50 max)', 'Reportes básicos'], limits: '500 clientes, 500 citas', nequiLink: 'https://buy.nequi.com.co/AdminG-Basic' },
-            { code: 'plus', name: 'PLUS', price: 79, priceCOP: 320000, color: 'purple', features: ['Hasta 2000 clientes', 'Hasta 2000 citas', 'Todas las funciones BASIC', 'Servicios (200 max)', 'Reportes avanzados', 'Exportar datos', 'Gestión de usuarios'], limits: '2000 clientes, 2000 citas', nequiLink: 'https://buy.nequi.com.co/AdminG-Plus' },
-            { code: 'max', name: 'PRO MAX', price: 149, priceCOP: 600000, color: 'indigo', features: ['Clientes ilimitados', 'Citas ilimitadas', 'Todas las funciones PLUS', 'Servicios ilimitados', 'Analytics avanzado', 'API completa', 'Soporte prioritario'], limits: 'Ilimitado', nequiLink: 'https://buy.nequi.com.co/AdminG-Max' }
+            { code: 'free', name: 'GRATUITO', price: 0, priceCOP: 0, color: 'gray', features: ['1 usuario', 'Funciones básicas', 'Solo lectura', 'Ideal para pruebas'], limits: '1 usuario, solo lectura', nequiLink: null },
+            { code: 'starter', name: 'STARTER', price: 10, priceCOP: 39900, color: 'blue', features: ['Hasta 5 usuarios', 'Hasta 100 clientes', 'Hasta 200 citas', 'CRUD completo', 'Reportes básicos'], limits: '5 usuarios, 100 clientes', nequiLink: 'https://buy.nequi.com.co/AdminG-Starter' },
+            { code: 'pro', name: 'PRO', price: 25, priceCOP: 99900, color: 'purple', features: ['Hasta 25 usuarios', 'Hasta 1000 clientes', 'Citas ilimitadas', 'Reportes avanzados', 'Exportar datos', 'API acceso'], limits: '25 usuarios, 1000 clientes', nequiLink: 'https://buy.nequi.com.co/AdminG-Pro' },
+            { code: 'max', name: 'MAX', price: 62, priceCOP: 249900, color: 'indigo', features: ['Hasta 100 usuarios', 'Clientes ilimitados', 'Citas ilimitadas', 'Analytics avanzado', 'API completa', 'IA integrada', 'Soporte prioritario'], limits: 'Ilimitado', nequiLink: 'https://buy.nequi.com.co/AdminG-Max' }
         ];
         this.formData = {
             business_type: '',
             business_name: '',
-            plan: 'basic',
+            plan: 'starter',
             role: 'admin'
         };
     }
@@ -147,10 +147,6 @@ class OnboardingWizard {
                         <div style="margin-bottom: 12px;">
                             <div style="font-weight: 600; color: #1f2937; margin-bottom: 4px;">✓ Plan Heredado</div>
                             <div style="font-size: 13px; color: #6b7280;">Tu plan se determina según la suscripción del administrador. Tendrás acceso a las funciones permitidas para tu rol.</div>
-                        </div>
-                        <div style="margin-bottom: 12px;">
-                            <div style="font-weight: 600; color: #1f2937; margin-bottom: 4px;">✓ Configuración del Negocio</div>
-                            <div style="font-size: 13px; color: #6b7280;">La configuración de tipo de negocio, etiquetas y campos ya ha sido establecida por el administrador. No necesitas volver a configurar.</div>
                         </div>
                         <div>
                             <div style="font-weight: 600; color: #1f2937; margin-bottom: 4px;">✓ Acceso Limitado</div>
@@ -507,10 +503,14 @@ class OnboardingWizard {
                 role: this.formData.role  // Use the role from current user
             };
 
+            console.log('💾 Saving configuration:', configData);
+
             // Save or create configuration
             if (config) {
+                console.log('📝 Updating existing config with plan:', this.formData.plan);
                 await apiService.updateBusinessConfig(configData);
             } else {
+                console.log('📝 Creating new config with plan:', this.formData.plan);
                 await apiService.createBusinessConfig(configData);
             }
 
@@ -520,6 +520,8 @@ class OnboardingWizard {
             // Save plan and role to user preferences
             localStorage.setItem('user_plan', this.formData.plan);
             localStorage.setItem('user_role', this.formData.role);
+            
+            console.log('✓ Saved to localStorage - plan:', this.formData.plan);
             
             // Mark onboarding as complete
             localStorage.setItem('onboarding_completed', 'true');
@@ -560,7 +562,7 @@ class OnboardingWizard {
             'team': '✓ Cuenta de equipo con acceso restringido. Tu administrador controla tus permisos y plan.',
             'viewer': '✓ Podrás ver clientes, citas y reportes básicos. Ideal para empleados que consultan información.',
             'manager': '✓ Podrás crear y editar clientes, citas, y gestionar el día a día. Perfecto para gerentes y supervisores.',
-            'admin': '✓ Acceso completo: configuración del negocio, gestión de usuarios, planes, reportes avanzados y todas las funcionalidades del sistema.'
+            'admin': '✓ Acceso completo: gestión de usuarios, planes, reportes avanzados y todas las funcionalidades del sistema.'
         };
         return roleDescriptions[role] || 'Rol personalizado';
     }

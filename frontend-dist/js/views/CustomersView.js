@@ -12,7 +12,7 @@ export class CustomersView {
     constructor() {
         this.customers = [];
         this.businessConfig = null;
-        const petFieldLabels = {
+        this.petFieldLabels = {
             name: 'Nombre',
             animal_type: 'Tipo de Animal',
             breed: 'Raza',
@@ -277,9 +277,9 @@ export class CustomersView {
     }
 
     renderPetSection(pet) {
-        if (!this.businessConfig?.has_pet_relationship) return '';
+        if (!this.businessConfig || !this.businessConfig.has_pet_relationship) return '';
 
-        const enabled = this.businessConfig.pet_fields_enabled || {};
+        const enabled = (this.businessConfig && this.businessConfig.pet_fields_enabled) || {};
         const petFields = Object.keys(this.petFieldLabels).filter(key => enabled[key]);
 
         if (!petFields.length) {

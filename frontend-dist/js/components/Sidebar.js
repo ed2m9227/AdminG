@@ -25,6 +25,7 @@ export class Sidebar {
 
             // Team & Admin
             { id: 'team', icon: '👫', label: 'Mi Equipo', route: 'team' },
+            { id: 'businessconfig', icon: '🛠️', label: 'Configuracion de negocio', route: 'businessconfig', roles: ['admin', 'manager'] },
             { id: 'admin', icon: '⚙️', label: 'Administración', route: 'admin', roleRequired: 'admin' },
             { id: 'businesstypes', icon: '🏢', label: 'Tipos de Negocio', route: 'businesstypes', roleRequired: 'admin' },
         ];
@@ -39,6 +40,9 @@ export class Sidebar {
         
         // Filtrar items solo por rol (admin)
         const filteredItems = this.allMenuItems.filter(item => {
+            if (item.roles && !item.roles.includes(user?.role)) {
+                return false;
+            }
             if (item.roleRequired && user?.role !== item.roleRequired) {
                 return false;
             }

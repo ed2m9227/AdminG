@@ -60,59 +60,10 @@ class Feature(str, Enum):
 # Plan Features Mapping
 PLAN_FEATURES: Dict[str, Set[Feature]] = {
     "free": {
-        # Free plan is READ-ONLY demo mode with very limited access
         Feature.VIEW_CUSTOMERS,
         Feature.VIEW_APPOINTMENTS,
     },
-    "basic": {
-        # Basic plan (AdminG_Basic) has full CRUD for customers, appointments, payments, basic reports
-        # Basic plan (AdminG_Basic) has full CRUD for customers, appointments, payments, basic reports
-        Feature.VIEW_CUSTOMERS,
-        Feature.CREATE_CUSTOMERS,
-        Feature.EDIT_CUSTOMERS,
-        Feature.DELETE_CUSTOMERS,
-        Feature.VIEW_APPOINTMENTS,
-        Feature.CREATE_APPOINTMENTS,
-        Feature.EDIT_APPOINTMENTS,
-        Feature.DELETE_APPOINTMENTS,
-        Feature.VIEW_PAYMENTS,
-        Feature.CREATE_PAYMENTS,
-        Feature.VIEW_REPORTS,
-        # NO inventory, NO advanced features, 1 team member only
-    },
-    "AdminG_Basic": {  # Explicit mapping
-        Feature.VIEW_CUSTOMERS,
-        Feature.CREATE_CUSTOMERS,
-        Feature.EDIT_CUSTOMERS,
-        Feature.DELETE_CUSTOMERS,
-        Feature.VIEW_APPOINTMENTS,
-        Feature.CREATE_APPOINTMENTS,
-        Feature.EDIT_APPOINTMENTS,
-        Feature.DELETE_APPOINTMENTS,
-        Feature.VIEW_PAYMENTS,
-        Feature.CREATE_PAYMENTS,
-        Feature.VIEW_REPORTS,
-    },
-    "AdminG_Plus": {  # Explicit mapping
-        Feature.VIEW_CUSTOMERS,
-        Feature.CREATE_CUSTOMERS,
-        Feature.EDIT_CUSTOMERS,
-        Feature.DELETE_CUSTOMERS,
-        Feature.EXPORT_CUSTOMERS,
-        Feature.VIEW_APPOINTMENTS,
-        Feature.CREATE_APPOINTMENTS,
-        Feature.EDIT_APPOINTMENTS,
-        Feature.DELETE_APPOINTMENTS,
-        Feature.CANCEL_APPOINTMENTS,
-        Feature.VIEW_PAYMENTS,
-        Feature.CREATE_PAYMENTS,
-        Feature.REFUND_PAYMENTS,
-        Feature.VIEW_REPORTS,
-        Feature.EXPORT_REPORTS,
-        Feature.VIEW_TEAM,
-        Feature.MANAGE_TEAM_USERS,
-    },
-    "plus": {
+    "starter": {
         Feature.VIEW_CUSTOMERS,
         Feature.CREATE_CUSTOMERS,
         Feature.EDIT_CUSTOMERS,
@@ -125,20 +76,9 @@ PLAN_FEATURES: Dict[str, Set[Feature]] = {
         Feature.CREATE_PRODUCTS,
         Feature.EDIT_PRODUCTS,
         Feature.DELETE_PRODUCTS,
-        Feature.TRACK_STOCK,
-        Feature.VIEW_PAYMENTS,
-        Feature.CREATE_PAYMENTS,
-        Feature.REFUND_PAYMENTS,
         Feature.VIEW_REPORTS,
-        Feature.EXPORT_REPORTS,
-        Feature.USE_CASHREGISTER,
-        Feature.OPEN_REGISTER,
-        Feature.CLOSE_REGISTER,
-        Feature.VIEW_TEAM,
-        Feature.MANAGE_TEAM_USERS,
-        Feature.INVITE_USERS,
     },
-    "start": {
+    "pro": {
         Feature.VIEW_CUSTOMERS,
         Feature.CREATE_CUSTOMERS,
         Feature.EDIT_CUSTOMERS,
@@ -159,7 +99,6 @@ PLAN_FEATURES: Dict[str, Set[Feature]] = {
         Feature.REFUND_PAYMENTS,
         Feature.VIEW_REPORTS,
         Feature.EXPORT_REPORTS,
-        Feature.ADVANCED_ANALYTICS,
         Feature.USE_CASHREGISTER,
         Feature.OPEN_REGISTER,
         Feature.CLOSE_REGISTER,
@@ -168,7 +107,6 @@ PLAN_FEATURES: Dict[str, Set[Feature]] = {
         Feature.INVITE_USERS,
     },
     "max": {
-        # All features except admin-only
         Feature.VIEW_CUSTOMERS,
         Feature.CREATE_CUSTOMERS,
         Feature.EDIT_CUSTOMERS,
@@ -198,13 +136,11 @@ PLAN_FEATURES: Dict[str, Set[Feature]] = {
         Feature.INVITE_USERS,
     },
     "admin": {
-        # Master admin - all features
         Feature.ADMIN_PANEL,
         Feature.MANAGE_ALL_USERS,
         Feature.VIEW_SYSTEM_STATS,
         Feature.MANAGE_PLANS,
         Feature.VIEW_BILLING,
-        # Plus all user features
         Feature.VIEW_CUSTOMERS,
         Feature.CREATE_CUSTOMERS,
         Feature.EDIT_CUSTOMERS,
@@ -233,10 +169,28 @@ PLAN_FEATURES: Dict[str, Set[Feature]] = {
         Feature.MANAGE_TEAM_USERS,
         Feature.INVITE_USERS,
     },
+    # Legacy plan aliases (backward compatibility)
+    "basic": set(),
+    "plus": set(),
+    "start": set(),
+    "AdminG_Basic": set(),
+    "AdminG_Plus": set(),
+    "AdminPro_Start": set(),
+    "AdminPro_Max": set(),
 }
+
+# Legacy plan aliases
+PLAN_FEATURES["basic"] = PLAN_FEATURES["starter"]
+PLAN_FEATURES["AdminG_Basic"] = PLAN_FEATURES["starter"]
+PLAN_FEATURES["plus"] = PLAN_FEATURES["pro"]
+PLAN_FEATURES["AdminG_Plus"] = PLAN_FEATURES["pro"]
+PLAN_FEATURES["start"] = PLAN_FEATURES["pro"]
+PLAN_FEATURES["AdminPro_Start"] = PLAN_FEATURES["pro"]
+PLAN_FEATURES["AdminPro_Max"] = PLAN_FEATURES["max"]
 
 # Role-based permissions
 ROLE_PERMISSIONS: Dict[str, Set[str]] = {
+    "team": {"view"},
     "viewer": {"view"},
     "manager": {"view", "edit", "create"},
     "admin": {"view", "edit", "create", "delete", "manage"},
@@ -289,58 +243,36 @@ def get_plan_limits(plan: str) -> Dict[str, int]:
     """
     limits = {
         "free": {
-            # Free is very limited - demo mode only
             "team_members": 1,
-            "customers": 10,
-            "appointments": 20,
-            "reports": 0,  # No reports
-            "storage_gb": 0,
-            "services": 5,
+            "customers": 50,
+            "appointments": 100,
+            "reports": 0,
+            "storage_gb": 1,
+            "services": 0,
         },
-        "basic": {
-            "team_members": 1,
+        "starter": {
+            "team_members": 5,
             "customers": 500,
-            "appointments": 500,
+            "appointments": 1000,
             "reports": 10,
             "storage_gb": 5,
             "services": 50,
         },
-        "AdminG_Basic": {
-            "team_members": 1,
-            "customers": 500,
-            "appointments": 500,
-            "reports": 10,
-            "storage_gb": 5,
-            "services": 50,
-        },
-        "AdminG_Plus": {
-            "team_members": 3,
-            "customers": 2000,
-            "appointments": 2000,
-            "reports": 50,
-            "storage_gb": 25,
+        "pro": {
+            "team_members": 25,
+            "customers": 999999,
+            "appointments": 999999,
+            "reports": 200,
+            "storage_gb": 50,
             "services": 200,
         },
-        "plus": {
-            "team_members": 5,
-            "customers": 2000,
-            "appointments": 5000,
-            "reports": 100,
-            "storage_gb": 50,
-        },
-        "start": {
-            "team_members": 10,
-            "customers": 10000,
-            "appointments": 50000,
-            "reports": 500,
-            "storage_gb": 200,
-        },
         "max": {
-            "team_members": 50,
+            "team_members": 100,
             "customers": 999999,
             "appointments": 999999,
             "reports": 999999,
-            "storage_gb": 1000,
+            "storage_gb": 200,
+            "services": 1000,
         },
         "admin": {
             "team_members": 999999,
@@ -348,6 +280,22 @@ def get_plan_limits(plan: str) -> Dict[str, int]:
             "appointments": 999999,
             "reports": 999999,
             "storage_gb": 10000,
+            "services": 999999,
         },
+        "basic": {},
+        "plus": {},
+        "start": {},
+        "AdminG_Basic": {},
+        "AdminG_Plus": {},
+        "AdminPro_Start": {},
+        "AdminPro_Max": {},
     }
+
+    limits["basic"] = limits["starter"]
+    limits["AdminG_Basic"] = limits["starter"]
+    limits["plus"] = limits["pro"]
+    limits["AdminG_Plus"] = limits["pro"]
+    limits["start"] = limits["pro"]
+    limits["AdminPro_Start"] = limits["pro"]
+    limits["AdminPro_Max"] = limits["max"]
     return limits.get(plan, limits["free"])

@@ -136,10 +136,17 @@ def create_business_config(
     if existing:
         # Actualizar existente
         for field, value in payload.model_dump().items():
-            setattr(existing, field, value)
+            if field == 'plan':
+                # Update user plan separately
+                if value:
+                    current_user.plan = value
+                    db.add(current_user)
+            else:
+                setattr(existing, field, value)
         db.add(existing)
         db.commit()
         db.refresh(existing)
+        db.refresh(current_user)
         return existing
     
     # Obtener defaults para el tipo de negocio
@@ -159,6 +166,12 @@ def create_business_config(
         custom_fields=payload.custom_fields,
         has_pet_relationship=defaults.get("has_pet_relationship", payload.has_pet_relationship)
     )
+    
+    # Si viene plan en el payload, actualizar el usuario
+    if hasattr(payload, 'plan') and payload.plan:
+        current_user.plan = payload.plan
+        db.add(current_user)
+    
     db.add(config)
     db.commit()
     db.refresh(config)
@@ -197,11 +210,18 @@ def update_business_config(
     
     update_data = payload.model_dump(exclude_unset=True)
     for field, value in update_data.items():
-        setattr(config, field, value)
+        if field == 'plan':
+            # Update user plan separately
+            if value:
+                current_user.plan = value
+                db.add(current_user)
+        else:
+            setattr(config, field, value)
     
     db.add(config)
     db.commit()
     db.refresh(config)
+    db.refresh(current_user)
     return config
 
 

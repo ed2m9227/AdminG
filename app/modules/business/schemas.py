@@ -13,6 +13,7 @@ class BusinessConfigurationBase(BaseModel):
     customer_fields_enabled: dict[str, Any] | None = None
     custom_fields: dict[str, Any] | None = None
     has_pet_relationship: bool = True
+    plan: str | None = None  # Plan a guardar para el usuario
 
 class BusinessConfigurationCreate(BusinessConfigurationBase):
     pass
@@ -28,6 +29,7 @@ class BusinessConfigurationUpdate(BaseModel):
     customer_fields_enabled: dict[str, Any] | None = None
     custom_fields: dict[str, Any] | None = None
     has_pet_relationship: bool | None = None
+    plan: str | None = None  # Plan a guardar para el usuario
 
 class BusinessConfigurationOut(BusinessConfigurationBase):
     id: int

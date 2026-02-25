@@ -413,9 +413,16 @@ def get_user_features(
     user = db.query(User).filter(User.id == int(current_user["id"])).first()
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    plan_for_display = user.plan
+    plan_for_features = user.plan
+    plan_for_limits = user.plan
+    if user.role == "admin":
+        plan_for_display = "max"
+        plan_for_features = "admin"
+        plan_for_limits = "max"
     return {
-        "plan": user.plan,
+        "plan": plan_for_display,
         "role": user.role,
-        "features": get_available_features(user.plan, user.role),
-        "limits": get_plan_limits(user.plan)
+        "features": get_available_features(plan_for_features, user.role),
+        "limits": get_plan_limits(plan_for_limits)
     }

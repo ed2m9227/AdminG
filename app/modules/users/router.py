@@ -19,6 +19,10 @@ def get_current_user_info(
     user = db.query(User).filter(User.id == int(current_user["id"])).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+    if user.role == "admin" and user.plan != "max":
+        user.plan = "max"
+        db.commit()
+        db.refresh(user)
     return user
 
 @router.get("/")

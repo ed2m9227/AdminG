@@ -25,6 +25,7 @@ import {
 } from './views/OtherViews.js';
 import { masterAdminView, teamManagementView } from './views/AdminPanelView.js';
 import { BusinessTypesView } from './views/BusinessTypesView.js';
+import businessConfigView from './views/BusinessConfigView.js';
 import modal from './components/Modal.js';
 
 if (typeof window !== 'undefined' && typeof window.newUrlFound !== 'function') {
@@ -135,6 +136,23 @@ class App {
 
         router.register('team', async () => {
             await this.renderProtectedView(teamManagementView);
+        });
+
+        router.register('businessconfig', async () => {
+            const onboardingCompleted = localStorage.getItem('onboarding_completed');
+            if (!onboardingCompleted) {
+                await router.navigate('onboarding');
+                return;
+            }
+
+            const user = await authService.loadCurrentUser();
+            if (user.role === 'admin' || user.role === 'manager') {
+                await this.renderProtectedView(businessConfigView);
+                return;
+            }
+
+            modal.showError('Solo administradores y managers pueden acceder a esta sección');
+            await router.navigate('dashboard');
         });
 
         // Ruta para gestión de tipos de negocio
@@ -356,10 +374,9 @@ class App {
 
                     const planColors = {
                         'free': '#95a5a6',
-                        'basic': '#3498db',
-                        'plus': '#2ecc71',
-                        'start': '#f39c12',
-                        'max': '#9b59b6',
+                        'starter': '#3498db',
+                        'pro': '#9b59b6',
+                        'max': '#e74c3c',
                         'admin': '#e74c3c'
                     };
 
