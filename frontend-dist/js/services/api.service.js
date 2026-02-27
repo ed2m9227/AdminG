@@ -105,6 +105,20 @@ export class ApiService {
         return this.get('/payments/');
     }
 
+    async getReportsDashboard() {
+        return this.get('/reports/dashboard');
+    }
+
+    async getReport(reportType, payload) {
+        return this.post(`/reports/${reportType}`, payload);
+    }
+
+    async exportReport(reportType, startDate, endDate) {
+        const start = encodeURIComponent(startDate);
+        const end = encodeURIComponent(endDate);
+        return this.get(`/reports/export/${reportType}?start_date=${start}&end_date=${end}`);
+    }
+
     async getBusinessTypes() {
         return this.get('/api/admin/business-types/public/list', false);
     }

@@ -23,7 +23,7 @@ import {
     reportsView, 
     adminView 
 } from './views/OtherViews.js';
-import { masterAdminView, teamManagementView } from './views/AdminPanelView.js';
+import { masterAdminView, teamManagementView, teamMovementsView } from './views/AdminPanelView.js';
 import { BusinessTypesView } from './views/BusinessTypesView.js';
 import businessConfigView from './views/BusinessConfigView.js';
 import modal from './components/Modal.js';
@@ -136,6 +136,16 @@ class App {
 
         router.register('team', async () => {
             await this.renderProtectedView(teamManagementView);
+        });
+
+        router.register('team-movements', async () => {
+            const user = await authService.loadCurrentUser();
+            if (user.plan !== 'free') {
+                await this.renderProtectedView(teamMovementsView);
+            } else {
+                modal.showError('Esta función está disponible en planes pagados');
+                await router.navigate('dashboard');
+            }
         });
 
         router.register('businessconfig', async () => {

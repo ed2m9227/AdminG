@@ -299,6 +299,7 @@ export class AppointmentsView {
 export class PaymentsView {
     constructor() {
         this.payments = [];
+        this.containerHandler = null; // Handler reference for removal
     }
 
     formatCurrency(value) {
@@ -328,12 +329,22 @@ export class PaymentsView {
         const user = authService.getCurrentUser();
         const isAdmin = user && user.role === 'admin';
         
+        const statusFormatter = (status) => {
+            const statusMap = {
+                'pending': { label: 'Pendiente', class: 'warning', emoji: '⏳' },
+                'completed': { label: 'Completado', class: 'success', emoji: '✅' },
+                'cancelled': { label: 'Cancelado', class: 'danger', emoji: '❌' }
+            };
+            const s = statusMap[status] || { label: status, class: 'secondary', emoji: '❓' };
+            return `<span class="badge badge-${s.class}">${s.emoji} ${s.label}</span>`;
+        };
+        
         const columns = [
             { key: 'created_at', label: 'Fecha', type: 'datetime' },
             { key: 'customer.full_name', label: 'Cliente', formatter: (v) => v || 'N/A' },
             { key: 'method', label: 'Método' },
             { key: 'final_amount', label: 'Monto', formatter: (v) => this.formatCurrency(v || 0) },
-            { key: 'status', label: 'Estado', type: 'badge', badgeClass: 'success' }
+            { key: 'status', label: 'Estado', formatter: statusFormatter }
         ];
         
         if (isAdmin) {
@@ -356,56 +367,89 @@ export class PaymentsView {
     }
 
     async init() {
+        console.log('🔄 PaymentsView: init() called');
+        await this.reloadData();
+        this.attachEventListeners();
+    }
+
+    async reloadData() {
+        console.log('🔄 PaymentsView: Reloading payments data...');
         try {
             this.payments = await apiService.getPayments();
+            console.log('✅ PaymentsView: Payments loaded:', this.payments.length);
             const container = document.getElementById('paymentsContainer');
-            if (container) container.innerHTML = this.renderTable();
+            if (container) {
+                container.innerHTML = this.renderTable();
+                console.log('✅ PaymentsView: Table updated');
+                // Re-attach listeners after innerHTML update
+                this.attachEventListeners();
+            }
         } catch (error) {
-            console.error('Error loading payments:', error);
+            console.error('❌ PaymentsView: Error loading payments:', error);
         }
+    }
 
-        // Event listeners
+    attachEventListeners() {
+        // New payment button - remove old listener first
         const btnNew = document.getElementById('btnNewPayment');
         if (btnNew) {
-            btnNew.addEventListener('click', () => this.showNewPaymentModal());
+            const newBtnClone = btnNew.cloneNode(true);
+            btnNew.parentNode.replaceChild(newBtnClone, btnNew);
+            newBtnClone.addEventListener('click', () => this.showNewPaymentModal());
         }
         
-        // Delete payment listener
-        document.addEventListener('click', async (e) => {
-            const deleteBtn = e.target.closest('[data-delete-payment]');
-            if (deleteBtn) {
-                const paymentId = deleteBtn.dataset.deletePayment;
-                const confirmed = await modal.confirm({
-                    title: 'Confirmar eliminación',
-                    message: '¿Estás seguro de que quieres eliminar este pago?',
-                    confirmText: 'Eliminar',
-                    cancelText: 'Cancelar'
-                });
+        // Container click handler - remove old listener first
+        const container = document.getElementById('paymentsContainer');
+        if (container) {
+            // Remove old handler if exists
+            if (this.containerHandler) {
+                container.removeEventListener('click', this.containerHandler);
+            }
+            
+            // Create and save new handler
+            this.containerHandler = async (e) => {
+                // Handle delete
+                const deleteBtn = e.target.closest('[data-delete-payment]');
+                if (deleteBtn) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const paymentId = deleteBtn.dataset.deletePayment;
+                    const confirmed = await modal.confirm({
+                        title: 'Confirmar eliminación',
+                        message: '¿Estás seguro de que quieres eliminar este pago?',
+                        confirmText: 'Eliminar',
+                        cancelText: 'Cancelar'
+                    });
+                    
+                    if (confirmed) {
+                        try {
+                            await apiService.delete(`/payments/${paymentId}`);
+                            await this.reloadData(); // This will re-attach listeners
+                            await modal.alert({ title: 'Éxito', message: 'Pago eliminado correctamente', type: 'success' });
+                        } catch (error) {
+                            const errorMsg = getErrorMessage(error);
+                            await modal.alert({ title: 'Error', message: 'Error al eliminar pago: ' + errorMsg, type: 'error' });
+                        }
+                    }
+                    return;
+                }
                 
-                if (confirmed) {
-                    try {
-                        await apiService.delete(`/payments/${paymentId}`);
-                        await this.init();
-                        await modal.alert({ title: 'Éxito', message: 'Pago eliminado correctamente', type: 'success' });
-                    } catch (error) {
-                        const errorMsg = getErrorMessage(error);
-                        await modal.alert({ title: 'Error', message: 'Error al eliminar pago: ' + errorMsg, type: 'error' });
+                // Handle edit
+                const editBtn = e.target.closest('[data-edit-payment]');
+                if (editBtn) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const paymentId = editBtn.dataset.editPayment;
+                    const payment = this.payments.find(p => p.id === parseInt(paymentId));
+                    if (payment) {
+                        this.showEditPaymentModal(payment);
                     }
                 }
-            }
-        });
-
-        // Edit payment listener
-        document.addEventListener('click', async (e) => {
-            const editBtn = e.target.closest('[data-edit-payment]');
-            if (editBtn) {
-                const paymentId = editBtn.dataset.editPayment;
-                const payment = this.payments.find(p => p.id === parseInt(paymentId));
-                if (payment) {
-                    this.showEditPaymentModal(payment);
-                }
-            }
-        });
+            };
+            
+            // Attach new handler
+            container.addEventListener('click', this.containerHandler);
+        }
     }
 
     async showNewPaymentModal() {
@@ -451,6 +495,14 @@ export class PaymentsView {
                     <label>Concepto</label>
                     <input type="text" name="notes" placeholder="Descripción..." style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
                 </div>
+                <div class="form-group">
+                    <label>Estado</label>
+                    <select name="status" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
+                        <option value="pending">Pendiente</option>
+                        <option value="completed" selected>Completado</option>
+                        <option value="cancelled">Cancelado</option>
+                    </select>
+                </div>
                 <div class="modal-actions">
                     <button type="submit" class="btn btn-success">Guardar</button>
                     <button type="button" class="btn" data-close>Cancelar</button>
@@ -473,13 +525,14 @@ export class PaymentsView {
                 customer_id: parseInt(formData.get('customer_id')),
                 amount: parseFloat(formData.get('amount')),
                 method: formData.get('method'),
-                notes: formData.get('notes') || null
+                notes: formData.get('notes') || null,
+                status: formData.get('status') || 'completed'
             };
             
             try {
                 await apiService.post('/payments/', paymentData);
                 modal.close(paymentModal);
-                await this.init();
+                await this.reloadData();
                 await modal.alert({ title: 'Éxito', message: 'Pago registrado correctamente', type: 'success' });
             } catch (error) {
                 console.error('Error creating payment:', error);
@@ -533,6 +586,14 @@ export class PaymentsView {
                     <label>Notas</label>
                     <textarea name="notes" placeholder="Información adicional" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">${payment.notes || ''}</textarea>
                 </div>
+                <div class="form-group">
+                    <label>Estado</label>
+                    <select name="status" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
+                        <option value="pending" ${payment.status === 'pending' ? 'selected' : ''}>Pendiente</option>
+                        <option value="completed" ${payment.status === 'completed' ? 'selected' : ''}>Completado</option>
+                        <option value="cancelled" ${payment.status === 'cancelled' ? 'selected' : ''}>Cancelado</option>
+                    </select>
+                </div>
                 <div class="modal-actions">
                     <button type="submit" class="btn btn-success">Actualizar</button>
                     <button type="button" class="btn" data-close>Cancelar</button>
@@ -551,21 +612,22 @@ export class PaymentsView {
             e.preventDefault();
             const formData = new FormData(form);
             
+            // Only send status and notes (PaymentUpdate schema)
             const paymentData = {
-                customer_id: parseInt(formData.get('customer_id')),
-                amount: parseFloat(formData.get('amount')),
-                method: formData.get('method'),
-                notes: formData.get('notes') || null,
-                status: payment.status
+                status: formData.get('status') || payment.status,
+                notes: formData.get('notes') || null
             };
             
+            console.log('💾 Updating payment:', payment.id, 'with data:', paymentData);
+            
             try {
-                await apiService.put(`/payments/${payment.id}`, paymentData);
+                const updated = await apiService.put(`/payments/${payment.id}`, paymentData);
+                console.log('✅ Payment updated successfully:', updated);
                 modal.close(paymentModal);
-                await this.init();
+                await this.reloadData();
                 await modal.alert({ title: 'Éxito', message: 'Pago actualizado correctamente', type: 'success' });
             } catch (error) {
-                console.error('Error updating payment:', error);
+                console.error('❌ Error updating payment:', error);
                 let errorMsg = error.message || 'Error desconocido';
                 if (error.detail) {
                     errorMsg = typeof error.detail === 'string' ? error.detail : JSON.stringify(error.detail);
@@ -939,12 +1001,11 @@ export class CashRegisterView {
 // Reports View
 export class ReportsView {
     constructor() {
-        this.stats = {
-            sales: 0,
-            expenses: 0,
-            profit: 0,
-            transactions: 0
-        };
+        this.metrics = null;
+        this.selectedReport = 'overview';
+        this.startDate = new Date(new Date().setDate(new Date().getDate() - 30));
+        this.endDate = new Date();
+        this.reportData = null;
     }
 
     formatCurrency(value) {
@@ -956,114 +1017,474 @@ export class ReportsView {
         }).format(value);
     }
 
+    formatDate(date) {
+        return date.toISOString().split('T')[0];
+    }
+
     render() {
         const user = authService.getCurrentUser();
         const isAdmin = user?.role === 'admin';
         const plan = user?.plan || 'free';
 
-        // Plan limitations
-        const canViewExpenses = isAdmin || ['start', 'max'].includes(plan);
-        const canViewProfit = isAdmin || ['max'].includes(plan);
-        const canViewDetailed = isAdmin || ['plus', 'start', 'max'].includes(plan);
+        // Check feature access
+        const canViewReports = isAdmin || ['starter', 'pro', 'max'].includes(plan);
+        const canExportReports = isAdmin || ['pro', 'max'].includes(plan);
+        const canAdvancedAnalytics = isAdmin || ['max'].includes(plan);
+
+        if (!canViewReports) {
+            return `
+                <div class="card">
+                    <div class="card-body" style="text-align: center; padding: 40px;">
+                        <div style="font-size: 48px; margin-bottom: 20px;">🔒</div>
+                        <h2>Reportes no disponibles</h2>
+                        <p style="color: #7f8c8d; margin-top: 10px;">
+                            Los reportes están disponibles en planes Starter o superior.
+                        </p>
+                    </div>
+                </div>
+            `;
+        }
 
         return `
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <h3>Ventas del Mes</h3>
-                    <div class="value">${this.formatCurrency(this.stats.sales)}</div>
+            <div class="reports-view">
+                <!-- Métricas del Mes -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>💰 Ventas del Mes</h3>
+                        <div class="value">${this.formatCurrency(this.metrics?.total_revenue_month || 0)}</div>
+                        <p style="font-size: 12px; color: #7f8c8d; margin-top: 5px;">
+                            ${this.metrics?.total_appointments_month || 0} transacciones
+                        </p>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <h3>👥 Clientes</h3>
+                        <div class="value">${this.metrics?.total_customers || 0}</div>
+                        <p style="font-size: 12px; color: #7f8c8d; margin-top: 5px;">Total registrados</p>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <h3>📅 Citas del Mes</h3>
+                        <div class="value">${this.metrics?.total_appointments_month || 0}</div>
+                        <p style="font-size: 12px; color: #7f8c8d; margin-top: 5px;">
+                            Ticket: ${this.formatCurrency(this.metrics?.average_ticket || 0)}
+                        </p>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <h3>⏳ Pagos Pendientes</h3>
+                        <div class="value">${this.formatCurrency(this.metrics?.pending_payments || 0)}</div>
+                        <p style="font-size: 12px; color: #7f8c8d; margin-top: 5px;">Por cobrar</p>
+                    </div>
                 </div>
-                ${canViewExpenses ? `
-                <div class="stat-card">
-                    <h3>Gastos del Mes</h3>
-                    <div class="value">${this.formatCurrency(this.stats.expenses)}</div>
+
+                <!-- Generador de Reportes -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">📊 Generar Reportes</h2>
+                    </div>
+                    <div class="card-body">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 12px; margin-bottom: 20px; align-items: flex-end;">
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600;">Tipo de Reporte</label>
+                                <select id="reportType" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                    <option value="revenue">💵 Reporte de Ingresos</option>
+                                    <option value="customers">👥 Reporte de Clientes</option>
+                                    <option value="appointments">📅 Reporte de Citas</option>
+                                    ${['pro', 'max'].includes(plan) || isAdmin ? `<option value="inventory">📦 Reporte de Inventario</option>` : ''}
+                                </select>
+                            </div>
+
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600;">Desde</label>
+                                <input type="date" id="startDate" value="${this.formatDate(this.startDate)}" 
+                                    style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600;">Hasta</label>
+                                <input type="date" id="endDate" value="${this.formatDate(this.endDate)}" 
+                                    style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+
+                            <button class="btn btn-success" id="btnGenerateReport">Generar</button>
+                        </div>
+
+                        ${canExportReports ? `
+                            <button class="btn btn-primary" id="btnExportReport" style="margin-left: 0;">
+                                📥 Exportar CSV
+                            </button>
+                        ` : ''}
+                    </div>
                 </div>
-                ` : `
-                <div class="stat-card" style="opacity: 0.5;">
-                    <h3>Gastos del Mes</h3>
-                    <div class="value">🔒</div>
-                    <p style="font-size: 12px; color: #7f8c8d;">Disponible en plan Start</p>
-                </div>
-                `}
-                ${canViewProfit ? `
-                <div class="stat-card">
-                    <h3>Ganancia Neta</h3>
-                    <div class="value">${this.formatCurrency(this.stats.profit)}</div>
-                </div>
-                ` : `
-                <div class="stat-card" style="opacity: 0.5;">
-                    <h3>Ganancia Neta</h3>
-                    <div class="value">🔒</div>
-                    <p style="font-size: 12px; color: #7f8c8d;">Disponible en plan Max</p>
-                </div>
-                `}
-                <div class="stat-card">
-                    <h3>Transacciones</h3>
-                    <div class="value">${this.stats.transactions}</div>
-                </div>
+
+                <!-- Resultados del Reporte -->
+                <div id="reportResults" style="margin-top: 20px;"></div>
             </div>
-            
+        `;
+    }
+
+    async loadMetrics() {
+        try {
+            console.log('🔄 ReportsView: Loading metrics from /reports/dashboard...');
+            this.metrics = await apiService.getReportsDashboard();
+            console.log('✅ ReportsView: Metrics loaded:', this.metrics);
+        } catch (error) {
+            console.error('❌ ReportsView: Error loading metrics:', error);
+            this.metrics = {
+                total_customers: 0,
+                total_appointments_month: 0,
+                total_revenue_month: 0,
+                average_ticket: 0,
+                pending_payments: 0,
+                top_services: [],
+                busiest_days: []
+            };
+        }
+    }
+
+    updateMetricsDisplay() {
+        console.log('🎨 ReportsView: updateMetricsDisplay() called');
+        console.log('📊 ReportsView: Current metrics:', this.metrics);
+        
+        // Find the stats grid container
+        const statsGrid = document.querySelector('.reports-view .stats-grid');
+        console.log('🔍 ReportsView: statsGrid found?', !!statsGrid);
+        
+        if (!statsGrid) {
+            console.warn('⚠️ ReportsView: Stats grid container not found');
+            return;
+        }
+        
+        const statCards = Array.from(statsGrid.querySelectorAll('.stat-card'));
+        console.log('🔍 ReportsView: Found', statCards.length, 'stat cards');
+        
+        if (!statCards.length) {
+            console.warn('⚠️ ReportsView: No stat cards found');
+            return;
+        }
+        
+        // Update cards in order: Ventas, Clientes, Citas, Pagos Pendientes
+        statCards.forEach((card, index) => {
+            const h3 = card.querySelector('h3');
+            const valueElement = card.querySelector('.value');
+            console.log(`  Card ${index}: "${h3?.textContent}" - valueElement found?`, !!valueElement);
+        });
+        
+        // Card 0: Ventas del Mes
+        if (statCards[0]) {
+            const ventasValue = statCards[0].querySelector('.value');
+            if (ventasValue) {
+                const newValue = this.formatCurrency(this.metrics?.total_revenue_month || 0);
+                ventasValue.textContent = newValue;
+                console.log('✅ Updated Card 0 Ventas to:', newValue);
+            } else {
+                console.warn('⚠️ Card 0: .value element not found');
+            }
+        }
+        
+        // Card 1: Clientes
+        if (statCards[1]) {
+            const clientesValue = statCards[1].querySelector('.value');
+            if (clientesValue) {
+                const newValue = this.metrics?.total_customers || 0;
+                clientesValue.textContent = newValue;
+                console.log('✅ Updated Card 1 Clientes to:', newValue);
+            } else {
+                console.warn('⚠️ Card 1: .value element not found');
+            }
+        }
+        
+        // Card 2: Citas del Mes
+        if (statCards[2]) {
+            const citasValue = statCards[2].querySelector('.value');
+            if (citasValue) {
+                const newValue = this.metrics?.total_appointments_month || 0;
+                citasValue.textContent = newValue;
+                console.log('✅ Updated Card 2 Citas to:', newValue);
+            } else {
+                console.warn('⚠️ Card 2: .value element not found');
+            }
+        }
+        
+        // Card 3: Pagos Pendientes
+        if (statCards[3]) {
+            const pagosValue = statCards[3].querySelector('.value');
+            if (pagosValue) {
+                const newValue = this.formatCurrency(this.metrics?.pending_payments || 0);
+                pagosValue.textContent = newValue;
+                console.log('✅ Updated Card 3 Pagos Pendientes to:', newValue);
+            } else {
+                console.warn('⚠️ Card 3: .value element not found');
+            }
+        }
+        
+        console.log('🎨 ReportsView: updateMetricsDisplay() completed');
+    }
+
+    async generateReport(type, startDate, endDate) {
+        try {
+            this.reportData = await apiService.getReport(type, {
+                start_date: startDate + 'T00:00:00',
+                end_date: endDate + 'T23:59:59',
+                report_type: type
+            });
+            return this.reportData;
+        } catch (error) {
+            const errorMsg = getErrorMessage(error);
+            await modal.alert({
+                type: 'error',
+                title: 'Error al generar reporte',
+                message: errorMsg
+            });
+            return null;
+        }
+    }
+
+    renderReportResults(type, data) {
+        if (type === 'revenue') {
+            return this.renderRevenueReport(data);
+        } else if (type === 'customers') {
+            return this.renderCustomerReport(data);
+        } else if (type === 'appointments') {
+            return this.renderAppointmentReport(data);
+        } else if (type === 'inventory') {
+            return this.renderInventoryReport(data);
+        }
+        return '';
+    }
+
+    renderRevenueReport(data) {
+        return `
             <div class="card">
                 <div class="card-header">
-                    <h2 class="card-title">Reportes Financieros</h2>
+                    <h3>💵 Reporte de Ingresos</h3>
                 </div>
                 <div class="card-body">
-                    ${canViewDetailed ? `
-                        <div style="margin-bottom: 20px;">
-                            <h3>📊 Reportes Disponibles</h3>
-                            <ul style="list-style: none; padding: 0;">
-                                <li style="padding: 10px; border-bottom: 1px solid #eee;">
-                                    <a href="#" onclick="event.preventDefault(); alert('Reporte de Ventas: Próximamente')">📈 Reporte de Ventas por Producto</a>
-                                </li>
-                                <li style="padding: 10px; border-bottom: 1px solid #eee;">
-                                    <a href="#" onclick="event.preventDefault(); alert('Reporte de Clientes: Próximamente')">👥 Reporte de Clientes más Activos</a>
-                                </li>
-                                ${['start', 'max'].includes(plan) || isAdmin ? `
-                                <li style="padding: 10px; border-bottom: 1px solid #eee;">
-                                    <a href="#" onclick="event.preventDefault(); alert('Reporte de Gastos: Próximamente')">💸 Reporte de Gastos</a>
-                                </li>
-                                ` : ''}
-                                ${['max'].includes(plan) || isAdmin ? `
-                                <li style="padding: 10px;">
-                                    <a href="#" onclick="event.preventDefault(); alert('Análisis de Ganancias: Próximamente')">💰 Análisis de Ganancias</a>
-                                </li>
-                                ` : ''}
-                            </ul>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                        <div style="background: #e8f5e9; padding: 15px; border-radius: 4px;">
+                            <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Total Ingresos</div>
+                            <div style="font-size: 24px; font-weight: 600; color: #2e7d32;">
+                                ${this.formatCurrency(data.total_revenue || 0)}
+                            </div>
                         </div>
-                        <div style="background: #f0f8ff; padding: 12px; border-radius: 4px; margin-top: 12px;">
-                            <p style="margin: 0; color: #2c3e50; font-size: 12px;">
-                                📌 Los reportes detallados se generarán próximamente. Actualmente puedes consultar el resumen mensual arriba.
-                            </p>
+                        <div style="background: #fff3e0; padding: 15px; border-radius: 4px;">
+                            <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Cobrado</div>
+                            <div style="font-size: 24px; font-weight: 600; color: #f57c00;">
+                                ${this.formatCurrency(data.paid_amount || 0)}
+                            </div>
                         </div>
-                    ` : `
-                        <div style="background: #fff3cd; padding: 12px; border-radius: 4px;">
-                            <p style="margin: 0; color: #856404;">
-                                🔒 Acceso limitado en tu plan. Reportes disponibles en planes Plus, Start o Max.
-                            </p>
+                        <div style="background: #fce4ec; padding: 15px; border-radius: 4px;">
+                            <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Pendiente</div>
+                            <div style="font-size: 24px; font-weight: 600; color: #c2185b;">
+                                ${this.formatCurrency(data.pending_amount || 0)}
+                            </div>
                         </div>
-                    `}
+                    </div>
+
+                    ${data.by_payment_method ? `
+                        <div style="margin-top: 20px;">
+                            <h4>Por Método de Pago</h4>
+                            <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                                <tr style="border-bottom: 1px solid #eee;">
+                                    <th style="text-align: left; padding: 8px;">Método</th>
+                                    <th style="text-align: right; padding: 8px;">Monto</th>
+                                </tr>
+                                ${Object.entries(data.by_payment_method).map(([method, amount]) => `
+                                    <tr style="border-bottom: 1px solid #eee;">
+                                        <td style="padding: 8px;">${method}</td>
+                                        <td style="text-align: right; padding: 8px;">${this.formatCurrency(amount)}</td>
+                                    </tr>
+                                `).join('')}
+                            </table>
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    }
+
+    renderCustomerReport(data) {
+        return `
+            <div class="card">
+                <div class="card-header">
+                    <h3>👥 Reporte de Clientes</h3>
+                </div>
+                <div class="card-body">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+                        <div style="background: #e3f2fd; padding: 15px; border-radius: 4px;">
+                            <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Total Clientes</div>
+                            <div style="font-size: 24px; font-weight: 600; color: #1565c0;">
+                                ${data.total_customers || 0}
+                            </div>
+                        </div>
+                        <div style="background: #f3e5f5; padding: 15px; border-radius: 4px;">
+                            <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Nuevos (período)</div>
+                            <div style="font-size: 24px; font-weight: 600; color: #6a1b9a;">
+                                ${data.new_customers || 0}
+                            </div>
+                        </div>
+                        <div style="background: #e0f2f1; padding: 15px; border-radius: 4px;">
+                            <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Retención</div>
+                            <div style="font-size: 24px; font-weight: 600; color: #00695c;">
+                                ${(data.retention_rate || 0).toFixed(1)}%
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    renderAppointmentReport(data) {
+        return `
+            <div class="card">
+                <div class="card-header">
+                    <h3>📅 Reporte de Citas</h3>
+                </div>
+                <div class="card-body">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 15px;">
+                        <div style="background: #e8eaf6; padding: 15px; border-radius: 4px;">
+                            <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Total Citas</div>
+                            <div style="font-size: 24px; font-weight: 600; color: #3f51b5;">
+                                ${data.total_appointments || 0}
+                            </div>
+                        </div>
+                        <div style="background: #e8f5e9; padding: 15px; border-radius: 4px;">
+                            <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Completadas</div>
+                            <div style="font-size: 24px; font-weight: 600; color: #388e3c;">
+                                ${data.completed_appointments || 0}
+                            </div>
+                        </div>
+                        <div style="background: #ffebee; padding: 15px; border-radius: 4px;">
+                            <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Canceladas</div>
+                            <div style="font-size: 24px; font-weight: 600; color: #d32f2f;">
+                                ${data.cancelled_appointments || 0}
+                            </div>
+                        </div>
+                        <div style="background: #fff3e0; padding: 15px; border-radius: 4px;">
+                            <div style="font-size: 12px; color: #666; margin-bottom: 5px;">No Show</div>
+                            <div style="font-size: 24px; font-weight: 600; color: #f57c00;">
+                                ${(data.no_show_rate || 0).toFixed(1)}%
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    renderInventoryReport(data) {
+        return `
+            <div class="card">
+                <div class="card-header">
+                    <h3>📦 Reporte de Inventario</h3>
+                </div>
+                <div class="card-body">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+                        <div style="background: #ede7f6; padding: 15px; border-radius: 4px;">
+                            <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Productos</div>
+                            <div style="font-size: 24px; font-weight: 600; color: #512da8;">
+                                ${data.total_items || 0}
+                            </div>
+                        </div>
+                        <div style="background: #fce4ec; padding: 15px; border-radius: 4px;">
+                            <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Stock Bajo</div>
+                            <div style="font-size: 24px; font-weight: 600; color: #c2185b;">
+                                ${data.low_stock_items || 0}
+                            </div>
+                        </div>
+                        <div style="background: #e1f5fe; padding: 15px; border-radius: 4px;">
+                            <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Valor Total</div>
+                            <div style="font-size: 24px; font-weight: 600; color: #0277bd;">
+                                ${this.formatCurrency(data.total_value || 0)}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         `;
     }
 
     async init() {
-        try {
-            // Cargar datos de pagos para reportes
-            const payments = await apiService.getPayments();
-            if (Array.isArray(payments)) {
-                const currentMonth = new Date().getMonth();
-                const currentYear = new Date().getFullYear();
-                
-                const monthPayments = payments.filter(p => {
-                    const date = new Date(p.payment_date);
-                    return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
-                });
+        console.log('🔄 ReportsView: init() started');
+        await this.loadMetrics();
+        console.log('✅ ReportsView: Metrics loaded, updating DOM...');
+        
+        // Update the metrics display after loading
+        this.updateMetricsDisplay();
+        
+        // Event listeners
+        const btnGenerate = document.getElementById('btnGenerateReport');
+        if (btnGenerate) {
+            btnGenerate.addEventListener('click', async () => {
+                const type = document.getElementById('reportType').value;
+                const startDate = document.getElementById('startDate').value;
+                const endDate = document.getElementById('endDate').value;
 
-                this.stats.sales = monthPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
-                this.stats.transactions = monthPayments.length;
-            }
-        } catch (error) {
-            console.error('Error loading reports:', error);
+                if (!startDate || !endDate) {
+                    await modal.alert({
+                        type: 'warning',
+                        title: 'Fechas requeridas',
+                        message: 'Por favor selecciona las fechas de inicio y fin'
+                    });
+                    return;
+                }
+
+                btnGenerate.disabled = true;
+                btnGenerate.textContent = '⏳ Generando...';
+
+                const data = await this.generateReport(type, startDate, endDate);
+                if (data) {
+                    const resultsContainer = document.getElementById('reportResults');
+                    if (resultsContainer) {
+                        resultsContainer.innerHTML = this.renderReportResults(type, data);
+                    }
+                }
+
+                btnGenerate.disabled = false;
+                btnGenerate.textContent = 'Generar';
+            });
+        }
+
+        const btnExport = document.getElementById('btnExportReport');
+        if (btnExport) {
+            btnExport.addEventListener('click', async () => {
+                const type = document.getElementById('reportType').value;
+                const startDate = document.getElementById('startDate').value;
+                const endDate = document.getElementById('endDate').value;
+
+                if (!startDate || !endDate) {
+                    await modal.alert({
+                        type: 'warning',
+                        title: 'Fechas requeridas',
+                        message: 'Por favor selecciona las fechas de inicio y fin'
+                    });
+                    return;
+                }
+
+                btnExport.disabled = true;
+                btnExport.textContent = '⏳ Exportando...';
+
+                try {
+                    const result = await apiService.exportReport(type, startDate, endDate);
+                    await modal.alert({
+                        type: 'success',
+                        title: 'Exportación completada',
+                        message: result.message || 'Archivo CSV generado correctamente'
+                    });
+                } catch (error) {
+                    const errorMsg = getErrorMessage(error);
+                    await modal.alert({
+                        type: 'error',
+                        title: 'Error en la exportación',
+                        message: errorMsg
+                    });
+                }
+
+                btnExport.disabled = false;
+                btnExport.textContent = '📥 Exportar CSV';
+            });
         }
     }
 }

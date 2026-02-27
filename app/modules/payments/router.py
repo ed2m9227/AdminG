@@ -51,6 +51,11 @@ def create_payment(
     
     final_amount = payload.amount - discount_amount
     
+    # Use provided status or determine by method
+    payment_status = payload.status if payload.status else (
+        "completed" if payload.method.lower() in ["cash", "montelibano_gen"] else "pending"
+    )
+    
     payment = Payment(
         user_id=current_user["id"],
         customer_id=payload.customer_id,
@@ -61,8 +66,8 @@ def create_payment(
         method=payload.method,
         reference=payload.reference,
         notes=payload.notes,
-        status="completed" if payload.method.lower() in ["cash", "montelibano_gen"] else "pending",
-        paid_at=datetime.utcnow() if payload.method.lower() in ["cash", "montelibano_gen"] else None,
+        status=payment_status,
+        paid_at=datetime.utcnow() if payment_status == "completed" else None,
     )
     
     db.add(payment)

@@ -253,10 +253,17 @@ export class DashboardView {
                 this.updateStat('statAppointments', this.stats.appointments);
             }
 
-            // Revenue calculation
+            // Revenue calculation - Only count completed payments
             if (paymentsData.status === 'fulfilled' && Array.isArray(paymentsData.value)) {
-                this.stats.revenue = paymentsData.value.reduce((sum, p) => sum + (p.amount || 0), 0);
+                console.log('🔍 DashboardView: Payments fetched:', paymentsData.value);
+                const completedPayments = paymentsData.value.filter(p => p.status === 'completed');
+                console.log('✅ DashboardView: Completed payments:', completedPayments);
+                this.stats.revenue = completedPayments
+                    .reduce((sum, p) => sum + (parseFloat(p.final_amount) || parseFloat(p.amount) || 0), 0);
+                console.log('💰 DashboardView: Total revenue calculated:', this.stats.revenue);
                 this.updateStat('statRevenue', this.stats.revenue);
+            } else {
+                console.warn('⚠️ DashboardView: Payment data not fulfilled or not an array:', paymentsData);
             }
         } catch (error) {
             console.error('Error loading dashboard stats:', error);

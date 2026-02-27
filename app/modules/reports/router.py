@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -34,16 +35,26 @@ def resolve_user(
         raise HTTPException(status_code=404, detail="User not found")
     return user
 
+LEGACY_PLAN_MAP = {
+    "basic": "starter",
+    "AdminG_Basic": "starter",
+    "plus": "pro",
+    "AdminG_Plus": "pro",
+    "start": "pro",
+    "AdminPro_Start": "pro",
+    "AdminPro_Max": "max",
+}
+
+
 def check_reports_access(user: User, required_plans: list[str] = ["starter", "pro", "max"]):
     """Check if user has access to reports features"""
-    legacy_plans = [
-        "basic", "plus", "start",
-        "AdminG_Basic", "AdminG_Plus",
-        "AdminPro_Start", "AdminPro_Max",
-    ]
-
-    if user.role == 'admin' or user.plan in required_plans + legacy_plans + ["admin"]:
+    if user.role == "admin" or user.plan == "admin":
         return True
+
+    normalized_plan = LEGACY_PLAN_MAP.get(user.plan, user.plan)
+    if normalized_plan in required_plans:
+        return True
+
     raise HTTPException(status_code=403, detail="Feature not available in your plan")
 
 @router.get("/dashboard", response_model=DashboardMetrics)
@@ -71,17 +82,22 @@ def get_dashboard_metrics(
         Customer.user_id == user_id
     ).count()
     
-    # Appointments this month
-    appointments_month = db.query(Appointment).filter(
-        Appointment.user_id == user_id,
-        Appointment.appointment_date >= month_start
+    # Appointments this month (need to join with Customer to filter by user)
+    appointments_month = db.query(Appointment).join(
+        Customer, Appointment.customer_id == Customer.id
+    ).filter(
+        Customer.user_id == user_id,
+        Appointment.scheduled_at >= month_start
     ).count()
     
     # Revenue this month
     revenue_query = db.query(Payment).filter(
         Payment.user_id == user_id,
-        Payment.created_at >= month_start,
-        Payment.status == "completed"
+        Payment.status == "completed",
+        or_(
+            Payment.paid_at >= month_start,
+            and_(Payment.paid_at.is_(None), Payment.created_at >= month_start),
+        ),
     )
     
     total_revenue = sum(p.final_amount for p in revenue_query.all()) or Decimal(0)
@@ -125,11 +141,8 @@ def get_revenue_report(
     - AdminG Plus+ 
     - AdminPro Start+
     """
-    user_plan = current_user.plan
     user_id = current_user.id
-    
-    if user_plan not in ["plus", "start", "max"]:
-        raise HTTPException(status_code=403, detail="Feature not available in your plan")
+    check_reports_access(current_user, ["starter", "pro", "max"])
     
     payments = db.query(Payment).filter(
         Payment.user_id == user_id,
@@ -185,11 +198,8 @@ def get_customer_report(
     - AdminG Plus+
     - AdminPro Start+
     """
-    user_plan = current_user.plan
     user_id = current_user.id
-    
-    if user_plan not in ["plus", "start", "max"]:
-        raise HTTPException(status_code=403, detail="Feature not available in your plan")
+    check_reports_access(current_user, ["starter", "pro", "max"])
     
     # Total customers
     total_customers = db.query(Customer).filter(
@@ -225,11 +235,8 @@ def get_appointment_report(
     - AdminG Plus+
     - AdminPro Start+
     """
-    user_plan = current_user.plan
     user_id = current_user.id
-    
-    if user_plan not in ["plus", "start", "max"]:
-        raise HTTPException(status_code=403, detail="Feature not available in your plan")
+    check_reports_access(current_user, ["starter", "pro", "max"])
     
     appointments = db.query(Appointment).filter(
         Appointment.user_id == user_id,
@@ -261,11 +268,8 @@ def get_inventory_report(
     Available for:
     - AdminPro Start+ (with inventory)
     """
-    user_plan = current_user.plan
     user_id = current_user.id
-    
-    if user_plan not in ["start", "max"]:
-        raise HTTPException(status_code=403, detail="Feature not available in your plan")
+    check_reports_access(current_user, ["pro", "max"])
     
     items = db.query(InventoryItem).filter(
         InventoryItem.user_id == user_id
@@ -299,8 +303,7 @@ def export_report(
     Available for:
     - AdminPro Start+ (exports)
     """
-    if current_user.plan not in ["start", "max"]:
-        raise HTTPException(status_code=403, detail="Feature not available in your plan")
+    check_reports_access(current_user, ["pro", "max"])
     
     return {
         "message": "Export functionality coming soon",

@@ -21,6 +21,7 @@ export class Modal {
         // Crear el modal
         const modal = document.createElement('div');
         modal.className = 'modal';
+        modal.style.zIndex = '9999'; // Fuerza explícitamente el z-index
         modal.innerHTML = `
             <div class="modal-content modal-${size}">
                 <div class="modal-header">
@@ -36,14 +37,20 @@ export class Modal {
         // Event listeners
         modal.addEventListener('click', (e) => {
             // Cerrar si se hace click fuera del modal o en el botón de cerrar
-            if (e.target.classList.contains('modal') || 
-                e.target.closest('[data-close]')) {
+            if (e.target === modal || e.target.closest('[data-close]')) {
                 this.close(modal, onClose);
             }
         });
 
-        // Agregar al DOM
-        document.body.appendChild(modal);
+        // Agregar al DOM - Usar setTimeout para asegurar que se renderice
+        // Esto ayuda con el Simple Browser de VS Code
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                document.body.appendChild(modal);
+            });
+        } else {
+            document.body.appendChild(modal);
+        }
 
         return modal;
     }

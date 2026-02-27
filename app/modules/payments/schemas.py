@@ -16,6 +16,7 @@ class PaymentCreate(BaseModel):
     method: str  # "cash", "card", "transfer", "montelibano_gen"
     reference: str | None = None
     notes: str | None = None
+    status: str | None = None
 
 class PaymentUpdate(BaseModel):
     status: str | None = None

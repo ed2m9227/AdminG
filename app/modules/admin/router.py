@@ -4,6 +4,7 @@ Endpoint para administradores globales y gestión de equipos
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 from typing import List
 from app.db.session import get_db
@@ -11,6 +12,13 @@ from app.core.security import get_current_user, hash_password
 from app.core.features import get_available_features, get_plan_limits, Feature
 from app.models.user import User
 from app.models.team_user import TeamUser
+from app.models.customer import Customer
+from app.models.appointment import Appointment
+from app.models.payment import Payment
+from app.models.pet import Pet
+from app.models.inventory import InventoryCategory, InventoryItem, InventoryMovement
+from app.models.business_config import BusinessConfiguration
+from app.models.service import Service
 from datetime import datetime
 
 router = APIRouter(
@@ -91,12 +99,17 @@ def list_all_users(
     admin: User = Depends(require_admin),
     db: Session = Depends(get_db),
     skip: int = 0,
-    limit: int = 50
+    limit: int = 50,
+    include_inactive: bool = True
 ):
     """Lista todos los usuarios del sistema (Master Admin only)"""
     try:
-        users = db.query(User).offset(skip).limit(limit).all()
-        total = db.query(User).count()
+        query = db.query(User)
+        if not include_inactive:
+            query = query.filter(User.is_active == True)
+            
+        users = query.offset(skip).limit(limit).all()
+        total = query.count()
         
         return {
             "total": total,
@@ -110,6 +123,8 @@ def list_all_users(
                     "plan": u.plan,
                     "is_active": u.is_active,
                     "business_type": u.business_type,
+                    "parent_user_id": u.parent_user_id,
+                    "parent_email": db.query(User.email).filter(User.id == u.parent_user_id).scalar() if u.parent_user_id else None,
                     "created_at": u.created_at.isoformat(),
                     "updated_at": u.updated_at.isoformat(),
                 }
@@ -155,28 +170,118 @@ def change_user_role(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.delete("/master/users/{user_id}")
-def delete_user(
+@router.patch("/master/users/{user_id}/activate")
+def activate_user(
     user_id: int,
     admin: User = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
-    """Elimina un usuario del sistema (Master Admin only)"""
+    """Reactiva una cuenta de usuario desactivada (Master Admin only)"""
+    try:
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+        if user.is_active:
+            raise HTTPException(status_code=400, detail="El usuario ya está activo")
+
+        user.is_active = True
+        user.updated_at = datetime.utcnow()
+        db.commit()
+        db.refresh(user)
+        
+        return {
+            "success": True,
+            "message": f"Usuario {user.email} reactivado correctamente.",
+            "user": {
+                "id": user.id,
+                "email": user.email,
+                "is_active": user.is_active
+            }
+        }
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/master/users/{user_id}/sub-users")
+def list_sub_users(
+    user_id: int,
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+    include_inactive: bool = True
+):
+    """Lista los sub-usuarios de un usuario padre específico (Master Admin only)"""
+    try:
+        parent = db.query(User).filter(User.id == user_id).first()
+        if not parent:
+            raise HTTPException(status_code=404, detail="Usuario padre no encontrado")
+        
+        query = db.query(User).filter(User.parent_user_id == user_id)
+        if not include_inactive:
+            query = query.filter(User.is_active == True)
+            
+        sub_users = query.all()
+        
+        return {
+            "parent_user": {
+                "id": parent.id,
+                "email": parent.email,
+                "plan": parent.plan
+            },
+            "total_sub_users": len(sub_users),
+            "sub_users": [
+                {
+                    "id": u.id,
+                    "email": u.email,
+                    "role": u.role,
+                    "is_active": u.is_active,
+                    "created_at": u.created_at.isoformat(),
+                }
+                for u in sub_users
+            ]
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete("/master/users/{user_id}")
+def deactivate_user(
+    user_id: int,
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """Desactiva una cuenta de usuario (Master Admin only)
+    
+    Cambia is_active a False sin eliminar datos.
+    Las transacciones permanecen asociadas al usuario para auditoría.
+    """
     try:
         if user_id == admin.id:
-            raise HTTPException(status_code=400, detail="No puedes eliminarte a ti mismo")
+            raise HTTPException(status_code=400, detail="No puedes desactivarte a ti mismo")
         
         user = db.query(User).filter(User.id == user_id).first()
         if not user:
             raise HTTPException(status_code=404, detail="Usuario no encontrado")
-        
-        db.delete(user)
+
+        if not user.is_active:
+            raise HTTPException(status_code=400, detail="El usuario ya está inactivo")
+
+        # Solo cambiar el estado a inactivo
+        user.is_active = False
         db.commit()
-        
-        return {"success": True, "message": "Usuario eliminado"}
+
+        return {
+            "success": True,
+            "message": f"Usuario {user.email} desactivado correctamente.",
+            "info": "El usuario y todas sus transacciones permanecen en el sistema para auditoría."
+        }
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============== TEAM MANAGEMENT ENDPOINTS ==============
 
 
 # ============== TEAM MANAGEMENT ENDPOINTS ==============
@@ -380,12 +485,12 @@ def accept_team_invite(
 
 
 @router.delete("/team/members/{member_id}")
-def remove_team_member(
+def deactivate_team_member(
     member_id: int,
     user: User = Depends(is_team_owner),
     db: Session = Depends(get_db)
 ):
-    """Elimina un miembro del equipo"""
+    """Desactiva un miembro del equipo en lugar de eliminarlo"""
     try:
         team_user = db.query(TeamUser).filter(
             TeamUser.team_owner_id == user.id,
@@ -395,10 +500,39 @@ def remove_team_member(
         if not team_user:
             raise HTTPException(status_code=404, detail="Miembro del equipo no encontrado")
         
-        db.delete(team_user)
+        # Desactivar en lugar de eliminar
+        team_user.is_active = False
+        team_user.status = "suspended"
         db.commit()
         
-        return {"success": True, "message": "Miembro removido del equipo"}
+        return {"success": True, "message": "Miembro desactivado del equipo"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.patch("/team/members/{member_id}/activate")
+def activate_team_member(
+    member_id: int,
+    user: User = Depends(is_team_owner),
+    db: Session = Depends(get_db)
+):
+    """Reactiva un miembro del equipo"""
+    try:
+        team_user = db.query(TeamUser).filter(
+            TeamUser.team_owner_id == user.id,
+            TeamUser.member_user_id == member_id
+        ).first()
+        
+        if not team_user:
+            raise HTTPException(status_code=404, detail="Miembro del equipo no encontrado")
+        
+        # Reactivar
+        team_user.is_active = True
+        team_user.status = "active"
+        db.commit()
+        
+        return {"success": True, "message": "Miembro reactivado"}
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
@@ -426,3 +560,148 @@ def get_user_features(
         "features": get_available_features(plan_for_features, user.role),
         "limits": get_plan_limits(plan_for_limits)
     }
+
+
+# ============== MOVIMIENTOS POR USUARIO HIJO ==============
+
+@router.get("/team/movements/summary")
+def get_team_movements_summary(
+    user: User = Depends(is_team_owner),
+    db: Session = Depends(get_db),
+    include_inactive: bool = False
+):
+    """Obtiene resumen de movimientos de cada miembro del equipo"""
+    try:
+        # Obtener miembros del equipo
+        query = db.query(TeamUser).filter(TeamUser.team_owner_id == user.id)
+        if not include_inactive:
+            query = query.filter(TeamUser.is_active == True)
+        
+        team_members = query.all()
+        
+        summary = []
+        for member in team_members:
+            member_user = db.query(User).filter(User.id == member.member_user_id).first()
+            if not member_user:
+                continue
+                
+            # Contar movimientos por tipo
+            payments_count = db.query(Payment).filter(Payment.user_id == member_user.id).count()
+            customers_count = db.query(Customer).filter(Customer.user_id == member_user.id).count()
+            appointments_count = db.query(Appointment).join(Customer).filter(
+                Customer.user_id == member_user.id
+            ).count()
+            
+            # Calcular ingresos totales
+            payments = db.query(Payment).filter(
+                Payment.user_id == member_user.id,
+                Payment.status == "completed"
+            ).all()
+            total_revenue = sum(p.amount for p in payments)
+            
+            summary.append({
+                "member_id": member_user.id,
+                "member_email": member_user.email,
+                "role": member.role_in_team,
+                "status": member.status,
+                "is_active": member.is_active,
+                "statistics": {
+                    "payments": payments_count,
+                    "customers": customers_count,
+                    "appointments": appointments_count,
+                    "total_revenue": float(total_revenue)
+                }
+            })
+        
+        return {
+            "team_owner": {
+                "id": user.id,
+                "email": user.email
+            },
+            "total_members": len(summary),
+            "members": summary
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/team/movements/by-member/{member_id}")
+def get_member_movements(
+    member_id: int,
+    user: User = Depends(is_team_owner),
+    db: Session = Depends(get_db),
+    movement_type: str = "all"  # payments, customers, appointments, all
+):
+    """Obtiene movimientos detallados de un miembro específico del equipo"""
+    try:
+        # Verificar que el miembro pertenece al equipo
+        team_user = db.query(TeamUser).filter(
+            TeamUser.team_owner_id == user.id,
+            TeamUser.member_user_id == member_id
+        ).first()
+        
+        if not team_user:
+            raise HTTPException(status_code=404, detail="Miembro no encontrado en tu equipo")
+        
+        member = db.query(User).filter(User.id == member_id).first()
+        result = {
+            "member": {
+                "id": member.id,
+                "email": member.email,
+                "role": team_user.role_in_team,
+                "status": team_user.status,
+                "is_active": team_user.is_active
+            },
+            "movements": {}
+        }
+        
+        # Pagos
+        if movement_type in ["payments", "all"]:
+            payments = db.query(Payment).filter(Payment.user_id == member_id).all()
+            result["movements"]["payments"] = [
+                {
+                    "id": p.id,
+                    "amount": float(p.amount),
+                    "method": p.method,
+                    "status": p.status,
+                    "notes": p.notes,
+                    "created_at": p.created_at.isoformat(),
+                    "paid_at": p.paid_at.isoformat() if p.paid_at else None
+                }
+                for p in payments
+            ]
+        
+        # Clientes
+        if movement_type in ["customers", "all"]:
+            customers = db.query(Customer).filter(Customer.user_id == member_id).all()
+            result["movements"]["customers"] = [
+                {
+                    "id": c.id,
+                    "name": c.name,
+                    "email": c.email,
+                    "phone": c.phone,
+                    "created_at": c.created_at.isoformat()
+                }
+                for c in customers
+            ]
+        
+        # Citas
+        if movement_type in ["appointments", "all"]:
+            appointments = db.query(Appointment).join(Customer).filter(
+                Customer.user_id == member_id
+            ).all()
+            result["movements"]["appointments"] = [
+                {
+                    "id": a.id,
+                    "customer_id": a.customer_id,
+                    "scheduled_at": a.scheduled_at.isoformat(),
+                    "status": a.status,
+                    "notes": a.notes,
+                    "created_at": a.created_at.isoformat()
+                }
+                for a in appointments
+            ]
+        
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

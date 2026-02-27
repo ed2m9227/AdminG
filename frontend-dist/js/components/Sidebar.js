@@ -25,6 +25,7 @@ export class Sidebar {
 
             // Team & Admin
             { id: 'team', icon: '👫', label: 'Mi Equipo', route: 'team' },
+            { id: 'team-movements', icon: '📊', label: 'Movimientos del Equipo', route: 'team-movements', roles: ['manager', 'admin'] },
             { id: 'businessconfig', icon: '🛠️', label: 'Configuracion de negocio', route: 'businessconfig', roles: ['admin', 'manager'] },
             { id: 'admin', icon: '⚙️', label: 'Administración', route: 'admin', roleRequired: 'admin' },
             { id: 'businesstypes', icon: '🏢', label: 'Tipos de Negocio', route: 'businesstypes', roleRequired: 'admin' },
