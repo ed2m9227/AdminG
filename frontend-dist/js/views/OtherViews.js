@@ -645,6 +645,7 @@ export class CashRegisterView {
         this.total = 0;
         this.inventory = [];
         this.movements = [];
+        this.customersCache = [];
     }
 
     formatCurrency(value) {
@@ -746,6 +747,7 @@ export class CashRegisterView {
             // Cargar clientes
             const customers = await apiService.getCustomers();
             if (Array.isArray(customers)) {
+                this.customersCache = customers;
                 const select = document.getElementById('cashCustomer');
                 if (select) {
                     customers.forEach(c => {
@@ -755,6 +757,30 @@ export class CashRegisterView {
                         select.appendChild(option);
                     });
                 }
+            }
+
+            // Cargar transacciones de caja del día
+            try {
+                const transactions = await apiService.get('/cashregister/transactions?limit=50');
+                if (Array.isArray(transactions) && transactions.length > 0) {
+                    // Enriquecer transacciones con datos del cliente
+                    this.movements = transactions.map(t => {
+                        let customer = null;
+                        if (t.customer_id && customers) {
+                            customer = customers.find(c => c.id === t.customer_id);
+                        }
+                        return {
+                            type: t.transaction_type,
+                            amount: t.amount,
+                            timestamp: new Date(t.created_at).toLocaleTimeString('es-CO'),
+                            customer: customer ? customer.full_name : null,
+                            description: t.description
+                        };
+                    });
+                    this.updateMovements();
+                }
+            } catch (error) {
+                console.warn('Could not load cash transactions:', error);
             }
         } catch (error) {
             console.error('Error loading cash register data:', error);
@@ -876,6 +902,36 @@ export class CashRegisterView {
         this.updateCart();
     }
 
+    async refreshMovements() {
+        try {
+            const transactions = await apiService.get('/cashregister/transactions?limit=50');
+            
+            if (Array.isArray(transactions)) {
+                this.movements = transactions.map(t => {
+                    let customer = null;
+                    if (t.customer_id && Array.isArray(this.customersCache)) {
+                        customer = this.customersCache.find(c => c.id === t.customer_id);
+                    }
+                    return {
+                        type: t.transaction_type,
+                        amount: t.amount,
+                        timestamp: new Date(t.created_at).toLocaleTimeString('es-CO'),
+                        customer: customer ? customer.full_name : null,
+                        description: t.description
+                    };
+                });
+            } else {
+                this.movements = [];
+            }
+
+            this.updateMovements();
+        } catch (error) {
+            console.warn('Error refreshing cash movements:', error);
+            this.movements = [];
+            this.updateMovements();
+        }
+    }
+
     updateCart() {
         this.total = this.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
         
@@ -910,29 +966,58 @@ export class CashRegisterView {
         }
     }
 
-    addExpense() {
+    async addExpense() {
+        const description = prompt('Descripción del gasto:');
+        if (!description) return;
+        
         const amount = prompt('Monto del gasto:');
         if (amount && !isNaN(amount)) {
-            const movement = {
-                type: 'expense',
-                amount: parseFloat(amount),
-                timestamp: new Date().toLocaleTimeString('es-CO')
-            };
-            this.movements.unshift(movement);
-            this.updateMovements();
+            try {
+                const amountNum = parseFloat(amount);
+                await apiService.post('/cashregister/transactions', {
+                    transaction_type: 'expense',
+                    amount: amountNum,
+                    description: description || 'Gasto en caja'
+                });
+
+                await this.refreshMovements();
+                
+                await modal.alert({ 
+                    title: 'Gasto Registrado', 
+                    message: `Gasto de ${this.formatCurrency(amountNum)} registrado en caja`, 
+                    type: 'success' 
+                });
+            } catch (error) {
+                console.error('Error adding expense:', error);
+                const errorMsg = error?.detail || error?.message || (typeof error === 'string' ? error : JSON.stringify(error));
+                await modal.alert({ title: 'Error', message: 'Error al registrar gasto: ' + errorMsg, type: 'error' });
+            }
         }
     }
 
-    addBase() {
+    async addBase() {
         const amount = prompt('Monto de la base:');
         if (amount && !isNaN(amount)) {
-            const movement = {
-                type: 'base',
-                amount: parseFloat(amount),
-                timestamp: new Date().toLocaleTimeString('es-CO')
-            };
-            this.movements.unshift(movement);
-            this.updateMovements();
+            try {
+                const amountNum = parseFloat(amount);
+                await apiService.post('/cashregister/transactions', {
+                    transaction_type: 'base',
+                    amount: amountNum,
+                    description: 'Base inicial de caja'
+                });
+
+                await this.refreshMovements();
+                
+                await modal.alert({ 
+                    title: 'Base Agregada', 
+                    message: `Base de ${this.formatCurrency(amountNum)} agregada a caja`, 
+                    type: 'success' 
+                });
+            } catch (error) {
+                console.error('Error adding base:', error);
+                const errorMsg = error?.detail || error?.message || (typeof error === 'string' ? error : JSON.stringify(error));
+                await modal.alert({ title: 'Error', message: 'Error al agregar base: ' + errorMsg, type: 'error' });
+            }
         }
     }
 
@@ -944,15 +1029,33 @@ export class CashRegisterView {
             container.innerHTML = '<p style="color: #7f8c8d; text-align: center;">Sin movimientos</p>';
         } else {
             container.innerHTML = this.movements.map(movement => {
-                const isExpense = movement.type === 'expense';
-                const icon = isExpense ? '📊' : '💰';
-                const label = isExpense ? 'Gasto' : 'Base';
-                const color = isExpense ? '#ef4444' : '#10b981';
+                let icon, label, color;
+                
+                if (movement.type === 'expense') {
+                    icon = '📊';
+                    label = 'Gasto';
+                    color = '#ef4444';
+                } else if (movement.type === 'base') {
+                    icon = '💰';
+                    label = 'Base';
+                    color = '#10b981';
+                } else if (movement.type === 'sale') {
+                    icon = '💳';
+                    label = movement.customer ? `Venta a ${movement.customer}` : 'Venta';
+                    color = '#0ea5e9';
+                } else {
+                    icon = '📝';
+                    label = 'Movimiento';
+                    color = '#6b7280';
+                }
+                
                 return `
-                    <div style="padding: 8px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; font-size: 11px;">
-                        <span>${icon} ${label}</span>
-                        <span style="color: ${color}; font-weight: 600;">${this.formatCurrency(movement.amount)}</span>
-                        <span style="color: #9ca3af;">${movement.timestamp}</span>
+                    <div style="padding: 8px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: flex-start; font-size: 11px;">
+                        <div style="flex: 1;">
+                            <div>${icon} <strong style="color: ${color};">${label}</strong></div>
+                            <div style="color: #9ca3af; margin-top: 2px;">${movement.timestamp}</div>
+                        </div>
+                        <span style="color: ${color}; font-weight: 600; min-width: 70px; text-align: right;">${this.formatCurrency(movement.amount)}</span>
                     </div>
                 `;
             }).join('');
@@ -966,24 +1069,45 @@ export class CashRegisterView {
         }
 
         const customerId = document.getElementById('cashCustomer')?.value;
+        const parsedCustomerId = customerId && customerId !== '' ? parseInt(customerId) : null;
+
         const paymentData = {
-            customer_id: customerId ? parseInt(customerId) : null,
+            customer_id: parsedCustomerId,
             amount: this.total,
             method: 'cash',
             notes: `Venta POS: ${this.cart.map(i => `${i.name} (${i.quantity})`).join(', ')}`
         };
 
         try {
-            const response = await apiService.post('/payments/', paymentData);
+            if (parsedCustomerId) {
+                await apiService.post('/payments/', paymentData);
+            }
             
-            // Agregar movimiento de venta
-            const movement = {
-                type: 'sale',
+            // Get customer name for description
+            let customerName = 'Cliente sin identificar';
+            if (parsedCustomerId && this.customersCache.length > 0) {
+                const customer = this.customersCache.find(c => c.id === parsedCustomerId);
+                if (customer) {
+                    customerName = customer.full_name || 'Cliente';
+                }
+            }
+            
+            // Register cash transaction with items for stock deduction
+            const description = `Venta a ${customerName}: ${this.cart.map(i => `${i.name} (${i.quantity})`).join(', ')}`;
+            const itemsForSale = this.cart.map(item => ({
+                item_id: item.id,
+                quantity: item.quantity
+            }));
+            
+            await apiService.post('/cashregister/transactions', {
+                transaction_type: 'sale',
                 amount: this.total,
-                timestamp: new Date().toLocaleTimeString('es-CO')
-            };
-            this.movements.unshift(movement);
-            this.updateMovements();
+                customer_id: parsedCustomerId,
+                description: description,
+                items: itemsForSale
+            });
+
+            await this.refreshMovements();
 
             await modal.alert({ 
                 title: 'Pago Procesado', 
@@ -992,7 +1116,8 @@ export class CashRegisterView {
             });
             this.clearCart();
         } catch (error) {
-            const errorMsg = typeof error === 'string' ? error : (error.message || error.detail || 'Error desconocido');
+            console.error('Error processing payment:', error);
+            const errorMsg = error?.detail || error?.message || (typeof error === 'string' ? error : JSON.stringify(error));
             await modal.alert({ title: 'Error', message: 'Error al procesar pago: ' + errorMsg, type: 'error' });
         }
     }
