@@ -943,6 +943,7 @@ export class CashRegisterView {
         } catch (error) {
             console.warn('Error refreshing cash movements:', error);
             this.movements = [];
+            this.checkCashRegisterStatus();
             this.updateMovements();
         }
     }
@@ -957,16 +958,20 @@ export class CashRegisterView {
             return moveDate === today;
         });
         
-        // Buscar última base y último cierre
+        // Buscar última base y último cierre (el más reciente de cada tipo)
         let lastBase = null;
         let lastClose = null;
         
         todayMovements.forEach(m => {
             if (m.type === 'base') {
-                lastBase = m;
+                if (!lastBase || new Date(m.created_at) > new Date(lastBase.created_at)) {
+                    lastBase = m;
+                }
             }
             if (m.type === 'close') {
-                lastClose = m;
+                if (!lastClose || new Date(m.created_at) > new Date(lastClose.created_at)) {
+                    lastClose = m;
+                }
             }
         });
         
@@ -981,6 +986,13 @@ export class CashRegisterView {
             this.cashRegisterOpen = false; // No hay base o solo hay cierre
         }
 
+        console.log('📊 Estado caja:', { 
+            cashRegisterOpen: this.cashRegisterOpen, 
+            lastBase: lastBase?.created_at, 
+            lastClose: lastClose?.created_at,
+            todayMovements: todayMovements.length
+        });
+        
         this.updateCashRegisterUI();
     }
 
