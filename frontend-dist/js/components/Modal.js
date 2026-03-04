@@ -21,9 +21,22 @@ export class Modal {
         // Crear el modal
         const modal = document.createElement('div');
         modal.className = 'modal';
-        modal.style.zIndex = '9999'; // Fuerza explícitamente el z-index
+        // Fuerza estilos inline para compatibilidad con Simple Browser
+        modal.style.cssText = `
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            background: rgba(0, 0, 0, 0.6) !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            z-index: 999999 !important;
+            padding: 20px;
+        `;
         modal.innerHTML = `
-            <div class="modal-content modal-${size}">
+            <div class="modal-content modal-${size}" style="background: white !important; position: relative !important; z-index: 1000000 !important;">
                 <div class="modal-header">
                     <h2 class="modal-title">${title}</h2>
                     <button class="close-btn" data-close>&times;</button>
@@ -42,15 +55,15 @@ export class Modal {
             }
         });
 
-        // Agregar al DOM - Usar setTimeout para asegurar que se renderice
-        // Esto ayuda con el Simple Browser de VS Code
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => {
-                document.body.appendChild(modal);
-            });
-        } else {
-            document.body.appendChild(modal);
-        }
+        // Agregar al DOM - Forzar append inmediato
+        console.log('📢 Modal: Agregando modal al DOM...', modal);
+        document.body.appendChild(modal);
+        
+        // Verificar que se agregó
+        setTimeout(() => {
+            const modalInDom = document.querySelector('.modal');
+            console.log('📢 Modal: ¿Modal en DOM?', !!modalInDom, modalInDom);
+        }, 50);
 
         return modal;
     }
@@ -139,6 +152,76 @@ export class Modal {
                 if (e.target.closest('[data-close]')) {
                     this.close(modal);
                     resolve();
+                }
+            });
+        });
+    }
+
+    /**
+     * Mostrar modal de input (prompt)
+     * @param {object} options 
+     * @returns {Promise<string|null>}
+     */
+    prompt(options = {}) {
+        const {
+            title = 'Ingrese un valor',
+            message = '',
+            placeholder = '',
+            defaultValue = '',
+            inputType = 'text',
+            confirmText = 'Aceptar',
+            cancelText = 'Cancelar'
+        } = options;
+
+        return new Promise((resolve) => {
+            const inputId = 'prompt-input-' + Date.now();
+            const content = `
+                ${message ? `<p style="margin-bottom: 15px;">${message}</p>` : ''}
+                <input 
+                    type="${inputType}" 
+                    id="${inputId}"
+                    class="form-control" 
+                    placeholder="${placeholder}"
+                    value="${defaultValue}"
+                    style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; margin-bottom: 15px;"
+                />
+                <div class="modal-actions">
+                    <button class="btn btn-primary" data-confirm>${confirmText}</button>
+                    <button class="btn" data-cancel>${cancelText}</button>
+                </div>
+            `;
+
+            const modal = this.show({ title, content, size: 'small' });
+
+            // Auto-focus en el input
+            setTimeout(() => {
+                const input = document.getElementById(inputId);
+                if (input) {
+                    input.focus();
+                    input.select();
+                }
+            }, 100);
+
+            modal.addEventListener('click', (e) => {
+                if (e.target.closest('[data-confirm]')) {
+                    const input = document.getElementById(inputId);
+                    const value = input ? input.value : null;
+                    this.close(modal);
+                    resolve(value);
+                } else if (e.target.closest('[data-cancel]')) {
+                    this.close(modal);
+                    resolve(null);
+                }
+            });
+
+            // Permitir Enter para confirmar
+            modal.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const input = document.getElementById(inputId);
+                    const value = input ? input.value : null;
+                    this.close(modal);
+                    resolve(value);
                 }
             });
         });
