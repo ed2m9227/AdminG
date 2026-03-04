@@ -948,12 +948,38 @@ export class CashRegisterView {
     }
 
     checkCashRegisterStatus() {
-        // Verificar si hay base registrada hoy
+        // Verificar si hay base registrada hoy sin cierre posterior
         const today = new Date().toDateString();
-        this.cashRegisterOpen = this.movements.some(m => {
+        
+        // Filtrar movimientos de hoy
+        const todayMovements = this.movements.filter(m => {
             const moveDate = new Date(m.created_at).toDateString();
-            return moveDate === today && m.type === 'base';
+            return moveDate === today;
         });
+        
+        // Buscar última base y último cierre
+        let lastBase = null;
+        let lastClose = null;
+        
+        todayMovements.forEach(m => {
+            if (m.type === 'base') {
+                lastBase = m;
+            }
+            if (m.type === 'close') {
+                lastClose = m;
+            }
+        });
+        
+        // Caja está abierta solo si hay base y NO hay cierre posterior (o no hay cierre)
+        if (lastBase && lastClose) {
+            const baseTime = new Date(lastBase.created_at).getTime();
+            const closeTime = new Date(lastClose.created_at).getTime();
+            this.cashRegisterOpen = baseTime > closeTime; // Abierta solo si base es más reciente que cierre
+        } else if (lastBase && !lastClose) {
+            this.cashRegisterOpen = true; // Hay base sin cierre
+        } else {
+            this.cashRegisterOpen = false; // No hay base o solo hay cierre
+        }
 
         this.updateCashRegisterUI();
     }
@@ -1090,7 +1116,6 @@ export class CashRegisterView {
                     type: 'success' 
                 });
                 
-                this.cashRegisterOpen = false;
                 await this.refreshMovements();
             } catch (error) {
                 console.error('Error closing cash:', error);
@@ -1164,6 +1189,10 @@ export class CashRegisterView {
                     icon = '💳';
                     label = movement.customer ? `Venta a ${movement.customer}` : 'Venta';
                     color = '#0ea5e9';
+                } else if (movement.type === 'close') {
+                    icon = '🔒';
+                    label = 'Cierre de Caja';
+                    color = '#8b5cf6';
                 } else {
                     icon = '📝';
                     label = 'Movimiento';

@@ -186,6 +186,16 @@ async def close_cash_register(
     base = sum(float(t.amount) for t in transactions if t.transaction_type == 'base')
     final_balance = sales + base - expenses
     
+    # Registrar cierre de caja
+    close_transaction = CashTransaction(
+        user_id=user.id,
+        transaction_type='close',
+        amount=final_balance,
+        description=f'Cierre de caja - Balance: {final_balance}'
+    )
+    db.add(close_transaction)
+    db.commit()
+    
     return {
         "success": True,
         "message": "Caja cerrada",
