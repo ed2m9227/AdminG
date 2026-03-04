@@ -98,14 +98,14 @@ async def create_transaction(
             if not item:
                 raise HTTPException(status_code=404, detail=f"Item {item_sale.item_id} no encontrado")
             
-            if item.stock < item_sale.quantity:
+            if item.quantity < item_sale.quantity:
                 raise HTTPException(
                     status_code=400, 
-                    detail=f"Stock insuficiente de {item.name}. Disponible: {item.stock}, Solicitado: {item_sale.quantity}"
+                    detail=f"Stock insuficiente de {item.name}. Disponible: {item.quantity}, Solicitado: {item_sale.quantity}"
                 )
             
-            # Descontar stock
-            item.stock -= item_sale.quantity
+            # Descontar cantidad
+            item.quantity -= item_sale.quantity
             db.add(item)
     
     # Crear transacción
