@@ -178,7 +178,8 @@ def get_revenue_report(
         CashTransaction.user_id == user_id,
         CashTransaction.transaction_type == "sale",
         CashTransaction.created_at >= request.start_date,
-        CashTransaction.created_at <= request.end_date
+        CashTransaction.created_at <= request.end_date,
+    
     ).all()
     cash_sales_total = sum(t.amount for t in cash_sales) or Decimal(0)
     
@@ -190,7 +191,6 @@ def get_revenue_report(
     ).all()
     cash_expenses_total = sum(t.amount for t in cash_expenses) or Decimal(0)
     
-    total_revenue = payment_revenue + cash_sales_total - cash_expenses_total
     pending = sum(p.final_amount for p in payments if p.status == "pending") or Decimal(0)
     
     # Group by payment method
@@ -219,8 +219,10 @@ def get_revenue_report(
         current_date = day_end
     
     return RevenueReport(
-        total_revenue=float(total_revenue),
-        paid_amount=float(total_revenue),
+        total_revenue=float(payment_revenue + cash_sales_total),
+        total_expenses=float(cash_expenses_total),
+        net_profit=float(payment_revenue + cash_sales_total - cash_expenses_total),
+        paid_amount=float(payment_revenue),
         pending_amount=float(pending),
         by_payment_method=by_method,
         by_period=by_period,
