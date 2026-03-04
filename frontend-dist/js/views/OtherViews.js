@@ -1548,7 +1548,7 @@ export class ReportsView {
                     <h3>💵 Reporte de Ingresos</h3>
                 </div>
                 <div class="card-body">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
                         <div style="background: #e8f5e9; padding: 15px; border-radius: 4px;">
                             <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Total Ingresos</div>
                             <div style="font-size: 24px; font-weight: 600; color: #2e7d32;">
@@ -1556,9 +1556,15 @@ export class ReportsView {
                             </div>
                         </div>
                         <div style="background: #fff3e0; padding: 15px; border-radius: 4px;">
-                            <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Cobrado</div>
+                            <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Total Gastos</div>
                             <div style="font-size: 24px; font-weight: 600; color: #f57c00;">
-                                ${this.formatCurrency(data.paid_amount || 0)}
+                                ${this.formatCurrency(data.total_expenses || 0)}
+                            </div>
+                        </div>
+                        <div style="background: #e1f5fe; padding: 15px; border-radius: 4px;">
+                            <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Ganancia Neta</div>
+                            <div style="font-size: 24px; font-weight: 600; color: #01579b;">
+                                ${this.formatCurrency(data.net_profit || 0)}
                             </div>
                         </div>
                         <div style="background: #fce4ec; padding: 15px; border-radius: 4px;">
