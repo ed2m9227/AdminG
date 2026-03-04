@@ -165,6 +165,8 @@ def get_revenue_report(
     user_id = current_user.id
     check_reports_access(current_user, ["starter", "pro", "max"])
     
+    print(f"📊 Revenue Report - User: {user_id}, Period: {request.start_date} to {request.end_date}")
+    
     payments = db.query(Payment).filter(
         Payment.user_id == user_id,
         Payment.created_at >= request.start_date,
@@ -172,6 +174,7 @@ def get_revenue_report(
     ).all()
     
     payment_revenue = sum(p.final_amount for p in payments if p.status == "completed") or Decimal(0)
+    print(f"  💳 Payments: {len(payments)}, Revenue: {payment_revenue}")
     
     # Cash register transactions in period
     cash_sales = db.query(CashTransaction).filter(
@@ -182,6 +185,7 @@ def get_revenue_report(
     
     ).all()
     cash_sales_total = sum(t.amount for t in cash_sales) or Decimal(0)
+    print(f"  🤑 Cash Sales: {len(cash_sales)}, Total: {cash_sales_total}")
     
     cash_expenses = db.query(CashTransaction).filter(
         CashTransaction.user_id == user_id,
@@ -190,6 +194,13 @@ def get_revenue_report(
         CashTransaction.created_at <= request.end_date
     ).all()
     cash_expenses_total = sum(t.amount for t in cash_expenses) or Decimal(0)
+    print(f"  💸 Cash Expenses: {len(cash_expenses)}, Total: {cash_expenses_total}")
+    
+    # Debug: Check all cash transactions for user
+    all_cash = db.query(CashTransaction).filter(CashTransaction.user_id == user_id).all()
+    print(f"  📋 Total Cash Transactions (all dates): {len(all_cash)}")
+    for t in all_cash[-5:]:  # Show last 5
+        print(f"     - {t.transaction_type}: ${t.amount} on {t.created_at}")
     
     pending = sum(p.final_amount for p in payments if p.status == "pending") or Decimal(0)
     
