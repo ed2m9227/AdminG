@@ -646,6 +646,7 @@ export class CashRegisterView {
         this.inventory = [];
         this.movements = [];
         this.customersCache = [];
+        this.cashRegisterOpen = false;
     }
 
     formatCurrency(value) {
@@ -715,8 +716,10 @@ export class CashRegisterView {
                             <h2 class="card-title">Operaciones</h2>
                         </div>
                         <div class="card-body">
-                            <button class="btn btn-full" id="btnAddExpense" style="margin-bottom: 8px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white;">📊 Agregar Gasto</button>
-                            <button class="btn btn-full" id="btnAddBase" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white;">💰 Agregar Base</button>
+                            <div id="cashRegisterStatus" style="padding: 12px; margin-bottom: 12px; border-radius: 8px; text-align: center; font-weight: 600;"></div>
+                            <button class="btn btn-full" id="btnOpenCash" style="margin-bottom: 8px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; display: none;">🔓 Abrir Caja</button>
+                            <button class="btn btn-full" id="btnCloseCash" style="margin-bottom: 8px; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; display: none;">🔒 Cerrar Caja</button>
+                            <button class="btn btn-full" id="btnAddExpense" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white;">📊 Agregar Gasto</button>
                         </div>
                     </div>
 
@@ -793,11 +796,14 @@ export class CashRegisterView {
         const btnClear = document.getElementById('btnClearCart');
         if (btnClear) btnClear.addEventListener('click', () => this.clearCart());
 
+        const btnOpenCash = document.getElementById('btnOpenCash');
+        if (btnOpenCash) btnOpenCash.addEventListener('click', () => this.openCashRegister());
+
+        const btnCloseCash = document.getElementById('btnCloseCash');
+        if (btnCloseCash) btnCloseCash.addEventListener('click', () => this.closeCashRegister());
+
         const btnAddExpense = document.getElementById('btnAddExpense');
         if (btnAddExpense) btnAddExpense.addEventListener('click', () => this.addExpense());
-
-        const btnAddBase = document.getElementById('btnAddBase');
-        if (btnAddBase) btnAddBase.addEventListener('click', () => this.addBase());
 
         const searchInput = document.getElementById('searchProduct');
         if (searchInput) {
@@ -916,6 +922,7 @@ export class CashRegisterView {
                         type: t.transaction_type,
                         amount: t.amount,
                         timestamp: new Date(t.created_at).toLocaleTimeString('es-CO'),
+                        created_at: t.created_at,
                         customer: customer ? customer.full_name : null,
                         description: t.description
                     };
@@ -924,11 +931,47 @@ export class CashRegisterView {
                 this.movements = [];
             }
 
+            this.checkCashRegisterStatus();
             this.updateMovements();
         } catch (error) {
             console.warn('Error refreshing cash movements:', error);
             this.movements = [];
             this.updateMovements();
+        }
+    }
+
+    checkCashRegisterStatus() {
+        // Verificar si hay base registrada hoy
+        const today = new Date().toDateString();
+        this.cashRegisterOpen = this.movements.some(m => {
+            const moveDate = new Date(m.created_at).toDateString();
+            return moveDate === today && m.type === 'base';
+        });
+
+        this.updateCashRegisterUI();
+    }
+
+    updateCashRegisterUI() {
+        const btnOpen = document.getElementById('btnOpenCash');
+        const btnClose = document.getElementById('btnCloseCash');
+        const statusDiv = document.getElementById('cashRegisterStatus');
+
+        if (!btnOpen || !btnClose || !statusDiv) return;
+
+        if (this.cashRegisterOpen) {
+            // Caja abierta: mostrar botón cerrar
+            btnOpen.style.display = 'none';
+            btnClose.style.display = 'block';
+            statusDiv.innerHTML = '✅ Caja Abierta';
+            statusDiv.style.background = 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)';
+            statusDiv.style.color = '#065f46';
+        } else {
+            // Caja cerrada: mostrar botón abrir
+            btnOpen.style.display = 'block';
+            btnClose.style.display = 'none';
+            statusDiv.innerHTML = '🔒 Caja Cerrada';
+            statusDiv.style.background = 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)';
+            statusDiv.style.color = '#991b1b';
         }
     }
 
@@ -966,60 +1009,131 @@ export class CashRegisterView {
         }
     }
 
+    async openCashRegister() {
+        if (this.cashRegisterOpen) {
+            await modal.alert({ 
+                title: '⚠️ Caja Ya Abierta', 
+                message: 'La caja ya está abierta. Debe cerrarla primero.', 
+                type: 'warning' 
+            });
+            return;
+        }
+
+        const result = await modal.prompt({
+            title: '🔓 Abrir Caja Registradora',
+            message: 'Ingrese el monto de la base inicial:',
+            placeholder: 'Ejemplo: 50000',
+            inputType: 'number'
+        });
+
+        if (result && !isNaN(result)) {
+            try {
+                const amountNum = parseFloat(result);
+                await apiService.post('/cashregister/open', { initial_amount: amountNum });
+                await this.refreshMovements();
+                
+                await modal.alert({ 
+                    title: '✅ Caja Abierta', 
+                    message: `Caja abierta con base de ${this.formatCurrency(amountNum)}`, 
+                    type: 'success' 
+                });
+            } catch (error) {
+                console.error('Error opening cash:', error);
+                const errorMsg = error?.detail || error?.message || 'Error desconocido';
+                await modal.alert({ title: 'Error', message: 'Error al abrir caja: ' + errorMsg, type: 'error' });
+            }
+        }
+    }
+
+    async closeCashRegister() {
+        if (!this.cashRegisterOpen) {
+            await modal.alert({ 
+                title: '⚠️ Caja No Abierta', 
+                message: 'La caja no está abierta. Debe abrirla primero.', 
+                type: 'warning' 
+            });
+            return;
+        }
+
+        const confirm = await modal.confirm({
+            title: '🔒 Cerrar Caja',
+            message: '¿Está seguro de cerrar la caja registradora? Se generará un reporte del día.',
+            confirmText: 'Cerrar Caja',
+            cancelText: 'Cancelar'
+        });
+
+        if (confirm) {
+            try {
+                const report = await apiService.post('/cashregister/close');
+                
+                const reportDetails = `
+                    <div style="text-align: left; padding: 10px;">
+                        <p><strong>💰 Total Ventas:</strong> ${this.formatCurrency(report.sales)}</p>
+                        <p><strong>📊 Total Gastos:</strong> ${this.formatCurrency(report.expenses)}</p>
+                        <p><strong>🏦 Base:</strong> ${this.formatCurrency(report.base)}</p>
+                        <hr style="margin: 12px 0;">
+                        <p><strong>💵 Balance Final:</strong> ${this.formatCurrency(report.final_balance)}</p>
+                        <p><strong>📋 Transacciones:</strong> ${report.transaction_count}</p>
+                    </div>
+                `;
+
+                await modal.alert({ 
+                    title: '✅ Caja Cerrada', 
+                    message: reportDetails, 
+                    type: 'success' 
+                });
+                
+                this.cashRegisterOpen = false;
+                await this.refreshMovements();
+            } catch (error) {
+                console.error('Error closing cash:', error);
+                const errorMsg = error?.detail || error?.message || 'Error desconocido';
+                await modal.alert({ title: 'Error', message: 'Error al cerrar caja: ' + errorMsg, type: 'error' });
+            }
+        }
+    }
+
     async addExpense() {
-        const description = prompt('Descripción del gasto:');
+        const description = await modal.prompt({
+            title: '📊 Registrar Gasto',
+            message: 'Descripción del gasto:',
+            placeholder: 'Ejemplo: Compra de insumos'
+        });
+        
         if (!description) return;
         
-        const amount = prompt('Monto del gasto:');
+        const amount = await modal.prompt({
+            title: '📊 Registrar Gasto',
+            message: `Monto del gasto "${description}":`,
+            placeholder: 'Ejemplo: 25000',
+            inputType: 'number'
+        });
+
         if (amount && !isNaN(amount)) {
             try {
                 const amountNum = parseFloat(amount);
                 await apiService.post('/cashregister/transactions', {
                     transaction_type: 'expense',
                     amount: amountNum,
-                    description: description || 'Gasto en caja'
+                    description: description
                 });
 
                 await this.refreshMovements();
                 
                 await modal.alert({ 
-                    title: 'Gasto Registrado', 
+                    title: '✅ Gasto Registrado', 
                     message: `Gasto de ${this.formatCurrency(amountNum)} registrado en caja`, 
                     type: 'success' 
                 });
             } catch (error) {
                 console.error('Error adding expense:', error);
-                const errorMsg = error?.detail || error?.message || (typeof error === 'string' ? error : JSON.stringify(error));
+                const errorMsg = error?.detail || error?.message || 'Error desconocido';
                 await modal.alert({ title: 'Error', message: 'Error al registrar gasto: ' + errorMsg, type: 'error' });
             }
         }
     }
 
-    async addBase() {
-        const amount = prompt('Monto de la base:');
-        if (amount && !isNaN(amount)) {
-            try {
-                const amountNum = parseFloat(amount);
-                await apiService.post('/cashregister/transactions', {
-                    transaction_type: 'base',
-                    amount: amountNum,
-                    description: 'Base inicial de caja'
-                });
 
-                await this.refreshMovements();
-                
-                await modal.alert({ 
-                    title: 'Base Agregada', 
-                    message: `Base de ${this.formatCurrency(amountNum)} agregada a caja`, 
-                    type: 'success' 
-                });
-            } catch (error) {
-                console.error('Error adding base:', error);
-                const errorMsg = error?.detail || error?.message || (typeof error === 'string' ? error : JSON.stringify(error));
-                await modal.alert({ title: 'Error', message: 'Error al agregar base: ' + errorMsg, type: 'error' });
-            }
-        }
-    }
 
     updateMovements() {
         const container = document.getElementById('movementsList');

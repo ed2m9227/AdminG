@@ -43,6 +43,9 @@ class CashTransactionOut(BaseModel):
     class Config:
         from_attributes = True
 
+class OpenCashRegister(BaseModel):
+    initial_amount: float
+
 @router.get("/")
 async def get_cash_register_status(
     current_user: User = Depends(get_current_user),
@@ -140,7 +143,7 @@ async def get_transactions(
 
 @router.post("/open")
 async def open_cash_register(
-    initial_amount: float,
+    data: OpenCashRegister,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -151,7 +154,7 @@ async def open_cash_register(
     db_transaction = CashTransaction(
         user_id=user.id,
         transaction_type='base',
-        amount=initial_amount,
+        amount=data.initial_amount,
         description=f'Base inicial para apertura de caja'
     )
     db.add(db_transaction)
@@ -160,7 +163,7 @@ async def open_cash_register(
     return {
         "success": True,
         "message": "Caja abierta",
-        "initial_amount": initial_amount
+        "initial_amount": data.initial_amount
     }
 
 @router.post("/close")
