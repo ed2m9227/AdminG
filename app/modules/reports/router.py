@@ -8,6 +8,7 @@ from app.models.user import User
 from app.models.customer import Customer
 from app.models.appointment import Appointment
 from app.models.payment import Payment
+from app.models.cash_transaction import CashTransaction
 from app.models.inventory import InventoryItem, InventoryMovement
 from app.modules.reports.schemas import (
     DashboardMetrics,
@@ -90,7 +91,7 @@ def get_dashboard_metrics(
         Appointment.scheduled_at >= month_start
     ).count()
     
-    # Revenue this month
+    # Revenue this month (Payments + Cash Sales)
     revenue_query = db.query(Payment).filter(
         Payment.user_id == user_id,
         Payment.status == "completed",
@@ -100,11 +101,31 @@ def get_dashboard_metrics(
         ),
     )
     
-    total_revenue = sum(p.final_amount for p in revenue_query.all()) or Decimal(0)
+    payment_revenue = sum(p.final_amount for p in revenue_query.all()) or Decimal(0)
     
-    # Average ticket
+    # Cash register transactions this month
+    cash_sales = db.query(CashTransaction).filter(
+        CashTransaction.user_id == user_id,
+        CashTransaction.transaction_type == "sale",
+        CashTransaction.created_at >= month_start
+    ).all()
+    cash_sales_total = sum(t.amount for t in cash_sales) or Decimal(0)
+    
+    # Cash register expenses this month
+    cash_expenses = db.query(CashTransaction).filter(
+        CashTransaction.user_id == user_id,
+        CashTransaction.transaction_type == "expense",
+        CashTransaction.created_at >= month_start
+    ).all()
+    cash_expenses_total = sum(t.amount for t in cash_expenses) or Decimal(0)
+    
+    # Total revenue = Payments + Cash Sales - Cash Expenses
+    total_revenue = payment_revenue + cash_sales_total - cash_expenses_total
+    
+    # Average ticket (only from payments and cash sales, not expenses)
     completed_payments = revenue_query.count()
-    average_ticket = float(total_revenue / completed_payments) if completed_payments > 0 else 0
+    total_transactions = completed_payments + len(cash_sales)
+    average_ticket = float((payment_revenue + cash_sales_total) / total_transactions) if total_transactions > 0 else 0
     
     # Pending payments
     pending = db.query(Payment).filter(
@@ -150,7 +171,26 @@ def get_revenue_report(
         Payment.created_at <= request.end_date,
     ).all()
     
-    total_revenue = sum(p.final_amount for p in payments if p.status == "completed") or Decimal(0)
+    payment_revenue = sum(p.final_amount for p in payments if p.status == "completed") or Decimal(0)
+    
+    # Cash register transactions in period
+    cash_sales = db.query(CashTransaction).filter(
+        CashTransaction.user_id == user_id,
+        CashTransaction.transaction_type == "sale",
+        CashTransaction.created_at >= request.start_date,
+        CashTransaction.created_at <= request.end_date
+    ).all()
+    cash_sales_total = sum(t.amount for t in cash_sales) or Decimal(0)
+    
+    cash_expenses = db.query(CashTransaction).filter(
+        CashTransaction.user_id == user_id,
+        CashTransaction.transaction_type == "expense",
+        CashTransaction.created_at >= request.start_date,
+        CashTransaction.created_at <= request.end_date
+    ).all()
+    cash_expenses_total = sum(t.amount for t in cash_expenses) or Decimal(0)
+    
+    total_revenue = payment_revenue + cash_sales_total - cash_expenses_total
     pending = sum(p.final_amount for p in payments if p.status == "pending") or Decimal(0)
     
     # Group by payment method

@@ -19,8 +19,9 @@ export class DashboardView {
 
     render() {
         const user = authService.getCurrentUser();
+        const isSubUser = !!user?.parent_user_id;
         const greeting = this.getGreeting();
-        const isAdmin = user?.role === 'admin';
+        const isAdmin = user?.role === 'admin' && !isSubUser;
         const businessEmoji = this.getEmojiForBusinessType(user?.business_type);
 
         const roleLabel = this.getRoleLabel(user?.role);
@@ -28,13 +29,17 @@ export class DashboardView {
                             user?.role === 'manager' ? 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' :
                             'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)';
 
+        const subtextMessage = isSubUser 
+            ? 'Bienvenido a tu espacio de trabajo del equipo'
+            : 'Bienvenido de vuelta a AdminG';
+
         return `
             <!-- Header de Bienvenida Mejorado -->
             <div style="margin-bottom: 24px; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); border-radius: 12px; padding: 24px; border: 1px solid rgba(102, 126, 234, 0.1); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 24px;">
                     <div style="flex: 1;">
                         <h1 style="font-size: 32px; font-weight: 700; color: #1f2937; margin: 0 0 8px 0;">${greeting}</h1>
-                        <p style="font-size: 14px; color: #6b7280; margin: 0 0 16px 0;">Bienvenido de vuelta a AdminG</p>
+                        <p style="font-size: 14px; color: #6b7280; margin: 0 0 16px 0;">${subtextMessage}</p>
                         
                         <!-- Recuadro separado para Plan y Rol -->
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
@@ -73,10 +78,12 @@ export class DashboardView {
                     <h3>Productos</h3>
                     <div class="value" id="statInventory">${this.stats.inventory}</div>
                 </div>
+                ${!isSubUser ? `
                 <div class="stat-card">
                     <h3>Ingresos Mes</h3>
                     <div class="value" id="statRevenue">$0.00</div>
                 </div>
+                ` : ''}
             </div>
             
             <div class="card">
@@ -113,12 +120,22 @@ export class DashboardView {
                     </table>
                 </div>
             </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Movimientos de Caja Recientes</h2>
+                </div>
+                <div class="card-body" id="cashMovementsBox">
+                    <div style="padding: 12px; color: #7f8c8d;">Cargando movimientos de caja...</div>
+                </div>
+            </div>
         `;
     }
 
     async init() {
         await this.loadStats();
         await this.loadFeatures();
+        await this.loadCashMovements();
         this.attachEventListeners();
     }
 
@@ -129,7 +146,104 @@ export class DashboardView {
         }
     }
 
-    openUserPreviewModal() {
+    async loadCashMovements() {
+        try {
+            const [movements, customers] = await Promise.all([
+                apiService.get('/cashregister/transactions?limit=10'),
+                apiService.getCustomers().catch(() => [])
+            ]);
+            
+            const container = document.getElementById('cashMovementsBox');
+            
+            if (!container) return;
+
+            if (!movements || movements.length === 0) {
+                container.innerHTML = '<div style="padding: 12px; color: #7f8c8d; text-align: center;">Sin movimientos de caja registrados</div>';
+                return;
+            }
+
+            const formatCurrency = (value) => {
+                return new Intl.NumberFormat('es-CO', { 
+                    style: 'currency', 
+                    currency: 'COP',
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0
+                }).format(value);
+            };
+
+            const formatDate = (dateStr) => {
+                const date = new Date(dateStr);
+                return date.toLocaleString('es-CO', { 
+                    year: 'numeric', 
+                    month: 'short', 
+                    day: 'numeric', 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                });
+            };
+
+            const movementsHTML = movements.map(mov => {
+                let icon, typeLabel, color;
+                let description = mov.description || 'Sin descripción';
+                
+                // Enriquecer descripción de ventas con nombre del cliente
+                if (mov.transaction_type === 'sale' && mov.customer_id && Array.isArray(customers)) {
+                    const customer = customers.find(c => c.id === mov.customer_id);
+                    if (customer) {
+                        typeLabel = `Venta a ${customer.full_name}`;
+                    }
+                }
+                
+                if (mov.transaction_type === 'sale') {
+                    icon = '💳';
+                    if (!typeLabel) typeLabel = 'Venta';
+                    color = '#0ea5e9';
+                } else if (mov.transaction_type === 'expense') {
+                    icon = '📊';
+                    typeLabel = 'Gasto';
+                    color = '#ef4444';
+                } else if (mov.transaction_type === 'base') {
+                    icon = '💰';
+                    typeLabel = 'Base';
+                    color = '#10b981';
+                } else {
+                    icon = '📝';
+                    typeLabel = 'Movimiento';
+                    color = '#6b7280';
+                }
+
+                return `
+                    <div style="padding: 12px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+                        <div style="flex: 1;">
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                <span style="font-size: 18px;">${icon}</span>
+                                <div>
+                                    <div style="font-weight: 600; color: ${color};">${typeLabel}</div>
+                                    <div style="font-size: 12px; color: #7f8c8d;">${description}</div>
+                                </div>
+                            </div>
+                            <div style="font-size: 11px; color: #9ca3af;">
+                                ${formatDate(mov.created_at)}
+                            </div>
+                        </div>
+                        <div style="text-align: right; margin-left: 16px;">
+                            <div style="font-weight: 700; color: ${color}; font-size: 16px;">${formatCurrency(mov.amount)}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = `<div style="max-height: 400px; overflow-y: auto;">${movementsHTML}</div>`;
+        } catch (error) {
+            console.error('Error loading cash movements:', error);
+            const container = document.getElementById('cashMovementsBox');
+            if (container) {
+                container.innerHTML = `<div style="padding: 12px; color: #ef4444;">Error al cargar movimientos de caja: ${error.message}</div>`;
+            }
+        }
+    }
+
+    async openUserPreviewModal() {
         const user = authService.getCurrentUser();
         const roleLabel = this.getRoleLabel(user?.role);
         const roleDescription = this.getRoleDescription(user?.role);
@@ -228,11 +342,12 @@ export class DashboardView {
 
     async loadStats() {
         try {
-            const [customersData, inventoryData, appointmentsData, paymentsData] = await Promise.allSettled([
+            const [customersData, inventoryData, appointmentsData, paymentsData, cashTransactions] = await Promise.allSettled([
                 apiService.getCustomers(),
                 apiService.getInventoryItems(),
                 apiService.getAppointments(),
-                apiService.getPayments()
+                apiService.getPayments(),
+                apiService.get('/cashregister/transactions?limit=1000')
             ]);
 
             // Customers
@@ -253,18 +368,43 @@ export class DashboardView {
                 this.updateStat('statAppointments', this.stats.appointments);
             }
 
-            // Revenue calculation - Only count completed payments
+            // Revenue calculation - Payments + Cash Sales - Cash Expenses
+            let paymentRevenue = 0;
+            let cashSales = 0;
+            let cashExpenses = 0;
+            
             if (paymentsData.status === 'fulfilled' && Array.isArray(paymentsData.value)) {
                 console.log('🔍 DashboardView: Payments fetched:', paymentsData.value);
                 const completedPayments = paymentsData.value.filter(p => p.status === 'completed');
                 console.log('✅ DashboardView: Completed payments:', completedPayments);
-                this.stats.revenue = completedPayments
+                paymentRevenue = completedPayments
                     .reduce((sum, p) => sum + (parseFloat(p.final_amount) || parseFloat(p.amount) || 0), 0);
-                console.log('💰 DashboardView: Total revenue calculated:', this.stats.revenue);
-                this.updateStat('statRevenue', this.stats.revenue);
             } else {
                 console.warn('⚠️ DashboardView: Payment data not fulfilled or not an array:', paymentsData);
             }
+            
+            // Cash register transactions
+            if (cashTransactions.status === 'fulfilled' && Array.isArray(cashTransactions.value)) {
+                const today = new Date();
+                const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+                
+                cashTransactions.value.forEach(t => {
+                    const transDate = new Date(t.created_at);
+                    if (transDate >= monthStart) {
+                        if (t.transaction_type === 'sale') {
+                            cashSales += parseFloat(t.amount) || 0;
+                        } else if (t.transaction_type === 'expense') {
+                            cashExpenses += parseFloat(t.amount) || 0;
+                        }
+                    }
+                });
+                
+                console.log('💰 Cash sales:', cashSales, '💸 Cash expenses:', cashExpenses);
+            }
+            
+            this.stats.revenue = paymentRevenue + cashSales - cashExpenses;
+            console.log('💰 DashboardView: Total revenue (Payments + Cash Sales - Expenses):', this.stats.revenue);
+            this.updateStat('statRevenue', this.stats.revenue);
         } catch (error) {
             console.error('Error loading dashboard stats:', error);
         }
