@@ -776,14 +776,21 @@ export class CashRegisterView {
                             type: t.transaction_type,
                             amount: t.amount,
                             timestamp: new Date(t.created_at).toLocaleTimeString('es-CO'),
+                            created_at: t.created_at,
                             customer: customer ? customer.full_name : null,
                             description: t.description
                         };
                     });
+                    this.checkCashRegisterStatus();
                     this.updateMovements();
+                } else {
+                    this.movements = [];
+                    this.checkCashRegisterStatus();
                 }
             } catch (error) {
                 console.warn('Could not load cash transactions:', error);
+                this.movements = [];
+                this.checkCashRegisterStatus();
             }
         } catch (error) {
             console.error('Error loading cash register data:', error);
