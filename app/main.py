@@ -18,6 +18,7 @@ from app.modules.inventory.router import router as inventory_router
 from app.modules.payments.router import router as payments_router
 from app.modules.reports.router import router as reports_router
 from app.modules.cashregister.router import router as cashregister_router
+from app.modules.invoices.router import router as invoices_router
 from app.modules.admin.router import router as admin_router
 from app.modules.admin.routers.business_types import router as business_types_router
 from app.modules.plans.service import seed_plans
@@ -46,6 +47,19 @@ app.add_middleware(
     allow_headers=["*"],
     expose_headers=["*"],
 )
+
+# Middleware para deshabilitar caché en desarrollo (archivos JS/CSS)
+@app.middleware("http")
+async def disable_cache_middleware(request: Request, call_next):
+    response = await call_next(request)
+    
+    # Deshabilitar caché para archivos JS y CSS
+    if request.url.path.endswith(('.js', '.css')) or '/js/' in request.url.path or '/css/' in request.url.path:
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+    
+    return response
 
 # Manejador global de excepciones
 @app.exception_handler(Exception)
@@ -107,6 +121,7 @@ app.include_router(inventory_router)
 app.include_router(payments_router)
 app.include_router(reports_router)
 app.include_router(cashregister_router)
+app.include_router(invoices_router)
 app.include_router(admin_router)
 app.include_router(business_types_router)
 
@@ -204,13 +219,16 @@ if frontend_dist.exists():
             raise HTTPException(status_code=404, detail="Not found")
         
         # Skip static file extensions
-        static_extensions = (".css", ".js", ".png", ".jpg", ".jpeg", ".gif", ".svg", ".ico", ".woff", ".woff2")
+        static_extensions = (".html", ".css", ".js", ".png", ".jpg", ".jpeg", ".gif", ".svg", ".ico", ".woff", ".woff2")
         if any(full_path.endswith(ext) for ext in static_extensions):
             # Try to serve actual file
             file_path = frontend_dist / full_path
             if file_path.is_file() and file_path.exists():
                 return FileResponse(file_path)
-            raise HTTPException(status_code=404, detail="File not found")
+            # Si no es index.html, dar error 404
+            if not full_path.endswith("index.html"):
+                raise HTTPException(status_code=404, detail="File not found")
+            # Si es index.html pero no existe, continuar al siguiente bloque
         
         # Serve index.html for SPA routing (/login, /register, /dashboard, etc.)
         index_path = frontend_dist / "index.html"
