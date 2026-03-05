@@ -6,6 +6,7 @@ from app.db.session import get_db
 from app.models.payment import Payment
 from app.models.user import User
 from app.models.customer import Customer
+from sqlalchemy import or_
 from app.modules.payments.schemas import (
     PaymentCreate,
     PaymentUpdate,
@@ -24,6 +25,16 @@ router = APIRouter(
 MONTELIBANO_GEN_DISCOUNT = 0.07
 MONTELIBANO_PROMO_CODE = "MONTELIBANO7"
 APPLICABLE_PLANS_FOR_DISCOUNT = ["basic", "plus"]
+
+def get_user_ids_for_data_sharing(user_id: int, db: Session):
+    """Retorna list de user_ids a incluir en queries (para compartir datos padre-hijo)"""
+    user = db.query(User).filter(User.id == user_id).first()
+    if user and user.parent_user_id:
+        # Sub-usuario: incluir datos del padre y propio
+        return [user.id, user.parent_user_id]
+    else:
+        # Usuario padre/admin: incluir datos propios
+        return [user.id]
 
 @router.post("/", response_model=PaymentOut, status_code=status.HTTP_201_CREATED)
 def create_payment(
@@ -89,7 +100,8 @@ def list_payments(
     Optional filters:
     - status_filter: "pending", "completed", "failed", etc
     """
-    query = db.query(Payment).options(joinedload(Payment.customer)).filter(Payment.user_id == current_user["id"])
+    user_ids = get_user_ids_for_data_sharing(current_user["id"], db)
+    query = db.query(Payment).options(joinedload(Payment.customer)).filter(Payment.user_id.in_(user_ids))
     
     if status_filter:
         query = query.filter(Payment.status == status_filter)
@@ -103,9 +115,10 @@ def get_payment(
     current_user: User = Depends(get_current_user),
 ):
     """Get payment details"""
+    user_ids = get_user_ids_for_data_sharing(current_user["id"], db)
     payment = db.query(Payment).filter(
         Payment.id == payment_id,
-        Payment.user_id == current_user["id"]
+        Payment.user_id.in_(user_ids)
     ).first()
     
     if not payment:
@@ -121,9 +134,10 @@ def update_payment(
     current_user: User = Depends(get_current_user),
 ):
     """Update payment status (admin only)"""
+    user_ids = get_user_ids_for_data_sharing(current_user["id"], db)
     payment = db.query(Payment).filter(
         Payment.id == payment_id,
-        Payment.user_id == current_user["id"]
+        Payment.user_id.in_(user_ids)
     ).first()
     
     if not payment:

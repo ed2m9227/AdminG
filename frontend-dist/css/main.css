@@ -160,6 +160,21 @@ body {
     border-left: 4px solid white;
 }
 
+.menu-item.blocked {
+    opacity: 0.6;
+    position: relative;
+}
+
+.menu-item.blocked:hover {
+    background: rgba(255, 255, 255, 0.05);
+    opacity: 0.8;
+}
+
+.menu-lock {
+    font-size: 14px;
+    margin-left: auto;
+}
+
 .menu-icon {
     width: 20px;
     text-align: center;

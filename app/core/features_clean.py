@@ -173,6 +173,7 @@ PLAN_FEATURES: Dict[str, Set[Feature]] = {
         Feature.VIEW_AUTHORIZATIONS,
         Feature.CREATE_AUTHORIZATIONS,
         Feature.MANAGE_AUTHORIZATIONS,
+        Feature.ADMIN_PANEL,
     },
     "admin": {
         Feature.ADMIN_PANEL,
@@ -294,6 +295,7 @@ def get_plan_limits(plan: str) -> Dict[str, int]:
             "appointments": 100,
             "reports": 0,
             "storage_gb": 1,
+            "services": 0,
         },
         "starter": {
             "team_members": 5,

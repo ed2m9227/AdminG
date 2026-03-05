@@ -52,7 +52,7 @@ class InvoiceResponse(BaseModel):
     status: str
     issued_at: datetime
     due_date: Optional[datetime] = None
-    items: List[InvoiceItemResponse] = []
+    items: List[InvoiceItemResponse] = Field(default_factory=list)
 
     class Config:
         from_attributes = True

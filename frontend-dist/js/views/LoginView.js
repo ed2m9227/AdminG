@@ -105,7 +105,16 @@ export class LoginView {
                 return;
             }
 
-            // For non-admin users, check onboarding status
+            // Sub-users (team members) bypass onboarding - they inherit parent config
+            if (user?.parent_user_id || user?.onboarding_completed) {
+                localStorage.setItem('onboarding_completed', 'true');
+                localStorage.setItem('onboarding_user_email', userEmail);
+                console.log('🎯 Sub-user or onboarding already completed, bypassing onboarding...');
+                router.navigate('dashboard');
+                return;
+            }
+
+            // For non-admin, non-sub users, check onboarding status
             const storedEmail = localStorage.getItem('onboarding_user_email');
             const onboardingCompleted = localStorage.getItem('onboarding_completed') === 'true';
             
@@ -113,6 +122,7 @@ export class LoginView {
             console.log('   - Current email:', userEmail);
             console.log('   - Stored email:', storedEmail);
             console.log('   - Onboarding completed:', onboardingCompleted);
+            console.log('   - Is sub-user:', !!user?.parent_user_id);
 
             // If it's a different user, clear onboarding flags and start fresh
             if (storedEmail && storedEmail !== userEmail) {

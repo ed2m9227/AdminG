@@ -4,6 +4,8 @@
  * Principio SOLID: Single Responsibility
  */
 
+import modal from '../components/Modal.js';
+
 const API_BASE_URL = 'http://127.0.0.1:8000';
 
 export class ApiService {
@@ -44,8 +46,29 @@ export class ApiService {
             const response = await fetch(`${this.baseUrl}${endpoint}`, options);
             
             if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.detail || `HTTP Error: ${response.status}`);
+                let errorMessage = `HTTP Error: ${response.status}`;
+                try {
+                    const error = await response.json();
+                    const detail = error?.detail;
+                    if (typeof detail === 'string' && detail.trim()) {
+                        errorMessage = detail;
+                    } else if (Array.isArray(detail)) {
+                        const first = detail[0];
+                        errorMessage = first?.msg || JSON.stringify(first) || errorMessage;
+                    } else if (detail && typeof detail === 'object') {
+                        errorMessage = detail.msg || JSON.stringify(detail);
+                    }
+                } catch (_parseError) {
+                    // Keep default message when response is not JSON.
+                }
+
+                if (response.status === 403) {
+                    modal.showWarning('Tu plan actual no incluye esta operación. Actualiza tu plan para continuar.');
+                }
+
+                const requestError = new Error(errorMessage);
+                requestError.status = response.status;
+                throw requestError;
             }
 
             return await response.json();
@@ -156,7 +179,11 @@ export class ApiService {
     }
 
     async getFeatures() {
-        return this.get('/admin/features');
+        return this.get('/users/me/features');
+    }
+
+    async getUserFeatures() {
+        return this.get('/users/me/features');
     }
 
     async getVersion() {

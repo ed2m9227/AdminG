@@ -30,6 +30,15 @@ def resolve_user(
         raise HTTPException(status_code=404, detail="User not found")
     return user
 
+def get_user_ids_for_data_sharing(user: User):
+    """Retorna list de user_ids a incluir en queries (para compartir datos padre-hijo)"""
+    if user.parent_user_id:
+        # Sub-usuario: incluir datos del padre y propio
+        return [user.id, user.parent_user_id]
+    else:
+        # Usuario padre/admin: incluir datos propios
+        return [user.id]
+
 def check_inventory_access(user: User):
     """Check if user has access to inventory features"""
     if user.role == 'admin' or user.plan in ["start", "max", "admin"]:
@@ -67,8 +76,9 @@ def list_categories(
     """List all inventory categories - Only AdminPro Start/Max"""
     check_inventory_access(current_user)
     
+    user_ids = get_user_ids_for_data_sharing(current_user)
     return db.query(InventoryCategory).filter(
-        InventoryCategory.user_id == current_user.id
+        InventoryCategory.user_id.in_(user_ids)
     ).offset(skip).limit(limit).all()
 
 # ============ ITEMS ============
@@ -124,12 +134,35 @@ def list_items(
     """
     check_inventory_access(current_user)
     
-    query = db.query(InventoryItem).filter(InventoryItem.user_id == current_user.id)
+    user_ids = get_user_ids_for_data_sharing(current_user)
+    query = db.query(InventoryItem).filter(InventoryItem.user_id.in_(user_ids))
     
     if low_stock:
         query = query.filter(InventoryItem.quantity <= InventoryItem.min_quantity)
     
     return query.offset(skip).limit(limit).all()
+
+
+@router.get("/alerts/low-stock", response_model=list[InventoryItemOut])
+def list_low_stock_alerts(
+    threshold: int = 5,
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(resolve_user),
+):
+    """List low stock alerts using a fixed threshold (default: 5)."""
+    check_inventory_access(current_user)
+
+    if threshold < 0:
+        raise HTTPException(status_code=400, detail="Threshold must be >= 0")
+
+    user_ids = get_user_ids_for_data_sharing(current_user)
+    query = db.query(InventoryItem).filter(
+        InventoryItem.user_id.in_(user_ids),
+        InventoryItem.quantity <= threshold
+    )
+    return query.order_by(InventoryItem.quantity.asc()).offset(skip).limit(limit).all()
 
 @router.get("/items/{item_id}", response_model=InventoryItemOut)
 def get_item(
@@ -140,9 +173,10 @@ def get_item(
     """Get inventory item by ID - Only AdminPro Start/Max"""
     check_inventory_access(current_user)
     
+    user_ids = get_user_ids_for_data_sharing(current_user)
     item = db.query(InventoryItem).filter(
         InventoryItem.id == item_id,
-        InventoryItem.user_id == current_user.id
+        InventoryItem.user_id.in_(user_ids)
     ).first()
     
     if not item:
@@ -160,9 +194,10 @@ def update_item(
     """Update inventory item - Only AdminPro Start/Max"""
     check_inventory_access(current_user)
     
+    user_ids = get_user_ids_for_data_sharing(current_user)
     item = db.query(InventoryItem).filter(
         InventoryItem.id == item_id,
-        InventoryItem.user_id == current_user.id
+        InventoryItem.user_id.in_(user_ids)
     ).first()
     
     if not item:
@@ -193,9 +228,10 @@ def delete_item(
     """Delete inventory item - Only AdminPro Start/Max"""
     check_inventory_access(current_user)
     
+    user_ids = get_user_ids_for_data_sharing(current_user)
     item = db.query(InventoryItem).filter(
         InventoryItem.id == item_id,
-        InventoryItem.user_id == current_user.id
+        InventoryItem.user_id.in_(user_ids)
     ).first()
     
     if not item:

@@ -17,6 +17,8 @@ class ReportRequest(BaseModel):
 
 class RevenueReport(BaseModel):
     total_revenue: float
+    total_expenses: float
+    net_profit: float
     paid_amount: float
     pending_amount: float
     by_payment_method: dict

@@ -27,6 +27,8 @@ class UserUpdate(BaseModel):
 class UserOut(UserBase):
     id: int
     is_active: bool
+    onboarding_completed: bool
+    parent_user_id: int | None = None
     created_at: datetime
     updated_at: datetime
 

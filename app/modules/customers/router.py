@@ -18,6 +18,15 @@ def resolve_user(
         raise HTTPException(status_code=404, detail="User not found")
     return user
 
+def get_user_ids_for_data_sharing(user: User):
+    """Retorna list de user_ids a incluir en queries (para compartir datos padre-hijo)"""
+    if user.parent_user_id:
+        # Sub-usuario: incluir datos del padre y propio
+        return [user.id, user.parent_user_id]
+    else:
+        # Usuario padre/admin: incluir datos propios
+        return [user.id]
+
 @router.post("/", response_model=CustomerOut, status_code=status.HTTP_201_CREATED)
 def create_customer(
     payload: CustomerCreate,
@@ -43,8 +52,9 @@ def list_customers(
     db: Session = Depends(get_db),
     current_user: User = Depends(resolve_user)
 ):
+    user_ids = get_user_ids_for_data_sharing(current_user)
     return db.query(Customer).filter(
-        Customer.user_id == current_user.id
+        Customer.user_id.in_(user_ids)
     ).offset(skip).limit(limit).all()
 
 @router.get("/{customer_id}", response_model=CustomerOut)
@@ -53,9 +63,10 @@ def get_customer(
     db: Session = Depends(get_db),
     current_user: User = Depends(resolve_user)
 ):
+    user_ids = get_user_ids_for_data_sharing(current_user)
     customer = db.query(Customer).filter(
         Customer.id == customer_id,
-        Customer.user_id == current_user.id
+        Customer.user_id.in_(user_ids)
     ).first()
     if not customer:
         raise HTTPException(status_code=404, detail="Customer not found")
@@ -68,9 +79,10 @@ def update_customer(
     db: Session = Depends(get_db),
     current_user: User = Depends(resolve_user)
 ):
+    user_ids = get_user_ids_for_data_sharing(current_user)
     customer = db.query(Customer).filter(
         Customer.id == customer_id,
-        Customer.user_id == current_user.id
+        Customer.user_id.in_(user_ids)
     ).first()
     if not customer:
         raise HTTPException(status_code=404, detail="Customer not found")
@@ -90,9 +102,10 @@ def delete_customer(
     db: Session = Depends(get_db),
     current_user: User = Depends(resolve_user)
 ):
+    user_ids = get_user_ids_for_data_sharing(current_user)
     customer = db.query(Customer).filter(
         Customer.id == customer_id,
-        Customer.user_id == current_user.id
+        Customer.user_id.in_(user_ids)
     ).first()
     if not customer:
         raise HTTPException(status_code=404, detail="Customer not found")

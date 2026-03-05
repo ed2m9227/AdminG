@@ -16,6 +16,7 @@ class User(Base):
     # Multi-tenancy fields
     business_type = Column(String(50), default="general", nullable=False)
     parent_user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    onboarding_completed = Column(Boolean, default=False, nullable=False)
     
     # Relationships
     sub_users = relationship("User", remote_side=[id], backref="parent_user")

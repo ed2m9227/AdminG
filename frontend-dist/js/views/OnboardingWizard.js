@@ -523,8 +523,17 @@ class OnboardingWizard {
             
             console.log('✓ Saved to localStorage - plan:', this.formData.plan);
             
-            // Mark onboarding as complete
+            // Mark onboarding as complete in localStorage
             localStorage.setItem('onboarding_completed', 'true');
+            
+            // Mark onboarding as complete in backend
+            try {
+                await apiService.post('/users/me/complete-onboarding', {});
+                console.log('✅ Onboarding marked as completed in backend');
+            } catch (error) {
+                console.error('⚠️ Failed to update onboarding status in backend:', error);
+                // Continue anyway, localStorage will work for now
+            }
             
             // Navigate to dashboard without reloading
             setTimeout(async () => {

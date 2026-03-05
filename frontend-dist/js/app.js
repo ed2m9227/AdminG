@@ -26,6 +26,7 @@ import {
 import { masterAdminView, teamManagementView, teamMovementsView } from './views/AdminPanelView.js';
 import { BusinessTypesView } from './views/BusinessTypesView.js';
 import businessConfigView from './views/BusinessConfigView.js';
+import invoicesView from './views/InvoicesView.js';
 import modal from './components/Modal.js';
 
 if (typeof window !== 'undefined' && typeof window.newUrlFound !== 'function') {
@@ -110,6 +111,24 @@ class App {
 
         router.register('reports', async () => {
             await this.renderProtectedView(reportsView);
+
+                router.register('invoices', async () => {
+                    await this.renderProtectedView(invoicesView);
+                });
+        });
+
+        router.register('documents', async () => {
+            await this.renderProtectedView({
+                render: () => `<div class="card"><h2>📄 Documentos</h2><p>Gestión de documentos de consentimiento, responsabilidad y otros.</p></div>`,
+                init: () => {}
+            });
+        });
+
+        router.register('authorizations', async () => {
+            await this.renderProtectedView({
+                render: () => `<div class="card"><h2>✅ Autorizaciones</h2><p>Autorizaciones médicas y de procedimientos.</p></div>`,
+                init: () => {}
+            });
         });
 
         // Nuevas rutas de administración
@@ -235,7 +254,10 @@ class App {
                         payments: 'view_payments',
                         reports: 'view_reports',
                         cashregister: 'use_cashregister',
-                        team: 'manage_team_users'
+                        team: 'view_team',
+                        'team-movements': 'view_team',
+                        admin: 'admin_panel',
+                        businesstypes: 'admin_panel'
                     };
 
                     const requiredFeature = routeFeatureMap[path];
@@ -326,10 +348,16 @@ class App {
             return;
         }
 
+        // Cargar features UNA SOLA VEZ
+        await sidebar.loadUserFeatures();
+        
+        // Renderizar sidebar
+        const sidebarHTML = sidebar.render();
+
         // Renderizar layout de dashboard
         this.appRoot.innerHTML = `
             <div class="dashboard-layout">
-                ${sidebar.render()}
+                ${sidebarHTML}
                 <div class="main-content">
                     ${header.render()}
                     <div class="content-area">

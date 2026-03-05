@@ -42,3 +42,41 @@ def create_user_endpoint(
 ):
     created = create_auth_user(user.email, user.password, user.role, user.plan, db)
     return {"message": "User created", "email": created.email}
+
+@router.post("/me/complete-onboarding")
+def complete_onboarding(
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Mark onboarding as completed for current user"""
+    user = db.query(User).filter(User.id == int(current_user["id"])).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    user.onboarding_completed = True
+    db.commit()
+    db.refresh(user)
+    
+    return {"success": True, "message": "Onboarding marked as completed"}
+
+@router.get("/me/features")
+def get_user_features(
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get available features for current user based on plan and role"""
+    from app.core.features import get_available_features, get_plan_limits
+    
+    user = db.query(User).filter(User.id == int(current_user["id"])).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    features = get_available_features(user.plan, user.role)
+    limits = get_plan_limits(user.plan)
+    
+    return {
+        "plan": user.plan,
+        "role": user.role,
+        "features": features,
+        "limits": limits
+    }

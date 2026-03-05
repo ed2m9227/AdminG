@@ -5,6 +5,7 @@
  */
 
 import apiService from '../services/api.service.js';
+import authService from '../services/auth.service.js';
 import table from '../components/Table.js';
 import modal from '../components/Modal.js';
 
@@ -49,6 +50,9 @@ export class CustomersView {
     }
 
     renderTable() {
+        const user = authService.getCurrentUser();
+        const isSubUser = !!user?.parent_user_id;
+        
         const columns = [
             { key: 'full_name', label: 'Nombre' },
             { key: 'email', label: 'Email' },
@@ -59,16 +63,20 @@ export class CustomersView {
                 type: 'badge',
                 badgeClass: 'success',
                 formatter: () => 'Activo'
-            },
-            {
+            }
+        ];
+        
+        // Solo mostrar acciones si es admin (no es sub-usuario)
+        if (!isSubUser) {
+            columns.push({
                 key: 'actions',
                 label: 'Acciones',
                 formatter: (_, row) => `
                     <button class="btn btn-sm" data-edit="${row.id}">✏️ Editar</button>
                     <button class="btn btn-sm btn-danger" data-delete="${row.id}">🗑️ Eliminar</button>
                 `
-            }
-        ];
+            });
+        }
 
         return table.render({
             columns,

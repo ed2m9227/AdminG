@@ -27,7 +27,7 @@ __all__ = [
     "InventoryCategory", 
     "InventoryMovement",
     "TeamUser",
-    "CashTransaction"
+    "CashTransaction",
     "Invoice",
     "InvoiceItem",
     "TaxConfig"

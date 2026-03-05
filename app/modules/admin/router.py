@@ -414,6 +414,7 @@ def create_team_user(
         if role not in ["viewer", "manager", "admin"]:
             raise HTTPException(status_code=400, detail="Rol inválido")
 
+        # Crear usuario hijo con onboarding ya completado
         new_user = User(
             email=email,
             hashed_password=hash_password(password),
@@ -421,11 +422,34 @@ def create_team_user(
             plan=user.plan,
             is_active=True,
             business_type=user.business_type,
-            parent_user_id=user.id
+            parent_user_id=user.id,
+            onboarding_completed=True  # Sub-usuarios saltan el onboarding
         )
         db.add(new_user)
         db.commit()
         db.refresh(new_user)
+
+        # Copiar BusinessConfiguration del padre al hijo
+        parent_config = db.query(BusinessConfiguration).filter(
+            BusinessConfiguration.user_id == user.id
+        ).first()
+        
+        if parent_config:
+            child_config = BusinessConfiguration(
+                user_id=new_user.id,
+                business_type=parent_config.business_type,
+                business_name=parent_config.business_name,
+                business_description=parent_config.business_description,
+                customer_label=parent_config.customer_label,
+                pet_label=parent_config.pet_label,
+                appointment_label=parent_config.appointment_label,
+                pet_fields_enabled=parent_config.pet_fields_enabled,
+                customer_fields_enabled=parent_config.customer_fields_enabled,
+                custom_fields=parent_config.custom_fields,
+                has_pet_relationship=parent_config.has_pet_relationship
+            )
+            db.add(child_config)
+            db.commit()
 
         team_user = TeamUser(
             team_owner_id=user.id,
