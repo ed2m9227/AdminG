@@ -219,13 +219,25 @@ async def open_cash_register(
         initial_amount=data.initial_amount
     )
     db.add(session)
+    db.flush()
+    
+    # Create base transaction to sync with frontend
+    base_transaction = CashTransaction(
+        user_id=user.id,
+        transaction_type='base',
+        amount=data.initial_amount,
+        description=f'Base inicial de caja'
+    )
+    db.add(base_transaction)
     db.commit()
+    db.refresh(session)
     
     return {
         "success": True,
         "message": "Caja abierta",
         "initial_amount": data.initial_amount,
-        "opened_at": session.opened_at.isoformat()
+        "opened_at": session.opened_at.isoformat(),
+        "status": "open"
     }
 
 @router.post("/close")
@@ -260,6 +272,16 @@ async def close_cash_register(
     session.closed_at = datetime.utcnow()
     session.final_amount = final_balance
     db.add(session)
+    db.flush()
+    
+    # Create close transaction to sync with frontend
+    close_transaction = CashTransaction(
+        user_id=user.id,
+        transaction_type='close',
+        amount=final_balance,
+        description=f'Cierre de caja - Balance final: {final_balance}'
+    )
+    db.add(close_transaction)
     db.commit()
     
     return {
@@ -270,5 +292,37 @@ async def close_cash_register(
         "expenses": expenses,
         "initial_amount": session.initial_amount,
         "base": base,
-        "transaction_count": len(transactions)
+        "transaction_count": len(transactions),
+        "status": "closed"
+    }
+
+@router.post("/reset")
+async def reset_cash_register(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Reset cash register state - cierra todas las sesiones pendientes (admin only)"""
+    user = db.query(User).filter(User.id == int(current_user["id"])).first()
+    
+    # Cierra todas las sesiones activas del usuario
+    sessions = db.query(CashRegisterSession).filter(
+        CashRegisterSession.user_id == user.id,
+        CashRegisterSession.is_active == True
+    ).all()
+    
+    count = 0
+    for session in sessions:
+        session.is_active = False
+        session.closed_at = datetime.utcnow()
+        session.final_amount = session.initial_amount  # Cerrar sin cambios
+        db.add(session)
+        count += 1
+    
+    db.commit()
+    
+    return {
+        "success": True,
+        "message": f"Se cerraron {count} sesión(es) pendiente(s)",
+        "sessions_closed": count,
+        "status": "reset"
     }

@@ -781,16 +781,16 @@ export class CashRegisterView {
                             description: t.description
                         };
                     });
-                    this.checkCashRegisterStatus();
+                    await this.syncCashRegisterStatus();  // Sync with server first
                     this.updateMovements();
                 } else {
                     this.movements = [];
-                    this.checkCashRegisterStatus();
+                    await this.syncCashRegisterStatus();  // Sync with server
                 }
             } catch (error) {
                 console.warn('Could not load cash transactions:', error);
                 this.movements = [];
-                this.checkCashRegisterStatus();
+                await this.syncCashRegisterStatus();  // Sync with server regardless
             }
         } catch (error) {
             console.error('Error loading cash register data:', error);
@@ -938,13 +938,32 @@ export class CashRegisterView {
                 this.movements = [];
             }
 
-            this.checkCashRegisterStatus();
+            // Sync with server status endpoint
+            await this.syncCashRegisterStatus();
             this.updateMovements();
         } catch (error) {
             console.warn('Error refreshing cash movements:', error);
             this.movements = [];
-            this.checkCashRegisterStatus();
+            // Try to sync status even if movements fail
+            try {
+                await this.syncCashRegisterStatus();
+            } catch (e) {
+                console.warn('Could not sync cash status: ', e);
+                this.checkCashRegisterStatus();
+            }
             this.updateMovements();
+        }
+    }
+
+    async syncCashRegisterStatus() {
+        try {
+            // Get server status to override local state
+            const status = await apiService.get('/cashregister');
+            this.cashRegisterOpen = (status?.status === 'open');
+            console.log('✓ Cash status synced from server:', this.cashRegisterOpen);
+        } catch (error) {
+            console.warn('Could not sync with server, using local state');
+            this.checkCashRegisterStatus();
         }
     }
 
@@ -1074,8 +1093,20 @@ export class CashRegisterView {
         if (result && !isNaN(result)) {
             try {
                 const amountNum = parseFloat(result);
-                await apiService.post('/cashregister/open', { initial_amount: amountNum });
+                const response = await apiService.post('/cashregister/open', { initial_amount: amountNum });
+                
+                // Refresh movements and sync with server state
                 await this.refreshMovements();
+                
+                // Extra validation with server status
+                try {
+                    const status = await apiService.get('/cashregister');
+                    if (status.status === 'open') {
+                        console.log('✓ Caja abierta confirmada en servidor');
+                    }
+                } catch (e) {
+                    console.warn('No se pudo validar estado con servidor');
+                }
                 
                 await modal.alert({ 
                     title: '✅ Caja Abierta', 
@@ -1085,7 +1116,36 @@ export class CashRegisterView {
             } catch (error) {
                 console.error('Error opening cash:', error);
                 const errorMsg = error?.detail || error?.message || 'Error desconocido';
-                await modal.alert({ title: 'Error', message: 'Error al abrir caja: ' + errorMsg, type: 'error' });
+                
+                // Si dice "Caja ya está abierta", ofrecer reset
+                if (errorMsg.includes('ya está abierta')) {
+                    const shouldReset = await modal.confirm({
+                        title: '🔧 Caja Bloqueada',
+                        message: 'La caja reporta estar abierta pero no se puede sincronizar. ¿Desea resetear el estado?',
+                        confirmText: 'Resetear',
+                        cancelText: 'Cancelar'
+                    });
+                    
+                    if (shouldReset) {
+                        try {
+                            await apiService.post('/cashregister/reset');
+                            await this.refreshMovements();
+                            await modal.alert({
+                                title: '✅ Caja Reseteada',
+                                message: 'La caja ha sido reseteada. Puede intentar abrirla nuevamente.',
+                                type: 'success'
+                            });
+                        } catch (resetError) {
+                            await modal.alert({
+                                title: '❌ Error en Reset',
+                                message: 'No se pudo resetear. Contacte soporte.',
+                                type: 'error'
+                            });
+                        }
+                    }
+                } else {
+                    await modal.alert({ title: 'Error', message: 'Error al abrir caja: ' + errorMsg, type: 'error' });
+                }
             }
         }
     }
@@ -1128,7 +1188,18 @@ export class CashRegisterView {
                     type: 'success' 
                 });
                 
+                // Refresh movements and sync with server state
                 await this.refreshMovements();
+                
+                // Extra validation with server status
+                try {
+                    const status = await apiService.get('/cashregister');
+                    if (status.status === 'closed') {
+                        console.log('✓ Caja cerrada confirmada en servidor');
+                    }
+                } catch (e) {
+                    console.warn('No se pudo validar estado con servidor');
+                }
             } catch (error) {
                 console.error('Error closing cash:', error);
                 const errorMsg = error?.detail || error?.message || 'Error desconocido';
