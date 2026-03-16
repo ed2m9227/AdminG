@@ -26,13 +26,15 @@ export class InventoryView {
     render() {
         const user = authService.getCurrentUser();
         const isAdmin = user && user.role === 'admin';
+        const features = authService.getFeatures();
+        const canCreateCategory = isAdmin || features.includes('create_products');
         
         return `
             <div class="card">
                 <div class="card-header">
                     <h2 class="card-title">Inventario</h2>
                     <div style="display: flex; gap: 10px;">
-                        ${isAdmin ? '<button class="btn btn-primary" id="btnNewCategory">+ 📂 Nueva Categoría</button>' : ''}
+                        ${canCreateCategory ? '<button class="btn btn-primary" id="btnNewCategory">+ 📂 Nueva Categoría</button>' : ''}
                         <button class="btn btn-success" id="btnNewProduct">
                             + 📦 Nuevo Producto
                         </button>
@@ -83,7 +85,20 @@ export class InventoryView {
 
     async loadInventory() {
         try {
-            this.items = await apiService.getInventoryItems();
+            const items = await apiService.getInventoryItems();
+            // enrich with category name so table can display it
+            let categories = [];
+            try {
+                categories = await apiService.getInventoryCategories();
+            } catch (_e) {
+                // ignore, categories may be unavailable (user without access)
+            }
+            this.items = Array.isArray(items)
+                ? items.map(i => ({
+                      ...i,
+                      category: categories.find(c => c.id === i.category_id)?.name || ''
+                  }))
+                : [];
             this.updateTable();
         } catch (error) {
             console.error('Error loading inventory:', error);

@@ -91,15 +91,15 @@ PLAN_FEATURES: Dict[str, Set[Feature]] = {
         # Payments (Contabilidad/Facturación)
         Feature.VIEW_PAYMENTS,
         Feature.CREATE_PAYMENTS,
-        # Reports
-        Feature.VIEW_REPORTS,
-        # Documents (Documentos de responsabilidad, consentimiento, etc)
-        Feature.VIEW_DOCUMENTS,
-        Feature.CREATE_DOCUMENTS,
-        Feature.EDIT_DOCUMENTS,
-        # Authorizations (Autorizaciones médicas)
-        Feature.VIEW_AUTHORIZATIONS,
-        Feature.CREATE_AUTHORIZATIONS,
+        # Cash register (Caja)
+        Feature.USE_CASHREGISTER,
+        Feature.OPEN_REGISTER,
+        Feature.CLOSE_REGISTER,
+        # Team management (Mi equipo)
+        Feature.VIEW_TEAM,
+        Feature.MANAGE_TEAM_USERS,
+        Feature.INVITE_USERS,
+        # NOTE: reports, documents, and authorizations intentionally excluded for starter
     },
     "pro": {
         Feature.VIEW_CUSTOMERS,

@@ -18,7 +18,11 @@ export class Header {
             payments: 'Pagos',
             cashregister: 'Caja Registradora',
             reports: 'Reportes',
+            team: 'Mi Equipo',
+            'team-movements': 'Movimientos del Equipo',
             admin: 'Administración',
+            businessconfig: 'Configuracion de negocio',
+            businesstypes: 'Tipos de Negocio',
         };
     }
 

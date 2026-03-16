@@ -37,9 +37,10 @@ PLAN_DEFINITIONS = {
             ("customers", "Gestión de clientes", True),
             ("appointments", "Agenda y citas", True),
             ("reminders", "Recordatorios automáticos", True),
-            ("basic_reports", "Reportes básicos", True),
-            ("advanced_reports", "Reportes avanzados", False),
+            # basic_reports intentionally disabled for starter
             ("inventory", "Almacén/Inventario", True),
+            ("cashregister", "Caja registradora", True),
+            ("team", "Mi equipo", True),
             ("accounting", "Contabilidad", False),
             ("sms_reminders", "Recordatorios por SMS", False),
             ("api", "Acceso a API", False),

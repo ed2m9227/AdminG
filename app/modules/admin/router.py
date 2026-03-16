@@ -69,10 +69,19 @@ def master_dashboard(admin: User = Depends(require_admin), db: Session = Depends
         total_users = db.query(func.count(User.id)).scalar() or 0
         active_users = db.query(func.count(User.id)).filter(User.is_active == True).scalar() or 0
         
+        # Get all existing plans dynamically
+        all_plans = db.query(User.plan).distinct().all()
+        plan_names = [p[0] for p in all_plans if p[0] is not None]
+        
         users_by_plan = {}
-        for plan in ["free", "basic", "plus", "start", "max"]:
+        for plan in plan_names:
             count = db.query(func.count(User.id)).filter(User.plan == plan).scalar() or 0
             users_by_plan[plan] = count
+        
+        # Ensure common plans are included even if count is 0
+        for plan in ["free", "starter", "pro", "max"]:
+            if plan not in users_by_plan:
+                users_by_plan[plan] = 0
         
         users_by_role = {}
         for role in ["viewer", "manager", "admin"]:

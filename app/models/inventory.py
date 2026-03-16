@@ -28,6 +28,7 @@ class InventoryItem(Base):
     cost = Column(Numeric(10, 2), nullable=True)
     quantity = Column(Integer, default=0, nullable=False)
     min_quantity = Column(Integer, default=5, nullable=False)
+    item_type = Column(String(20), default='product', nullable=False)  # product, service, package
     is_active = Column(Boolean, default=True, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)

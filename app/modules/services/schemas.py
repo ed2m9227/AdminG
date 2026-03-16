@@ -29,3 +29,50 @@ class ServiceOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class ServicePackageItemCreate(BaseModel):
+    service_id: int
+    quantity: int = 1
+
+
+class ServicePackageCreate(BaseModel):
+    name: str
+    description: str | None = None
+    discount_percentage: Decimal = Decimal("0")
+    items: list[ServicePackageItemCreate]
+    is_active: bool = True
+
+
+class ServicePackageUpdate(BaseModel):
+    name: str | None = None
+    description: str | None = None
+    discount_percentage: Decimal | None = None
+    items: list[ServicePackageItemCreate] | None = None
+    is_active: bool | None = None
+
+
+class ServicePackageItemOut(BaseModel):
+    id: int
+    service_id: int
+    quantity: int
+
+    class Config:
+        from_attributes = True
+
+
+class ServicePackageOut(BaseModel):
+    id: int
+    user_id: int
+    name: str
+    description: str | None
+    discount_percentage: Decimal
+    base_price: Decimal
+    final_price: Decimal
+    is_active: bool
+    created_at: datetime
+    updated_at: datetime
+    items: list[ServicePackageItemOut]
+
+    class Config:
+        from_attributes = True

@@ -21,7 +21,7 @@ def create_admin():
     
     try:
         # Verificar si ya existe el admin
-        existing_admin = db.query(User).filter(User.email == "admin@admingpro.com").first()
+        existing_admin = db.query(User).filter(User.email == "admin@adminsystems.com").first()
         
         if existing_admin:
             print("⚠️  Usuario admin ya existe. Actualizando...")
@@ -35,7 +35,7 @@ def create_admin():
         else:
             # Crear nuevo admin
             admin_user = User(
-                email="admin@admingpro.com",
+                email="admin@adminsystems.com",
                 hashed_password=hash_password("Admin123"),
                 role="admin",
                 plan="max",
@@ -51,7 +51,7 @@ def create_admin():
         print("\n" + "="*50)
         print("📋 CREDENCIALES DEL ADMINISTRADOR:")
         print("="*50)
-        print("Email:    admin@admingpro.com")
+        print("Email:    admin@adminsystems.com")
         print("Password: Admin123")
         print("Role:     admin")
         print("Plan:     max (AdminPro 100k)")

@@ -93,6 +93,58 @@ def startup_event():
         finally:
             db.close()
 
+        # Ensure users table has plan_start_date column (SQLite)
+        try:
+            conn = sqlite3.connect("app.db")
+            cur = conn.cursor()
+            cur.execute("PRAGMA table_info(users)")
+            columns = [row[1] for row in cur.fetchall()]
+            if "plan_start_date" not in columns:
+                cur.execute("ALTER TABLE users ADD COLUMN plan_start_date DATETIME DEFAULT (datetime('now'))")
+                conn.commit()
+                logger.info("Added plan_start_date column to users table")
+            conn.close()
+        except Exception as e:
+            logger.warning(f"Could not update users table: {e}")
+
+        # Ensure default admin user exists
+        try:
+            from app.models.user import User
+            from app.core.security import hash_password
+
+            db = SessionLocal()
+            admin_email = "admin@adminsystems.com"
+            admin = db.query(User).filter(User.email == admin_email).first()
+            if not admin:
+                admin = User(
+                    email=admin_email,
+                    hashed_password=hash_password("Admin123"),
+                    role="admin",
+                    plan="max",
+                    is_active=True,
+                    business_type="master",
+                    parent_user_id=None
+                )
+                db.add(admin)
+                db.commit()
+                db.refresh(admin)
+                logger.info("Default admin user created")
+            else:
+                admin.role = "admin"
+                admin.plan = "max"
+                admin.is_active = True
+                admin.hashed_password = hash_password("Admin123")
+                db.add(admin)
+                db.commit()
+                logger.info("Default admin user updated")
+        except Exception as e:
+            logger.warning(f"Could not ensure admin user exists: {e}")
+        finally:
+            try:
+                db.close()
+            except Exception:
+                pass
+
         # Ensure customers table has user_id (SQLite)
         try:
             conn = sqlite3.connect("app.db")

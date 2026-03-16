@@ -7,10 +7,12 @@ from app.models.appointment import Appointment
 from app.models.payment import Payment
 from app.models.plan import Plan, PlanLimit, PlanFeature
 from app.models.inventory import InventoryItem, InventoryCategory, InventoryMovement
+from app.models.inventory_package import InventoryPackage, InventoryPackageItem
 from app.models.team_user import TeamUser
 from app.models.cash_transaction import CashTransaction
 from app.models.invoice import Invoice, InvoiceItem
 from app.models.tax_config import TaxConfig
+from app.models.service_package import ServicePackage, ServicePackageItem
 
 __all__ = [
     "User", 
@@ -30,5 +32,7 @@ __all__ = [
     "CashTransaction",
     "Invoice",
     "InvoiceItem",
-    "TaxConfig"
+    "TaxConfig",
+    "ServicePackage",
+    "ServicePackageItem"
 ]

@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.models.inventory import InventoryItem, InventoryCategory, InventoryMovement
+from app.models.inventory_package import InventoryPackage, InventoryPackageItem
 from app.modules.inventory.schemas import (
     InventoryItemCreate,
     InventoryItemOut,
@@ -10,6 +11,9 @@ from app.modules.inventory.schemas import (
     InventoryCategoryOut,
     InventoryMovementCreate,
     InventoryMovementOut,
+    InventoryPackageCreate,
+    InventoryPackageOut,
+    InventoryPackageItem,
 )
 from app.core.plan_permissions import check_feature_access
 from app.core.security import get_current_user
@@ -40,8 +44,16 @@ def get_user_ids_for_data_sharing(user: User):
         return [user.id]
 
 def check_inventory_access(user: User):
-    """Check if user has access to inventory features"""
-    if user.role == 'admin' or user.plan in ["start", "max", "admin"]:
+    """Check if the user can use inventory endpoints.
+
+    Starter plan users should be allowed (legacy name was `start` so we accept
+    both), plus any higher tiers or admin roles. This helper is used by all
+    inventory routers (categories, items, movements) and previously rejected
+    `starter` users due to a typo, leading to 403s on `/inventory/*` and the
+    frontend warning modal.
+    """
+    allowed = ["starter", "start", "pro", "max", "admin"]
+    if user.role == 'admin' or user.plan in allowed:
         return True
     raise HTTPException(status_code=403, detail="Feature not available in your plan")
 
@@ -89,7 +101,12 @@ def create_item(
     db: Session = Depends(get_db),
     current_user: User = Depends(resolve_user),
 ):
-    """Create inventory item - Only AdminPro Start/Max"""
+    """Create inventory item (product, service, or package) - Only AdminPro Start/Max
+    
+    - product: tiene stock controlado
+    - service: no tiene stock
+    - package: no tiene stock propio, combina items
+    """
     check_inventory_access(current_user)
     
     # Validate SKU uniqueness
@@ -103,16 +120,26 @@ def create_item(
         if not category or category.user_id != current_user.id:
             raise HTTPException(status_code=404, detail="Category not found")
     
+    # Validar según tipo de item
+    if payload.item_type in ['service', 'package']:
+        # Servicios y paquetes no usan stock propio
+        quantity = 0
+        min_quantity = 0
+    else:
+        quantity = payload.quantity
+        min_quantity = payload.min_quantity
+    
     item = InventoryItem(
         user_id=current_user.id,
         category_id=payload.category_id,
         name=payload.name,
         sku=payload.sku,
         description=payload.description,
-        quantity=payload.quantity,
-        min_quantity=payload.min_quantity,
+        quantity=quantity,
+        min_quantity=min_quantity,
         unit_price=payload.unit_price,
         cost=payload.cost,
+        item_type=payload.item_type,
     )
     db.add(item)
     db.commit()
@@ -124,6 +151,7 @@ def list_items(
     skip: int = 0,
     limit: int = 100,
     low_stock: bool = False,
+    item_type: str | None = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(resolve_user),
 ):
@@ -131,6 +159,7 @@ def list_items(
     
     Args:
         low_stock: If True, only return items with quantity <= min_quantity
+        item_type: Filter by type (product, service, package)
     """
     check_inventory_access(current_user)
     
@@ -139,6 +168,9 @@ def list_items(
     
     if low_stock:
         query = query.filter(InventoryItem.quantity <= InventoryItem.min_quantity)
+    
+    if item_type:
+        query = query.filter(InventoryItem.item_type == item_type)
     
     return query.offset(skip).limit(limit).all()
 
@@ -210,7 +242,12 @@ def update_item(
         existing = db.query(InventoryItem).filter(InventoryItem.sku == update_data["sku"]).first()
         if existing:
             raise HTTPException(status_code=400, detail="SKU already exists")
-    
+
+    # If item_type is changed to service or package, reset stock fields
+    if update_data.get("item_type") in ['service', 'package']:
+        update_data["quantity"] = 0
+        update_data["min_quantity"] = 0
+
     for field, value in update_data.items():
         setattr(item, field, value)
     
@@ -241,6 +278,145 @@ def delete_item(
     db.commit()
     return None
 
+# ============ PACKAGES ============
+
+
+def compute_inventory_package_totals(db: Session, user_id: int, items_payload: list, discount_percentage: float):
+    if not items_payload:
+        raise HTTPException(status_code=400, detail="Package requires at least one item")
+    base_price = 0
+    package_items = []
+    for entry in items_payload:
+        item_id = entry.get("item_id") if isinstance(entry, dict) else entry.item_id
+        qty = entry.get("quantity") if isinstance(entry, dict) else entry.quantity
+        if qty <= 0:
+            raise HTTPException(status_code=400, detail="Quantity must be greater than 0")
+        item = db.query(InventoryItem).filter(
+            InventoryItem.id == item_id,
+            InventoryItem.user_id == user_id
+        ).first()
+        if not item:
+            raise HTTPException(status_code=404, detail=f"Item not found: {item_id}")
+        base_price += float(item.unit_price) * qty
+        package_items.append({"item_id": item_id, "quantity": qty})
+    if discount_percentage < 0 or discount_percentage > 100:
+        raise HTTPException(status_code=400, detail="Discount must be between 0 and 100")
+    final_price = base_price * (1 - discount_percentage / 100)
+    return round(base_price,2), round(final_price,2), package_items
+
+
+@router.post("/packages", response_model=InventoryPackageOut, status_code=status.HTTP_201_CREATED)
+def create_inventory_package(
+    payload: InventoryPackageCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(resolve_user),
+):
+    """Create inventory package (combina productos) - AdminPro Start/Max"""
+    check_inventory_access(current_user)
+    base, final, pkg_items = compute_inventory_package_totals(
+        db, current_user.id, payload.items, payload.discount_percentage
+    )
+    package = InventoryPackage(
+        user_id=current_user.id,
+        name=payload.name,
+        description=payload.description,
+        discount_percentage=payload.discount_percentage,
+        base_price=base,
+        final_price=final,
+        is_active=True,
+    )
+    db.add(package)
+    db.flush()
+    for it in pkg_items:
+        db.add(InventoryPackageItem(package_id=package.id, item_id=it["item_id"], quantity=it["quantity"]))
+    db.commit()
+    db.refresh(package)
+    return package
+
+
+@router.get("/packages", response_model=list[InventoryPackageOut])
+def list_inventory_packages(
+    include_inactive: bool = False,
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(resolve_user),
+):
+    check_inventory_access(current_user)
+    query = db.query(InventoryPackage).filter(InventoryPackage.user_id == current_user.id)
+    if not include_inactive:
+        query = query.filter(InventoryPackage.is_active.is_(True))
+    return query.order_by(InventoryPackage.created_at.desc()).offset(skip).limit(limit).all()
+
+
+@router.get("/packages/{package_id}", response_model=InventoryPackageOut)
+def get_inventory_package(
+    package_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(resolve_user),
+):
+    check_inventory_access(current_user)
+    package = db.query(InventoryPackage).filter(
+        InventoryPackage.id == package_id,
+        InventoryPackage.user_id == current_user.id,
+    ).first()
+    if not package:
+        raise HTTPException(status_code=404, detail="Package not found")
+    return package
+
+
+@router.put("/packages/{package_id}", response_model=InventoryPackageOut)
+def update_inventory_package(
+    package_id: int,
+    payload: InventoryPackageCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(resolve_user),
+):
+    check_inventory_access(current_user)
+    package = db.query(InventoryPackage).filter(
+        InventoryPackage.id == package_id,
+        InventoryPackage.user_id == current_user.id,
+    ).first()
+    if not package:
+        raise HTTPException(status_code=404, detail="Package not found")
+    update_data = payload.model_dump(exclude_unset=True)
+    package.name = update_data.get('name', package.name)
+    package.description = update_data.get('description', package.description)
+    package.discount_percentage = update_data.get('discount_percentage', package.discount_percentage)
+    base, final, pkg_items = compute_inventory_package_totals(
+        db, current_user.id, update_data.get('items', []), package.discount_percentage
+    )
+    package.base_price = base
+    package.final_price = final
+    # reset items
+    db.query(InventoryPackageItem).filter(InventoryPackageItem.package_id == package.id).delete()
+    for it in pkg_items:
+        db.add(InventoryPackageItem(package_id=package.id, item_id=it['item_id'], quantity=it['quantity']))
+    db.add(package)
+    db.commit()
+    db.refresh(package)
+    return package
+
+
+@router.delete("/packages/{package_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_inventory_package(
+    package_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(resolve_user),
+):
+    check_inventory_access(current_user)
+    package = db.query(InventoryPackage).filter(
+        InventoryPackage.id == package_id,
+        InventoryPackage.user_id == current_user.id,
+    ).first()
+    if not package:
+        raise HTTPException(status_code=404, detail="Package not found")
+    package.is_active = False
+    db.add(package)
+    db.commit()
+    return None
+
+
 # ============ MOVEMENTS ============
 
 @router.post("/movements", response_model=InventoryMovementOut, status_code=status.HTTP_201_CREATED)
@@ -249,7 +425,10 @@ def create_movement(
     db: Session = Depends(get_db),
     current_user: User = Depends(resolve_user),
 ):
-    """Record inventory movement (entrada/salida/ajuste)"""
+    """Record inventory movement (entrada/salida/ajuste)
+    
+    Solo productos afectan el stock. Servicios y paquetes no tienen movimientos.
+    """
     check_inventory_access(current_user)
     
     item = db.query(InventoryItem).filter(
@@ -260,6 +439,10 @@ def create_movement(
     if not item:
         raise HTTPException(status_code=404, detail="Item not found")
     
+    # Solo productos pueden tener movimientos de inventario
+    if item.item_type != 'product':
+        raise HTTPException(status_code=400, detail=f"Solo productos pueden tener movimientos. Este es un {item.item_type}.")
+    
     # Update item quantity
     if payload.type == "entrada":
         item.quantity += payload.quantity
@@ -269,6 +452,8 @@ def create_movement(
         item.quantity -= payload.quantity
     elif payload.type == "ajuste":
         item.quantity = payload.quantity
+    else:
+        raise HTTPException(status_code=400, detail="Invalid movement type. Use: entrada, salida, ajuste")
     
     # Record movement
     movement = InventoryMovement(

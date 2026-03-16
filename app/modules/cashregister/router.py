@@ -8,9 +8,10 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime
 from app.db.session import get_db
-from app.core.security import get_current_user
+from app.core.security import get_current_user_with_plan_check, get_current_user
 from app.models.user import User
 from app.models.cash_transaction import CashTransaction
+from app.models.cash_register_session import CashRegisterSession
 from app.models.customer import Customer
 from app.models.inventory import InventoryItem
 from pydantic import BaseModel
@@ -48,17 +49,37 @@ class OpenCashRegister(BaseModel):
 
 @router.get("/")
 async def get_cash_register_status(
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_with_plan_check),
     db: Session = Depends(get_db)
 ):
     """Obtener estado actual de la caja registradora"""
     user = db.query(User).filter(User.id == int(current_user["id"])).first()
     
-    # Calcular totales de hoy
-    today = datetime.utcnow().date()
+    # For team users, check if parent has open session
+    if user.parent_user_id:
+        parent_session = db.query(CashRegisterSession).filter(
+            CashRegisterSession.user_id == user.parent_user_id,
+            CashRegisterSession.is_active == True
+        ).first()
+        if not parent_session:
+            return {
+                "status": "closed",
+                "message": "La caja debe ser abierta por el usuario padre primero"
+            }
+    
+    # Check if user has active session
+    session = db.query(CashRegisterSession).filter(
+        CashRegisterSession.user_id == user.id,
+        CashRegisterSession.is_active == True
+    ).first()
+    
+    if not session:
+        return {"status": "closed"}
+    
+    # Calcular totales desde apertura
     transactions = db.query(CashTransaction).filter(
         CashTransaction.user_id == user.id,
-        CashTransaction.created_at >= datetime.combine(today, datetime.min.time())
+        CashTransaction.created_at >= session.opened_at
     ).all()
     
     sales_total = sum(float(t.amount) for t in transactions if t.transaction_type == 'sale')
@@ -67,10 +88,12 @@ async def get_cash_register_status(
     
     return {
         "status": "open",
-        "balance": sales_total + base_total - expenses_total,
+        "balance": session.initial_amount + sales_total - expenses_total,
         "sales": sales_total,
         "expenses": expenses_total,
         "base": base_total,
+        "initial_amount": session.initial_amount,
+        "opened_at": session.opened_at.isoformat(),
         "transaction_count": len(transactions)
     }
 
@@ -85,6 +108,26 @@ async def create_transaction(
     Para ventas: descuenta automáticamente stock de los items incluidos
     """
     user = db.query(User).filter(User.id == int(current_user["id"])).first()
+    
+    # For team users, check if parent has open session
+    if user.parent_user_id:
+        parent_session = db.query(CashRegisterSession).filter(
+            CashRegisterSession.user_id == user.parent_user_id,
+            CashRegisterSession.is_active == True
+        ).first()
+        if not parent_session:
+            raise HTTPException(
+                status_code=400, 
+                detail="La caja debe ser abierta por el usuario padre primero"
+            )
+    
+    # Check if session is open
+    session = db.query(CashRegisterSession).filter(
+        CashRegisterSession.user_id == user.id,
+        CashRegisterSession.is_active == True
+    ).first()
+    if not session:
+        raise HTTPException(status_code=400, detail="Caja no está abierta")
     
     # Validar que el tipo de transacción sea válido
     if transaction.transaction_type not in ['sale', 'expense', 'base']:
@@ -150,20 +193,39 @@ async def open_cash_register(
     """Abrir caja registradora con monto inicial"""
     user = db.query(User).filter(User.id == int(current_user["id"])).first()
     
-    # Crear movimiento de base
-    db_transaction = CashTransaction(
+    # For team users, check if parent has open session
+    if user.parent_user_id:
+        parent_session = db.query(CashRegisterSession).filter(
+            CashRegisterSession.user_id == user.parent_user_id,
+            CashRegisterSession.is_active == True
+        ).first()
+        if not parent_session:
+            raise HTTPException(
+                status_code=400, 
+                detail="La caja debe ser abierta por el usuario padre primero"
+            )
+    
+    # Check if already open
+    existing = db.query(CashRegisterSession).filter(
+        CashRegisterSession.user_id == user.id,
+        CashRegisterSession.is_active == True
+    ).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Caja ya está abierta")
+    
+    # Create session
+    session = CashRegisterSession(
         user_id=user.id,
-        transaction_type='base',
-        amount=data.initial_amount,
-        description=f'Base inicial para apertura de caja'
+        initial_amount=data.initial_amount
     )
-    db.add(db_transaction)
+    db.add(session)
     db.commit()
     
     return {
         "success": True,
         "message": "Caja abierta",
-        "initial_amount": data.initial_amount
+        "initial_amount": data.initial_amount,
+        "opened_at": session.opened_at.isoformat()
     }
 
 @router.post("/close")
@@ -174,26 +236,30 @@ async def close_cash_register(
     """Cerrar caja registradora y generar reporte"""
     user = db.query(User).filter(User.id == int(current_user["id"])).first()
     
-    # Calcular totales
-    today = datetime.utcnow().date()
+    # Get active session
+    session = db.query(CashRegisterSession).filter(
+        CashRegisterSession.user_id == user.id,
+        CashRegisterSession.is_active == True
+    ).first()
+    if not session:
+        raise HTTPException(status_code=400, detail="No hay caja abierta")
+    
+    # Calcular totales desde apertura
     transactions = db.query(CashTransaction).filter(
         CashTransaction.user_id == user.id,
-        CashTransaction.created_at >= datetime.combine(today, datetime.min.time())
+        CashTransaction.created_at >= session.opened_at
     ).all()
     
     sales = sum(float(t.amount) for t in transactions if t.transaction_type == 'sale')
     expenses = sum(float(t.amount) for t in transactions if t.transaction_type == 'expense')
     base = sum(float(t.amount) for t in transactions if t.transaction_type == 'base')
-    final_balance = sales + base - expenses
+    final_balance = session.initial_amount + sales - expenses
     
-    # Registrar cierre de caja
-    close_transaction = CashTransaction(
-        user_id=user.id,
-        transaction_type='close',
-        amount=final_balance,
-        description=f'Cierre de caja - Balance: {final_balance}'
-    )
-    db.add(close_transaction)
+    # Close session
+    session.is_active = False
+    session.closed_at = datetime.utcnow()
+    session.final_amount = final_balance
+    db.add(session)
     db.commit()
     
     return {
@@ -202,6 +268,7 @@ async def close_cash_register(
         "final_balance": final_balance,
         "sales": sales,
         "expenses": expenses,
+        "initial_amount": session.initial_amount,
         "base": base,
         "transaction_count": len(transactions)
     }

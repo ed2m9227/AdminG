@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
@@ -19,7 +19,6 @@ from app.modules.reports.schemas import (
     ReportRequest,
 )
 from app.core.security import get_current_user
-from app.core.plan_permissions import check_feature_access
 
 router = APIRouter(
     prefix="/reports",
@@ -212,27 +211,41 @@ def get_revenue_report(
             by_method[method] = 0
         by_method[method] += float(payment.final_amount)
     
-    # Group by period (daily)
+    # Group by period (daily): ingresos, gastos, saldo
     by_period = []
-    current_date = request.start_date
-    while current_date <= request.end_date:
+    current_date = request.start_date.replace(hour=0, minute=0, second=0, microsecond=0)
+    end_date = request.end_date.replace(hour=23, minute=59, second=59, microsecond=999999)
+
+    while current_date <= end_date:
         day_end = current_date + timedelta(days=1)
-        day_payments = [p for p in payments if request.start_date <= p.created_at < day_end]
-        day_total = sum(p.final_amount for p in day_payments if p.status == "completed") or Decimal(0)
-        
-        if day_payments:
+
+        day_payments = [p for p in payments if current_date <= p.created_at < day_end and p.status == "completed"]
+        day_cash_sales = [t for t in cash_sales if current_date <= t.created_at < day_end]
+        day_cash_expenses = [t for t in cash_expenses if current_date <= t.created_at < day_end]
+
+        day_income = (sum(p.final_amount for p in day_payments) or Decimal(0)) + (sum(t.amount for t in day_cash_sales) or Decimal(0))
+        day_expenses = sum(t.amount for t in day_cash_expenses) or Decimal(0)
+        day_balance = day_income - day_expenses
+
+        if day_payments or day_cash_sales or day_cash_expenses:
             by_period.append({
                 "date": current_date.date().isoformat(),
-                "revenue": float(day_total),
-                "transactions": len(day_payments),
+                "income": float(day_income),
+                "expenses": float(day_expenses),
+                "balance": float(day_balance),
+                "transactions": len(day_payments) + len(day_cash_sales) + len(day_cash_expenses),
             })
-        
+
         current_date = day_end
-    
+
+    total_income = payment_revenue + cash_sales_total
+    balance = total_income - cash_expenses_total
+
     return RevenueReport(
-        total_revenue=float(payment_revenue + cash_sales_total),
+        total_revenue=float(total_income),
         total_expenses=float(cash_expenses_total),
-        net_profit=float(payment_revenue + cash_sales_total - cash_expenses_total),
+        net_profit=float(balance),
+        balance=float(balance),
         paid_amount=float(payment_revenue),
         pending_amount=float(pending),
         by_payment_method=by_method,
@@ -335,12 +348,22 @@ def get_inventory_report(
         InventoryMovement.created_at >= request.start_date,
         InventoryMovement.created_at <= request.end_date,
     ).all()
-    
+
+    movement_history = [
+        {
+            "item_id": m.item_id,
+            "type": m.type,
+            "quantity": float(m.quantity),
+            "created_at": m.created_at.isoformat() if m.created_at else None,
+        }
+        for m in movements
+    ]
+
     return InventoryReport(
         total_items=len(items),
         low_stock_items=low_stock,
         total_value=float(total_value),
-        movement_history=[],
+        movement_history=movement_history,
     )
 
 @router.get("/export/{report_type}")

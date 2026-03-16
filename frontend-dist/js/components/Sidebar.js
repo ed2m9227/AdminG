@@ -30,10 +30,10 @@ export class Sidebar {
 
             // Team & Admin
             { id: 'team', icon: '👫', label: 'Mi Equipo', route: 'team', requiredFeature: 'view_team' },
-            { id: 'team-movements', icon: '📊', label: 'Movimientos del Equipo', route: 'team-movements', roles: ['manager', 'admin'], requiredFeature: 'view_team' },
-            { id: 'businessconfig', icon: '🛠️', label: 'Configuracion de negocio', route: 'businessconfig', roles: ['admin', 'manager'], alwaysShow: true },
+            { id: 'team-movements', icon: '📊', label: 'Movimientos del Equipo', route: 'team-movements', parentId: 'team', roles: ['manager', 'admin'], requiredFeature: 'view_team' },
             { id: 'admin', icon: '⚙️', label: 'Administración', route: 'admin', roleRequired: 'admin', requiredFeature: 'admin_panel' },
-            { id: 'businesstypes', icon: '🏢', label: 'Tipos de Negocio', route: 'businesstypes', roleRequired: 'admin', requiredFeature: 'admin_panel' },
+            { id: 'businessconfig', icon: '🛠️', label: 'Configuracion de negocio', route: 'businessconfig', parentId: 'admin', roles: ['admin', 'manager'], alwaysShow: true },
+            { id: 'businesstypes', icon: '🏢', label: 'Tipos de Negocio', route: 'businesstypes', parentId: 'admin', roleRequired: 'admin', requiredFeature: 'admin_panel' },
         ];
         this.userFeatures = [];
         this.itemAccessMap = {};
@@ -86,9 +86,8 @@ export class Sidebar {
                 'view_appointments', 'create_appointments', 'edit_appointments', 'delete_appointments',
                 'view_inventory', 'create_products', 'edit_products', 'delete_products',
                 'view_payments', 'create_payments',
-                'view_reports',
-                'view_documents', 'create_documents', 'edit_documents',
-                'view_authorizations', 'create_authorizations'
+                'view_team', 'manage_team_users', 'invite_users',
+                'use_cashregister', 'open_register', 'close_register'
             ],
             'pro': [
                 'view_customers', 'create_customers', 'edit_customers', 'delete_customers', 'export_customers',
@@ -129,11 +128,12 @@ export class Sidebar {
      */
     render() {
         const user = authService.getCurrentUser();
+        const isAdmin = user?.role === 'admin';
         const isSubUser = !!user?.parent_user_id;
         this.itemAccessMap = {};
         
         // Filtrar items por rol y sub-usuario. Las restricciones por plan se muestran bloqueadas.
-        const filteredItems = this.allMenuItems.filter(item => {
+        const visibleByRole = this.allMenuItems.filter(item => {
             // Sub-usuarios no ven Reportes ni Mi Equipo
             if (isSubUser && (item.id === 'reports' || item.id === 'team')) {
                 return false;
@@ -147,7 +147,8 @@ export class Sidebar {
                 return false;
             }
             
-            const hasFeature = item.alwaysShow || !item.requiredFeature || this.userFeatures.includes(item.requiredFeature);
+            // Los admins globales no deben quedar bloqueados por plan en secciones de administración.
+            const hasFeature = isAdmin || item.alwaysShow || !item.requiredFeature || this.userFeatures.includes(item.requiredFeature);
             this.itemAccessMap[item.route] = {
                 isBlocked: !hasFeature,
                 label: item.label,
@@ -156,6 +157,10 @@ export class Sidebar {
             
             return true;
         });
+
+        // Si un padre no está visible, su submenú tampoco debe renderizarse.
+        const visibleIds = new Set(visibleByRole.map(item => item.id));
+        const filteredItems = visibleByRole.filter(item => !item.parentId || visibleIds.has(item.parentId));
 
         const userPlan = user?.plan || 'free';
         const userEmail = user?.email || 'Usuario';
@@ -185,8 +190,9 @@ export class Sidebar {
     renderMenuItem(item, isBlocked = false) {
         const isActive = router.getCurrentRoute() === item.route;
         const lockIcon = isBlocked ? '<span class="menu-lock" style="margin-left:auto;opacity:.8;">🔒</span>' : '';
+        const submenuClass = item.parentId ? 'submenu-item' : '';
         return `
-            <div class="menu-item ${isActive ? 'active' : ''} ${isBlocked ? 'blocked' : ''}" 
+            <div class="menu-item ${submenuClass} ${isActive ? 'active' : ''} ${isBlocked ? 'blocked' : ''}" 
                  data-route="${item.route}"
                  data-blocked="${isBlocked ? 'true' : 'false'}"
                  title="${item.label}">

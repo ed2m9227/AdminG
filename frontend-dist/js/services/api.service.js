@@ -63,7 +63,11 @@ export class ApiService {
                 }
 
                 if (response.status === 403) {
-                    modal.showWarning('Tu plan actual no incluye esta operación. Actualiza tu plan para continuar.');
+                    const warningMsg = 'Tu plan actual no incluye esta operación. Actualiza tu plan para continuar.';
+                    if (this.lastWarning !== warningMsg) {
+                        modal.showWarning(warningMsg);
+                        this.lastWarning = warningMsg;
+                    }
                 }
 
                 const requestError = new Error(errorMessage);

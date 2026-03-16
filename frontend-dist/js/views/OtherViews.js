@@ -1542,13 +1542,18 @@ export class ReportsView {
     }
 
     renderRevenueReport(data) {
+        const periods = Array.isArray(data.by_period) ? data.by_period : [];
+        const maxIncome = periods.length ? Math.max(...periods.map((p) => Number(p.income || p.revenue || 0))) : 0;
+        const maxExpenses = periods.length ? Math.max(...periods.map((p) => Number(p.expenses || 0))) : 0;
+        const maxScale = Math.max(maxIncome, maxExpenses, 1);
+
         return `
             <div class="card">
                 <div class="card-header">
-                    <h3>💵 Reporte de Ingresos</h3>
+                    <h3>Reporte de Ingresos</h3>
                 </div>
                 <div class="card-body">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 20px;">
                         <div style="background: #e8f5e9; padding: 15px; border-radius: 4px;">
                             <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Total Ingresos</div>
                             <div style="font-size: 24px; font-weight: 600; color: #2e7d32;">
@@ -1562,9 +1567,9 @@ export class ReportsView {
                             </div>
                         </div>
                         <div style="background: #e1f5fe; padding: 15px; border-radius: 4px;">
-                            <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Ganancia Neta</div>
+                            <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Saldo</div>
                             <div style="font-size: 24px; font-weight: 600; color: #01579b;">
-                                ${this.formatCurrency(data.net_profit || 0)}
+                                ${this.formatCurrency(data.balance ?? data.net_profit ?? 0)}
                             </div>
                         </div>
                         <div style="background: #fce4ec; padding: 15px; border-radius: 4px;">
@@ -1575,12 +1580,39 @@ export class ReportsView {
                         </div>
                     </div>
 
+                    ${periods.length ? `
+                        <div style="margin-top: 20px;">
+                            <h4>Grafico Diario (Ingresos vs Gastos)</h4>
+                            <div style="display: grid; gap: 8px; margin-top: 10px;">
+                                ${periods.map((period) => {
+                                    const income = Number(period.income || period.revenue || 0);
+                                    const expenses = Number(period.expenses || 0);
+                                    const incomeWidth = Math.max((income / maxScale) * 100, income > 0 ? 3 : 0);
+                                    const expenseWidth = Math.max((expenses / maxScale) * 100, expenses > 0 ? 3 : 0);
+                                    return `
+                                        <div style="display: grid; grid-template-columns: 95px 1fr; align-items: center; gap: 10px;">
+                                            <div style="font-size: 12px; color: #555;">${period.date}</div>
+                                            <div>
+                                                <div style="height: 10px; background: #e8f5e9; border-radius: 999px; margin-bottom: 4px; overflow: hidden;">
+                                                    <div style="height: 10px; width: ${incomeWidth}%; background: #2e7d32;"></div>
+                                                </div>
+                                                <div style="height: 10px; background: #fff3e0; border-radius: 999px; overflow: hidden;">
+                                                    <div style="height: 10px; width: ${expenseWidth}%; background: #f57c00;"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+
                     ${data.by_payment_method ? `
                         <div style="margin-top: 20px;">
-                            <h4>Por Método de Pago</h4>
+                            <h4>Por Metodo de Pago</h4>
                             <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
                                 <tr style="border-bottom: 1px solid #eee;">
-                                    <th style="text-align: left; padding: 8px;">Método</th>
+                                    <th style="text-align: left; padding: 8px;">Metodo</th>
                                     <th style="text-align: right; padding: 8px;">Monto</th>
                                 </tr>
                                 ${Object.entries(data.by_payment_method).map(([method, amount]) => `

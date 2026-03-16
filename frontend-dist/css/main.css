@@ -151,6 +151,12 @@ body {
     font-size: 14px;
 }
 
+.menu-item.submenu-item {
+    padding-left: calc(var(--spacing-lg) + 22px);
+    font-size: 13px;
+    opacity: 0.92;
+}
+
 .menu-item:hover {
     background: var(--sidebar-hover);
 }
@@ -783,6 +789,10 @@ code {
         padding: 12px var(--spacing-lg);
         flex-direction: row;
         gap: 10px;
+    }
+
+    .sidebar.active .menu-item.submenu-item {
+        padding-left: calc(var(--spacing-lg) + 26px);
     }
 
     .menu-label {

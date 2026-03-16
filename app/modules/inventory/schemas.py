@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from datetime import datetime
 from decimal import Decimal
 
@@ -25,6 +25,15 @@ class InventoryItemCreate(BaseModel):
     min_quantity: int = 5
     unit_price: Decimal
     cost: Decimal | None = None
+    item_type: str = 'product'  # product, service, package
+    
+    @field_validator('item_type')
+    @classmethod
+    def validate_item_type(cls, v):
+        allowed = ['product', 'service', 'package']
+        if v not in allowed:
+            raise ValueError(f"item_type debe ser una de {allowed}")
+        return v
 
 class InventoryItemUpdate(BaseModel):
     category_id: int | None = None
@@ -36,6 +45,16 @@ class InventoryItemUpdate(BaseModel):
     unit_price: Decimal | None = None
     cost: Decimal | None = None
     is_active: bool | None = None
+    item_type: str | None = None
+    
+    @field_validator('item_type')
+    @classmethod
+    def validate_item_type(cls, v):
+        if v is not None:
+            allowed = ['product', 'service', 'package']
+            if v not in allowed:
+                raise ValueError(f"item_type debe ser una de {allowed}")
+        return v
 
 class InventoryItemOut(BaseModel):
     id: int
@@ -48,6 +67,7 @@ class InventoryItemOut(BaseModel):
     min_quantity: int
     unit_price: Decimal
     cost: Decimal | None
+    item_type: str
     is_active: bool
     created_at: datetime
     updated_at: datetime
@@ -69,5 +89,40 @@ class InventoryMovementOut(BaseModel):
     reason: str | None
     created_at: datetime
     
+    class Config:
+        from_attributes = True
+
+
+# ------------ PACKAGES ------------
+class InventoryPackageItem(BaseModel):
+    item_id: int
+    quantity: int
+
+class InventoryPackageCreate(BaseModel):
+    name: str
+    description: str | None = None
+    discount_percentage: float = 0
+    items: list[InventoryPackageItem]
+
+    @field_validator('discount_percentage')
+    @classmethod
+    def validate_discount(cls, v):
+        if v < 0 or v > 100:
+            raise ValueError('discount_percentage debe estar entre 0 y 100')
+        return v
+
+class InventoryPackageOut(BaseModel):
+    id: int
+    user_id: int
+    name: str
+    description: str | None
+    discount_percentage: float
+    base_price: float
+    final_price: float
+    is_active: bool
+    items: list[InventoryPackageItem]
+    created_at: datetime
+    updated_at: datetime
+
     class Config:
         from_attributes = True
