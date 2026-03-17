@@ -2271,26 +2271,6 @@ export class ServicesView {
     }
 }
 
-// Admin View
-export class AdminView {
-    render() {
-        return `
-            <div class="card">
-                <div class="card-header">
-                    /* Lines 1979-1980 omitted */
-                </div>
-                <div class="card-body">
-                    /* Lines 1982-2004 omitted */
-                </div>
-            </div>
-        `;
-    }
-
-    init() {
-        // Placeholder
-    }
-}
-
 // Exportar instancias
 export const appointmentsView = new AppointmentsView();
 export const paymentsView = new PaymentsView();
