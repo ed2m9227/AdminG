@@ -48,6 +48,7 @@ def create_payment(
     - Support for multiple payment methods
     - MontelibanoGen 7% discount on AdminG plans
     - Automatic discount calculation
+    - Support for services and service packages
     """
     # Validate customer exists and belongs to user
     customer = db.query(Customer).filter(Customer.id == payload.customer_id).first()
@@ -71,9 +72,12 @@ def create_payment(
         user_id=current_user["id"],
         customer_id=payload.customer_id,
         appointment_id=payload.appointment_id,
+        service_id=payload.service_id,
+        service_package_id=payload.service_package_id,
         amount=payload.amount,
         discount_amount=discount_amount,
         final_amount=final_amount,
+        concept=payload.concept,
         method=payload.method,
         reference=payload.reference,
         notes=payload.notes,
@@ -133,7 +137,7 @@ def update_payment(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Update payment status (admin only)"""
+    """Update payment status, concept, or service"""
     user_ids = get_user_ids_for_data_sharing(current_user["id"], db)
     payment = db.query(Payment).filter(
         Payment.id == payment_id,
@@ -149,6 +153,12 @@ def update_payment(
         payment.status = update_data["status"]
         if update_data["status"] == "completed":
             payment.paid_at = datetime.utcnow()
+    
+    if "concept" in update_data:
+        payment.concept = update_data["concept"]
+    
+    if "service_id" in update_data:
+        payment.service_id = update_data["service_id"]
     
     if "notes" in update_data:
         payment.notes = update_data["notes"]

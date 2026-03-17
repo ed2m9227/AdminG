@@ -12,14 +12,19 @@ class CustomerInfo(BaseModel):
 class PaymentCreate(BaseModel):
     customer_id: int
     appointment_id: int | None = None
+    service_id: int | None = None
+    service_package_id: int | None = None
     amount: Decimal
     method: str  # "cash", "card", "transfer", "montelibano_gen"
+    concept: str | None = None  # Descripción del concepto de pago
     reference: str | None = None
     notes: str | None = None
     status: str | None = None
 
 class PaymentUpdate(BaseModel):
     status: str | None = None
+    concept: str | None = None
+    service_id: int | None = None
     notes: str | None = None
 
 class PaymentOut(BaseModel):
@@ -27,9 +32,12 @@ class PaymentOut(BaseModel):
     customer_id: int
     customer: CustomerInfo | None = None
     appointment_id: int | None
+    service_id: int | None = None
+    service_package_id: int | None = None
     amount: Decimal
     discount_amount: Decimal | None = None
     final_amount: Decimal
+    concept: str | None = None
     method: str
     status: str
     reference: str | None = None
