@@ -2011,9 +2011,290 @@ export class AdminView {
     }
 }
 
+// Services View
+export class ServicesView {
+    constructor() {
+        this.services = [];
+    }
+
+    formatCurrency(value) {
+        return new Intl.NumberFormat('es-CO', { 
+            style: 'currency', 
+            currency: 'COP',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        }).format(value);
+    }
+
+    render() {
+        return `
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">📋 Servicios</h2>
+                    <button class="btn btn-success" id="btnNewService">+ ➕ Nuevo Servicio</button>
+                </div>
+                <div class="card-body" id="servicesContainer">
+                    ${this.renderTable()}
+                </div>
+            </div>
+        `;
+    }
+
+    renderTable() {
+        const user = authService.getCurrentUser();
+        const isParent = user && !user.parent_user_id; // Only parent users can manage services
+        
+        const columns = [
+            { key: 'name', label: 'Nombre del Servicio' },
+            { key: 'unit_price', label: 'Precio', formatter: (v) => this.formatCurrency(v || 0) },
+            { key: 'category', label: 'Categoría' },
+            { key: 'description', label: 'Descripción' }
+        ];
+        
+        if (isParent) {
+            columns.push({
+                key: 'actions',
+                label: 'Acciones',
+                formatter: (_, row) => `
+                    <button class="btn btn-sm btn-primary" data-edit-service="${row.id}">✏️ Editar</button>
+                    <button class="btn btn-sm btn-danger" data-delete-service="${row.id}">🗑️ Eliminar</button>
+                `
+            });
+        }
+
+        return table.render({
+            columns,
+            data: this.services,
+            emptyMessage: 'No hay servicios registrados',
+            emptyIcon: '📋'
+        });
+    }
+
+    async init() {
+        const user = authService.getCurrentUser();
+        const isParent = user && !user.parent_user_id;
+
+        if (!isParent) {
+            // Show message if not parent user
+            const container = document.getElementById('servicesContainer');
+            if (container) {
+                container.innerHTML = '<p style="color: #7f8c8d; text-align: center;">Solo usuarios padre pueden gestionar servicios</p>';
+            }
+            return;
+        }
+
+        try {
+            this.services = await apiService.getServices();
+            const container = document.getElementById('servicesContainer');
+            if (container) container.innerHTML = this.renderTable();
+        } catch (error) {
+            console.error('Error loading services:', error);
+        }
+
+        // Event listeners
+        const btnNew = document.getElementById('btnNewService');
+        if (btnNew) {
+            btnNew.addEventListener('click', () => this.showNewServiceModal());
+        }
+        
+        // Delete service listener
+        document.addEventListener('click', async (e) => {
+            const deleteBtn = e.target.closest('[data-delete-service]');
+            if (deleteBtn) {
+                const serviceId = deleteBtn.dataset.deleteService;
+                const confirmed = await modal.confirm({
+                    title: 'Confirmar eliminación',
+                    message: '¿Estás seguro de que quieres eliminar este servicio?',
+                    confirmText: 'Eliminar',
+                    cancelText: 'Cancelar'
+                });
+                
+                if (confirmed) {
+                    try {
+                        await apiService.delete(`/inventory/services/${serviceId}`);
+                        await this.init();
+                        await modal.alert({ title: 'Éxito', message: 'Servicio eliminado correctamente', type: 'success' });
+                    } catch (error) {
+                        console.error('Error deleting service:', error);
+                        let errorMsg = error.message || 'Error desconocido';
+                        if (error.detail) {
+                            errorMsg = typeof error.detail === 'string' ? error.detail : JSON.stringify(error.detail);
+                        }
+                        await modal.alert({ title: 'Error', message: errorMsg, type: 'error' });
+                    }
+                }
+            }
+        });
+
+        // Edit service listener
+        document.addEventListener('click', async (e) => {
+            const editBtn = e.target.closest('[data-edit-service]');
+            if (editBtn) {
+                const serviceId = editBtn.dataset.editService;
+                const service = this.services.find(s => s.id === parseInt(serviceId));
+                if (service) {
+                    this.showEditServiceModal(service);
+                }
+            }
+        });
+    }
+
+    async showNewServiceModal() {
+        const html = `
+            <form id="serviceForm">
+                <div class="form-group">
+                    <label>Nombre del Servicio *</label>
+                    <input type="text" name="name" placeholder="Ej: Corte de cabello" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
+                </div>
+                <div class="form-group">
+                    <label>Descripción</label>
+                    <textarea name="description" placeholder="Descripción detallada del servicio" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px; height: 80px;"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Precio (COP) *</label>
+                    <input type="number" name="unit_price" placeholder="0.00" step="0.01" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
+                </div>
+                <div class="form-group">
+                    <label>Categoría</label>
+                    <input type="text" name="category" placeholder="Ej: Peluquería, Spa" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
+                </div>
+                <div class="form-group">
+                    <label>Cantidad Disponible (Stock)</label>
+                    <input type="number" name="quantity_available" placeholder="Dejar vacío si no aplica" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
+                </div>
+                <div class="modal-actions">
+                    <button type="submit" class="btn btn-success">Guardar</button>
+                    <button type="button" class="btn" data-close>Cancelar</button>
+                </div>
+            </form>
+        `;
+
+        const serviceModal = modal.show({ 
+            title: 'Nuevo Servicio', 
+            content: html, 
+            size: 'medium' 
+        });
+
+        const form = document.getElementById('serviceForm');
+        form?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
+            
+            const serviceData = {
+                name: formData.get('name'),
+                description: formData.get('description') || null,
+                unit_price: parseFloat(formData.get('unit_price')),
+                category: formData.get('category') || null,
+                quantity_available: formData.get('quantity_available') ? parseInt(formData.get('quantity_available')) : null,
+                item_type: 'service'
+            };
+            
+            try {
+                await apiService.post('/inventory/services', serviceData);
+                modal.close(serviceModal);
+                await this.init();
+                await modal.alert({ title: 'Éxito', message: 'Servicio creado correctamente', type: 'success' });
+            } catch (error) {
+                console.error('Error creating service:', error);
+                let errorMsg = error.message || 'Error desconocido';
+                if (error.detail) {
+                    errorMsg = typeof error.detail === 'string' ? error.detail : JSON.stringify(error.detail);
+                }
+                await modal.alert({ title: 'Error', message: errorMsg, type: 'error' });
+            }
+        });
+    }
+
+    async showEditServiceModal(service) {
+        const html = `
+            <form id="serviceForm">
+                <div class="form-group">
+                    <label>Nombre del Servicio *</label>
+                    <input type="text" name="name" value="${service.name || ''}" placeholder="Ej: Corte de cabello" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
+                </div>
+                <div class="form-group">
+                    <label>Descripción</label>
+                    <textarea name="description" placeholder="Descripción detallada del servicio" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px; height: 80px;">${service.description || ''}</textarea>
+                </div>
+                <div class="form-group">
+                    <label>Precio (COP) *</label>
+                    <input type="number" name="unit_price" value="${service.unit_price || 0}" placeholder="0.00" step="0.01" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
+                </div>
+                <div class="form-group">
+                    <label>Categoría</label>
+                    <input type="text" name="category" value="${service.category || ''}" placeholder="Ej: Peluquería, Spa" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
+                </div>
+                <div class="form-group">
+                    <label>Cantidad Disponible (Stock)</label>
+                    <input type="number" name="quantity_available" value="${service.quantity_available || ''}" placeholder="Dejar vacío si no aplica" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
+                </div>
+                <div class="modal-actions">
+                    <button type="submit" class="btn btn-success">Actualizar</button>
+                    <button type="button" class="btn" data-close>Cancelar</button>
+                </div>
+            </form>
+        `;
+
+        const serviceModal = modal.show({ 
+            title: 'Editar Servicio', 
+            content: html, 
+            size: 'medium' 
+        });
+
+        const form = document.getElementById('serviceForm');
+        form?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
+            
+            const serviceData = {
+                name: formData.get('name'),
+                description: formData.get('description') || null,
+                unit_price: parseFloat(formData.get('unit_price')),
+                category: formData.get('category') || null,
+                quantity_available: formData.get('quantity_available') ? parseInt(formData.get('quantity_available')) : null
+            };
+            
+            try {
+                await apiService.put(`/inventory/services/${service.id}`, serviceData);
+                modal.close(serviceModal);
+                await this.init();
+                await modal.alert({ title: 'Éxito', message: 'Servicio actualizado correctamente', type: 'success' });
+            } catch (error) {
+                console.error('Error updating service:', error);
+                let errorMsg = error.message || 'Error desconocido';
+                if (error.detail) {
+                    errorMsg = typeof error.detail === 'string' ? error.detail : JSON.stringify(error.detail);
+                }
+                await modal.alert({ title: 'Error', message: errorMsg, type: 'error' });
+            }
+        });
+    }
+}
+
+// Admin View
+export class AdminView {
+    render() {
+        return `
+            <div class="card">
+                <div class="card-header">
+                    /* Lines 1979-1980 omitted */
+                </div>
+                <div class="card-body">
+                    /* Lines 1982-2004 omitted */
+                </div>
+            </div>
+        `;
+    }
+
+    init() {
+        // Placeholder
+    }
+}
+
 // Exportar instancias
 export const appointmentsView = new AppointmentsView();
 export const paymentsView = new PaymentsView();
 export const cashRegisterView = new CashRegisterView();
 export const reportsView = new ReportsView();
+export const servicesView = new ServicesView();
 export const adminView = new AdminView();
