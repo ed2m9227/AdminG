@@ -4,6 +4,7 @@ from app.db.session import get_db
 from app.models.appointment import Appointment
 from app.models.customer import Customer
 from app.models.service import Service
+from app.models.service_package import ServicePackage
 from app.modules.appointments.schemas import AppointmentCreate, AppointmentOut, AppointmentUpdate
 from app.core.security import get_current_user
 from app.models.user import User
@@ -48,10 +49,16 @@ def create_appointment(
         service = db.get(Service, payload.service_id)
         if not service:
             raise HTTPException(status_code=404, detail="Service not found")
+    
+    if payload.service_package_id is not None:
+        package = db.get(ServicePackage, payload.service_package_id)
+        if not package:
+            raise HTTPException(status_code=404, detail="Service package not found")
 
     appointment = Appointment(
         customer_id=payload.customer_id,
         service_id=payload.service_id,
+        service_package_id=payload.service_package_id,
         scheduled_at=payload.scheduled_at,
         duration_minutes=payload.duration_minutes,
         status=payload.status or "scheduled",

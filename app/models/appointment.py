@@ -9,6 +9,7 @@ class Appointment(Base):
     id = Column(Integer, primary_key=True, index=True)
     customer_id = Column(Integer, ForeignKey("customers.id"), nullable=False)
     service_id = Column(Integer, ForeignKey("services.id"), nullable=True)
+    service_package_id = Column(Integer, ForeignKey("service_packages.id"), nullable=True)
     scheduled_at = Column(DateTime, nullable=False)
     duration_minutes = Column(Integer, nullable=True)
     status = Column(String(30), default="scheduled", nullable=False)
@@ -18,4 +19,5 @@ class Appointment(Base):
 
     customer = relationship("Customer", back_populates="appointments")
     service = relationship("Service", back_populates="appointments")
+    service_package = relationship("ServicePackage", foreign_keys=[service_package_id])
     payments = relationship("Payment", back_populates="appointment")

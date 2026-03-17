@@ -126,7 +126,7 @@ export class AppointmentsView {
         let servicesOptions = '<option value="">Cargar servicios...</option>';
         
         try {
-            [const customers, const services] = await Promise.all([
+            const [customers, services] = await Promise.all([
                 apiService.getCustomers(),
                 apiService.getServices()
             ]);

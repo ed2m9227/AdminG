@@ -492,3 +492,148 @@ def list_movements(
     return db.query(InventoryMovement).filter(
         InventoryMovement.item_id == item_id
     ).offset(skip).limit(limit).all()
+
+# ============ SERVICES ============
+
+@router.get("/services", response_model=list[InventoryItemOut])
+def list_services(
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(resolve_user),
+):
+    """List all services (InventoryItems with type='service')"""
+    check_inventory_access(current_user)
+    
+    user_ids = get_user_ids_for_data_sharing(current_user)
+    return db.query(InventoryItem).filter(
+        InventoryItem.user_id.in_(user_ids),
+        InventoryItem.item_type == 'service',
+        InventoryItem.is_active == True
+    ).offset(skip).limit(limit).all()
+
+@router.post("/services", response_model=InventoryItemOut, status_code=status.HTTP_201_CREATED)
+def create_service(
+    payload: InventoryItemCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(resolve_user),
+):
+    """Create a new service (only parent users)"""
+    check_inventory_access(current_user)
+    
+    # Only parent users can create services
+    if current_user.parent_user_id:
+        raise HTTPException(status_code=403, detail="Solo el usuario padre puede crear servicios")
+    
+    # Force item_type to 'service'
+    payload.item_type = 'service'
+    
+    # Generate SKU if not provided
+    if not payload.sku:
+        sku_base = payload.name.upper()[:3]
+        existing = db.query(InventoryItem).filter(
+            InventoryItem.sku.like(f'{sku_base}%')
+        ).count()
+        payload.sku = f"{sku_base}-{existing + 1}"
+    
+    service = InventoryItem(
+        user_id=current_user.id,
+        category_id=payload.category_id,
+        sku=payload.sku,
+        name=payload.name,
+        description=payload.description,
+        unit_price=payload.unit_price,
+        cost=payload.cost,
+        quantity=0,  # Services don't have inventory
+        item_type='service',
+        is_active=True,
+    )
+    
+    db.add(service)
+    db.commit()
+    db.refresh(service)
+    return service
+
+@router.put("/services/{service_id}", response_model=InventoryItemOut)
+def update_service(
+    service_id: int,
+    payload: InventoryItemUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(resolve_user),
+):
+    """Update a service (only parent users)"""
+    check_inventory_access(current_user)
+    
+    # Only parent users can edit services
+    if current_user.parent_user_id:
+        raise HTTPException(status_code=403, detail="Solo el usuario padre puede editar servicios")
+    
+    service = db.query(InventoryItem).filter(
+        InventoryItem.id == service_id,
+        InventoryItem.user_id == current_user.id,
+        InventoryItem.item_type == 'service'
+    ).first()
+    
+    if not service:
+        raise HTTPException(status_code=404, detail="Service not found")
+    
+    update_data = payload.model_dump(exclude_unset=True)
+    # Don't allow changing type
+    if 'item_type' in update_data:
+        del update_data['item_type']
+    
+    for field, value in update_data.items():
+        setattr(service, field, value)
+    
+    db.add(service)
+    db.commit()
+    db.refresh(service)
+    return service
+
+@router.get("/services/{service_id}", response_model=InventoryItemOut)
+def get_service(
+    service_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(resolve_user),
+):
+    """Get service details"""
+    check_inventory_access(current_user)
+    
+    user_ids = get_user_ids_for_data_sharing(current_user)
+    service = db.query(InventoryItem).filter(
+        InventoryItem.id == service_id,
+        InventoryItem.user_id.in_(user_ids),
+        InventoryItem.item_type == 'service'
+    ).first()
+    
+    if not service:
+        raise HTTPException(status_code=404, detail="Service not found")
+    
+    return service
+
+@router.delete("/services/{service_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_service(
+    service_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(resolve_user),
+):
+    """Soft delete a service (only parent users)"""
+    check_inventory_access(current_user)
+    
+    # Only parent users can delete services
+    if current_user.parent_user_id:
+        raise HTTPException(status_code=403, detail="Solo el usuario padre puede eliminar servicios")
+    
+    service = db.query(InventoryItem).filter(
+        InventoryItem.id == service_id,
+        InventoryItem.user_id == current_user.id,
+        InventoryItem.item_type == 'service'
+    ).first()
+    
+    if not service:
+        raise HTTPException(status_code=404, detail="Service not found")
+    
+    service.is_active = False
+    db.add(service)
+    db.commit()
+    return None

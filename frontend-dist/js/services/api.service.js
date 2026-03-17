@@ -193,6 +193,39 @@ export class ApiService {
     async getVersion() {
         return this.get('/api/version', false);
     }
+
+    // ========== SERVICES ==========
+    async getServices() {
+        return this.get('/inventory/services');
+    }
+
+    async createService(service) {
+        return this.post('/inventory/services', service);
+    }
+
+    async updateService(serviceId, service) {
+        return this.put(`/inventory/services/${serviceId}`, service);
+    }
+
+    async deleteService(serviceId) {
+        return this.delete(`/inventory/services/${serviceId}`);
+    }
+
+    async getServicePackages() {
+        return this.get('/services/packages');
+    }
+
+    async createServicePackage(package_) {
+        return this.post('/services/packages', package_);
+    }
+
+    async updateServicePackage(packageId, package_) {
+        return this.put(`/services/packages/${packageId}`, package_);
+    }
+
+    async deleteServicePackage(packageId) {
+        return this.delete(`/services/packages/${packageId}`);
+    }
 }
 
 // Exportar instancia singleton
