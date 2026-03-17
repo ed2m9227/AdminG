@@ -121,10 +121,16 @@ export class AppointmentsView {
     }
 
     async showNewAppointmentModal() {
-        // Cargar clientes PRIMERO
+        // Cargar clientes y servicios EN PARALELO
         let customersOptions = '<option value="">Cargando clientes...</option>';
+        let servicesOptions = '<option value="">Cargar servicios...</option>';
+        
         try {
-            const customers = await apiService.getCustomers();
+            [const customers, const services] = await Promise.all([
+                apiService.getCustomers(),
+                apiService.getServices()
+            ]);
+            
             if (Array.isArray(customers) && customers.length > 0) {
                 customersOptions = '<option value="">Seleccionar cliente...</option>';
                 customers.forEach(c => {
@@ -133,9 +139,19 @@ export class AppointmentsView {
             } else {
                 customersOptions = '<option value="">No hay clientes registrados</option>';
             }
+            
+            if (Array.isArray(services) && services.length > 0) {
+                servicesOptions = '<option value="">Seleccionar servicio...</option>';
+                services.forEach(s => {
+                    servicesOptions += `<option value="${s.id}">${s.name || 'Sin nombre'} (${this.formatCurrency(s.unit_price || 0)})</option>`;
+                });
+            } else {
+                servicesOptions = '<option value="">No hay servicios disponibles</option>';
+            }
         } catch (error) {
-            console.error('Error loading customers:', error);
+            console.error('Error loading data:', error);
             customersOptions = '<option value="">Error al cargar clientes</option>';
+            servicesOptions = '<option value="">Error al cargar servicios</option>';
         }
 
         const html = `
@@ -151,8 +167,14 @@ export class AppointmentsView {
                     <input type="datetime-local" name="scheduled_at" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
                 </div>
                 <div class="form-group">
-                    <label>Servicio *</label>
-                    <input type="text" name="notes" placeholder="Ej: Corte de cabello" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
+                    <label>Servicio</label>
+                    <select name="service_id" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
+                        ${servicesOptions}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Notas adicionales</label>
+                    <textarea name="notes" placeholder="Ej: Cliente requiere corte especial" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px; height: 80px;"></textarea>
                 </div>
                 <div class="form-group">
                     <label>Status</label>
@@ -184,7 +206,7 @@ export class AppointmentsView {
             const appointmentData = {
                 customer_id: parseInt(formData.get('customer_id')),
                 scheduled_at: formData.get('scheduled_at'),
-                service_id: null,
+                service_id: formData.get('service_id') ? parseInt(formData.get('service_id')) : null,
                 duration_minutes: 60,
                 status: formData.get('status') || 'scheduled',
                 notes: formData.get('notes')
@@ -207,10 +229,16 @@ export class AppointmentsView {
     }
 
     async showEditAppointmentModal(appointment) {
-        // Cargar clientes
+        // Cargar clientes y servicios EN PARALELO
         let customersOptions = '<option value="">Cargando clientes...</option>';
+        let servicesOptions = '<option value="">Cargar servicios...</option>';
+        
         try {
-            const customers = await apiService.getCustomers();
+            const [customers, services] = await Promise.all([
+                apiService.getCustomers(),
+                apiService.getServices()
+            ]);
+            
             if (Array.isArray(customers) && customers.length > 0) {
                 customersOptions = '';
                 customers.forEach(c => {
@@ -218,8 +246,16 @@ export class AppointmentsView {
                     customersOptions += `<option value="${c.id}" ${selected}>${c.full_name || 'Sin nombre'}</option>`;
                 });
             }
+            
+            if (Array.isArray(services) && services.length > 0) {
+                servicesOptions = '<option value="">Seleccionar servicio...</option>';
+                services.forEach(s => {
+                    const selected = s.id === appointment.service_id ? 'selected' : '';
+                    servicesOptions += `<option value="${s.id}" ${selected}>${s.name || 'Sin nombre'} (${this.formatCurrency(s.unit_price || 0)})</option>`;
+                });
+            }
         } catch (error) {
-            console.error('Error loading customers:', error);
+            console.error('Error loading data:', error);
         }
 
         // Format the datetime-local input from ISO string
@@ -239,8 +275,14 @@ export class AppointmentsView {
                     <input type="datetime-local" name="scheduled_at" value="${isoString}" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
                 </div>
                 <div class="form-group">
-                    <label>Servicio *</label>
-                    <input type="text" name="notes" placeholder="Ej: Corte de cabello" value="${appointment.notes || ''}" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
+                    <label>Servicio</label>
+                    <select name="service_id" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
+                        ${servicesOptions}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Notas adicionales</label>
+                    <textarea name="notes" placeholder="Ej: Cliente requiere corte especial" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px; height: 80px;">${appointment.notes || ''}</textarea>
                 </div>
                 <div class="form-group">
                     <label>Status</label>
@@ -272,7 +314,7 @@ export class AppointmentsView {
             const appointmentData = {
                 customer_id: parseInt(formData.get('customer_id')),
                 scheduled_at: formData.get('scheduled_at'),
-                service_id: null,
+                service_id: formData.get('service_id') ? parseInt(formData.get('service_id')) : null,
                 duration_minutes: 60,
                 status: formData.get('status') || 'scheduled',
                 notes: formData.get('notes')
@@ -453,10 +495,16 @@ export class PaymentsView {
     }
 
     async showNewPaymentModal() {
-        // Cargar clientes PRIMERO
+        // Cargar clientes y servicios EN PARALELO
         let customersOptions = '<option value="">Cargando clientes...</option>';
+        let servicesOptions = '<option value="">Cargar servicios...</option>';
+        
         try {
-            const customers = await apiService.getCustomers();
+            const [customers, services] = await Promise.all([
+                apiService.getCustomers(),
+                apiService.getServices()
+            ]);
+            
             if (Array.isArray(customers) && customers.length > 0) {
                 customersOptions = '<option value="">Seleccionar cliente...</option>';
                 customers.forEach(c => {
@@ -465,9 +513,19 @@ export class PaymentsView {
             } else {
                 customersOptions = '<option value="">No hay clientes registrados</option>';
             }
+            
+            if (Array.isArray(services) && services.length > 0) {
+                servicesOptions = '<option value="">Sin servicio específico</option>';
+                services.forEach(s => {
+                    servicesOptions += `<option value="${s.id}">${s.name || 'Sin nombre'} (${this.formatCurrency(s.unit_price || 0)})</option>`;
+                });
+            } else {
+                servicesOptions = '<option value="">No hay servicios disponibles</option>';
+            }
         } catch (error) {
-            console.error('Error loading customers:', error);
+            console.error('Error loading data:', error);
             customersOptions = '<option value="">Error al cargar clientes</option>';
+            servicesOptions = '<option value="">Error al cargar servicios</option>';
         }
 
         const html = `
@@ -492,8 +550,14 @@ export class PaymentsView {
                     </select>
                 </div>
                 <div class="form-group">
+                    <label>Servicio</label>
+                    <select name="service_id" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
+                        ${servicesOptions}
+                    </select>
+                </div>
+                <div class="form-group">
                     <label>Concepto</label>
-                    <input type="text" name="notes" placeholder="Descripción..." style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
+                    <input type="text" name="concept" placeholder="Ej: Corte + Peinado" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
                 </div>
                 <div class="form-group">
                     <label>Estado</label>
@@ -525,7 +589,8 @@ export class PaymentsView {
                 customer_id: parseInt(formData.get('customer_id')),
                 amount: parseFloat(formData.get('amount')),
                 method: formData.get('method'),
-                notes: formData.get('notes') || null,
+                service_id: formData.get('service_id') ? parseInt(formData.get('service_id')) : null,
+                concept: formData.get('concept') || null,
                 status: formData.get('status') || 'completed'
             };
             
@@ -546,10 +611,16 @@ export class PaymentsView {
     }
 
     async showEditPaymentModal(payment) {
-        // Cargar clientes
+        // Cargar clientes y servicios EN PARALELO
         let customersOptions = '<option value="">Cargando clientes...</option>';
+        let servicesOptions = '<option value="">Cargar servicios...</option>';
+        
         try {
-            const customers = await apiService.getCustomers();
+            const [customers, services] = await Promise.all([
+                apiService.getCustomers(),
+                apiService.getServices()
+            ]);
+            
             if (Array.isArray(customers) && customers.length > 0) {
                 customersOptions = '';
                 customers.forEach(c => {
@@ -557,8 +628,16 @@ export class PaymentsView {
                     customersOptions += `<option value="${c.id}" ${selected}>${c.full_name || 'Sin nombre'}</option>`;
                 });
             }
+            
+            if (Array.isArray(services) && services.length > 0) {
+                servicesOptions = '<option value="">Sin servicio específico</option>';
+                services.forEach(s => {
+                    const selected = s.id === payment.service_id ? 'selected' : '';
+                    servicesOptions += `<option value="${s.id}" ${selected}>${s.name || 'Sin nombre'} (${this.formatCurrency(s.unit_price || 0)})</option>`;
+                });
+            }
         } catch (error) {
-            console.error('Error loading customers:', error);
+            console.error('Error loading data:', error);
         }
 
         const html = `
@@ -583,8 +662,14 @@ export class PaymentsView {
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Notas</label>
-                    <textarea name="notes" placeholder="Información adicional" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">${payment.notes || ''}</textarea>
+                    <label>Servicio</label>
+                    <select name="service_id" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
+                        ${servicesOptions}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Concepto</label>
+                    <input type="text" name="concept" placeholder="Ej: Corte + Peinado" value="${payment.concept || ''}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
                 </div>
                 <div class="form-group">
                     <label>Estado</label>
@@ -612,10 +697,10 @@ export class PaymentsView {
             e.preventDefault();
             const formData = new FormData(form);
             
-            // Only send status and notes (PaymentUpdate schema)
+            // Send status and concept fields (PaymentUpdate schema)
             const paymentData = {
                 status: formData.get('status') || payment.status,
-                notes: formData.get('notes') || null
+                concept: formData.get('concept') || null
             };
             
             console.log('💾 Updating payment:', payment.id, 'with data:', paymentData);
