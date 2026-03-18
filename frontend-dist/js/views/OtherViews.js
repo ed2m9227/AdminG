@@ -131,6 +131,17 @@ export class AppointmentsView {
                 apiService.getServices()
             ]);
             
+            // Capturar formatCurrency antes de usarlo
+            const formatCurrency = (value) => {
+                if (!value) return '$0';
+                return new Intl.NumberFormat('es-CO', {
+                    style: 'currency',
+                    currency: 'COP',
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0
+                }).format(value);
+            };
+            
             if (Array.isArray(customers) && customers.length > 0) {
                 customersOptions = '<option value="">Seleccionar cliente...</option>';
                 customers.forEach(c => {
@@ -143,7 +154,7 @@ export class AppointmentsView {
             if (Array.isArray(services) && services.length > 0) {
                 servicesOptions = '<option value="">Seleccionar servicio...</option>';
                 services.forEach(s => {
-                    servicesOptions += `<option value="${s.id}">${s.name || 'Sin nombre'} (${this.formatCurrency(s.unit_price || 0)})</option>`;
+                    servicesOptions += `<option value="${s.id}">${s.name || 'Sin nombre'} (${formatCurrency(s.unit_price || 0)})</option>`;
                 });
             } else {
                 servicesOptions = '<option value="">No hay servicios disponibles</option>';
@@ -871,6 +882,7 @@ export class CashRegisterView {
         this.cart = [];
         this.total = 0;
         this.inventory = [];
+        this.services = [];
         this.movements = [];
         this.customersCache = [];
         this.cashRegisterOpen = false;
@@ -967,15 +979,21 @@ export class CashRegisterView {
 
     async init() {
         try {
-            // Cargar inventario
-            const items = await apiService.getInventoryItems();
+            // Cargar inventario, servicios y clientes EN PARALELO
+            const [items, services, customers] = await Promise.all([
+                apiService.getInventoryItems(),
+                apiService.getServices(),
+                apiService.getCustomers()
+            ]);
+            
             if (Array.isArray(items)) {
                 this.inventory = items;
-                this.renderProducts();
             }
-
-            // Cargar clientes
-            const customers = await apiService.getCustomers();
+            
+            if (Array.isArray(services)) {
+                this.services = services;
+            }
+            
             if (Array.isArray(customers)) {
                 this.customersCache = customers;
                 const select = document.getElementById('cashCustomer');
@@ -989,6 +1007,9 @@ export class CashRegisterView {
                 }
             }
 
+            // Renderizar productos (inventario + servicios) después de cargar
+            this.renderProducts();
+            
             // Cargar transacciones de caja del día
             try {
                 const transactions = await apiService.get('/cashregister/transactions?limit=50');
@@ -1052,7 +1073,8 @@ export class CashRegisterView {
                     const productId = parseInt(e.target.getAttribute('data-product-id'));
                     const productName = e.target.getAttribute('data-product-name');
                     const price = parseFloat(e.target.getAttribute('data-product-price'));
-                    this.addToCart(productId, productName, price);
+                    const productType = e.target.getAttribute('data-product-type') || 'product';
+                    this.addToCart(productId, productName, price, productType);
                 }
             });
         }
@@ -1073,11 +1095,29 @@ export class CashRegisterView {
                 }
             });
         }
+        
+        // Renderizar productos al inicio
+        this.renderProducts();
     }
 
     renderProducts(filter = '') {
-        const filtered = this.inventory.filter(item => 
-            !filter || (item.name || item.product_name || '').toLowerCase().includes(filter.toLowerCase())
+        // Combinar inventario (productos) y servicios
+        const allItems = [
+            ...this.inventory.map(item => ({
+                ...item,
+                type: 'product',
+                name: item.name || item.product_name,
+                quantity: item.quantity || 0
+            })),
+            ...this.services.map(service => ({
+                ...service,
+                type: 'service',
+                quantity: service.max_capacity || Infinity  // Servicios no tienen stock limitado
+            }))
+        ];
+        
+        const filtered = allItems.filter(item => 
+            !filter || (item.name || '').toLowerCase().includes(filter.toLowerCase())
         );
 
         const container = document.getElementById('productsList');
@@ -1085,13 +1125,16 @@ export class CashRegisterView {
 
         container.innerHTML = filtered.map(item => {
             const unitPrice = item.unit_price || item.price || 0;
+            const stockDisplay = item.type === 'service' ? '∞' : (item.quantity || 0);
+            const typeLabel = item.type === 'service' ? ' [Servicio]' : '';
+            
             return `
                 <div style="padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
                     <div>
-                        <strong>${item.name || item.product_name}</strong>
-                        <p style="color: #7f8c8d; font-size: 12px; margin: 4px 0;">${this.formatCurrency(parseFloat(unitPrice))} (Stock: ${item.quantity || 0})</p>
+                        <strong>${item.name}${typeLabel}</strong>
+                        <p style="color: #7f8c8d; font-size: 12px; margin: 4px 0;">${this.formatCurrency(parseFloat(unitPrice))} (Stock: ${stockDisplay})</p>
                     </div>
-                    <button class="btn btn-primary btn-sm" data-add-to-cart data-product-id="${item.id}" data-product-name="${(item.name || item.product_name).replace(/"/g, '&quot;')}" data-product-price="${unitPrice}">+</button>
+                    <button class="btn btn-primary btn-sm" data-add-to-cart data-product-id="${item.id}" data-product-type="${item.type}" data-product-name="${(item.name || '').replace(/"/g, '&quot;')}" data-product-price="${unitPrice}">+</button>
                 </div>
             `;
         }).join('');
@@ -1101,13 +1144,13 @@ export class CashRegisterView {
         this.renderProducts(query);
     }
 
-    addToCart(productId, productName, price) {
+    addToCart(productId, productName, price, productType = 'product') {
         const priceNum = parseFloat(price) || 0;
-        const existing = this.cart.find(item => item.id === productId);
+        const existing = this.cart.find(item => item.id === productId && item.type === productType);
         if (existing) {
             existing.quantity++;
         } else {
-            this.cart.push({ id: productId, name: productName, price: priceNum, quantity: 1 });
+            this.cart.push({ id: productId, name: productName, price: priceNum, quantity: 1, type: productType });
         }
         this.updateCart();
     }
@@ -1144,6 +1187,12 @@ export class CashRegisterView {
 
     async refreshMovements() {
         try {
+            // Refresh servicios en paralelo
+            const services = await apiService.getServices();
+            if (Array.isArray(services)) {
+                this.services = services;
+            }
+            
             const transactions = await apiService.get('/cashregister/transactions?limit=50');
             
             if (Array.isArray(transactions)) {
@@ -1588,26 +1637,49 @@ export class CashRegisterView {
         }
     }
 
-    async processPayment() {
+    async processPayment(customerId = null) {
         if (this.cart.length === 0) {
-            await modal.alert({ title: 'Carrito vacío', message: 'Añade productos antes de procesar pago', type: 'warning' });
+            await modal.alert({ title: 'Carrito vacío', message: 'Agrega items antes de procesar pago', type: 'warning' });
             return;
         }
 
-        const customerId = document.getElementById('cashCustomer')?.value;
-        const parsedCustomerId = customerId && customerId !== '' ? parseInt(customerId) : null;
+        // Usar customerId pasado como parámetro O del selector
+        const selectedCustomerId = customerId || document.getElementById('cashCustomer')?.value;
+        const parsedCustomerId = selectedCustomerId && selectedCustomerId !== '' ? parseInt(selectedCustomerId) : null;
 
+        // Construir items con source_type (servicios o productos)
+        const items = this.cart.map(item => {
+            const baseItem = {
+                description: item.name,
+                unit_price: item.price,
+                quantity: item.quantity,
+                source_type: item.type || 'product'
+            };
+            
+            if (item.type === 'service') {
+                baseItem.service_id = item.id;
+                baseItem.inventory_item_id = null;
+            } else {
+                baseItem.service_id = null;
+                baseItem.inventory_item_id = item.id;
+            }
+            
+            return baseItem;
+        });
+
+        // Calcular total desde items (como validación)
+        const calculatedTotal = items.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0);
+        
         const paymentData = {
             customer_id: parsedCustomerId,
-            amount: this.total,
-            method: 'cash',
-            notes: `Venta POS: ${this.cart.map(i => `${i.name} (${i.quantity})`).join(', ')}`
+            payment_items: items,
+            amount: calculatedTotal,  // Backend recalcula, pero enviamos para consistencia
+            final_amount: calculatedTotal
         };
 
         try {
-            if (parsedCustomerId) {
-                await apiService.post('/payments/', paymentData);
-            }
+            // Crear payment con items desagregados
+            const payment = await apiService.post('/payments/', paymentData);
             
             // Get customer name for description
             let customerName = 'Cliente sin identificar';
@@ -1618,33 +1690,30 @@ export class CashRegisterView {
                 }
             }
             
-            // Register cash transaction with items for stock deduction
+            // Register cash transaction
             const description = `Venta a ${customerName}: ${this.cart.map(i => `${i.name} (${i.quantity})`).join(', ')}`;
-            const itemsForSale = this.cart.map(item => ({
-                item_id: item.id,
-                quantity: item.quantity
-            }));
             
+            // Link cash transaction to payment
             await apiService.post('/cashregister/transactions', {
                 transaction_type: 'sale',
-                amount: this.total,
+                amount: calculatedTotal,
                 customer_id: parsedCustomerId,
-                description: description,
-                items: itemsForSale
+                payment_id: payment.id,  // Link to payment record
+                description: description
             });
 
             await this.refreshMovements();
 
             await modal.alert({ 
-                title: 'Pago Procesado', 
-                message: `Venta de ${this.formatCurrency(this.total)} procesada correctamente`, 
+                title: '✅ Pago Procesado', 
+                message: `Venta de ${this.formatCurrency(calculatedTotal)} registrada correctamente`, 
                 type: 'success' 
             });
             this.clearCart();
         } catch (error) {
             console.error('Error processing payment:', error);
             const errorMsg = error?.detail || error?.message || (typeof error === 'string' ? error : JSON.stringify(error));
-            await modal.alert({ title: 'Error', message: 'Error al procesar pago: ' + errorMsg, type: 'error' });
+            await modal.alert({ title: '❌ Error', message: 'Error al procesar pago: ' + errorMsg, type: 'error' });
         }
     }
 }
