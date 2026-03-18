@@ -328,3 +328,64 @@ async def reset_cash_register(
         "sessions_closed": count,
         "status": "reset"
     }
+
+
+@router.post("/close-previous-day")
+async def close_previous_day_cash(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Close the cash register session from a previous day.
+    Used when user logs in and finds an open session from another day.
+    """
+    user = db.query(User).filter(User.id == int(current_user["id"])).first()
+    
+    # Get active session
+    session = db.query(CashRegisterSession).filter(
+        CashRegisterSession.user_id == user.id,
+        CashRegisterSession.is_active == True
+    ).first()
+    if not session:
+        raise HTTPException(status_code=400, detail="No hay caja abierta para cerrar")
+    
+    # Calculate totals from session start
+    transactions = db.query(CashTransaction).filter(
+        CashTransaction.user_id == user.id,
+        CashTransaction.created_at >= session.opened_at
+    ).all()
+    
+    sales = sum(float(t.amount) for t in transactions if t.transaction_type == 'sale')
+    expenses = sum(float(t.amount) for t in transactions if t.transaction_type == 'expense')
+    base = sum(float(t.amount) for t in transactions if t.transaction_type == 'base')
+    final_balance = session.initial_amount + sales - expenses
+    
+    # Close the previous day's session
+    session.is_active = False
+    session.closed_at = datetime.utcnow()
+    session.final_amount = final_balance
+    db.add(session)
+    db.flush()
+    
+    # Create close transaction
+    close_transaction = CashTransaction(
+        user_id=user.id,
+        customer_id=None,
+        transaction_type='close',
+        amount=final_balance,
+        description=f'Cierre automático de caja anterior - Balance: {final_balance}'
+    )
+    db.add(close_transaction)
+    db.commit()
+    
+    return {
+        "success": True,
+        "message": "Caja de día anterior cerrada",
+        "final_balance": final_balance,
+        "sales": sales,
+        "expenses": expenses,
+        "base": base,
+        "initial_amount": session.initial_amount,
+        "transaction_count": len(transactions),
+        "status": "closed"
+    }

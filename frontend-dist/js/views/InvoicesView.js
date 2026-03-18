@@ -6,6 +6,9 @@ class InvoicesView {
         this.invoices = [];
         this.customers = [];
         this.customerById = new Map();
+        this.services = [];
+        this.inventory = [];
+        this.invoiceItemsMap = {};
     }
 
     render() {
@@ -115,8 +118,21 @@ class InvoicesView {
     async init() {
         this.attachEvents();
         await this.loadCustomers();
+        await this.loadServices();
         await this.loadInvoices();
-        this.addInvoiceItem();
+    }
+
+    async loadServices() {
+        try {
+            [this.services, this.inventory] = await Promise.all([
+                apiService.getServices(),
+                apiService.getInventoryItems()
+            ]);
+        } catch (error) {
+            console.warn('Error loading services/inventory:', error);
+            this.services = [];
+            this.inventory = [];
+        }
     }
 
     attachEvents() {
@@ -243,28 +259,89 @@ class InvoicesView {
         const container = document.getElementById('invoiceItems');
         if (!container) return;
 
+        // Build itemsOptions from services and inventory
+        let itemsOptions = '<option value="">Seleccionar item...</option>';
+        const itemsMap = {};
+
+        if (Array.isArray(this.services) && this.services.length > 0) {
+            itemsOptions += '<optgroup label="Servicios">';
+            this.services.forEach(s => {
+                const key = `service:${s.id}`;
+                itemsMap[key] = s;
+                itemsOptions += `<option value="${key}" data-price="${s.unit_price || 0}">${s.name || 'Sin nombre'}</option>`;
+            });
+            itemsOptions += '</optgroup>';
+        }
+
+        if (Array.isArray(this.inventory) && this.inventory.length > 0) {
+            itemsOptions += '<optgroup label="Productos">';
+            this.inventory.forEach(p => {
+                if (p.item_type === 'product' && p.is_active) {
+                    const key = `product:${p.id}`;
+                    itemsMap[key] = p;
+                    itemsOptions += `<option value="${key}" data-price="${p.unit_price || 0}">${p.name || 'Sin nombre'}</option>`;
+                }
+            });
+            itemsOptions += '</optgroup>';
+        }
+
+        itemsOptions += '<optgroup label="Otros">';
+        itemsOptions += '<option value="custom:0">Descripción personalizada</option>';
+        itemsOptions += '</optgroup>';
+
         const id = `invoice-item-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
         const row = document.createElement('div');
         row.id = id;
         row.className = 'form-row';
         row.innerHTML = `
             <div class="form-group" style="flex:2;">
-                <label>Descripcion *</label>
-                <input type="text" data-field="description" required>
+                <label>Item *</label>
+                <select data-field="item-select" required style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px;">
+                    ${itemsOptions}
+                </select>
             </div>
             <div class="form-group" style="flex:1;">
                 <label>Cantidad *</label>
-                <input type="number" min="0" step="0.01" value="1" data-field="quantity" required>
+                <input type="number" min="1" step="0.01" value="1" data-field="quantity" required style="width: 100%; padding: 6px;">
             </div>
             <div class="form-group" style="flex:1;">
-                <label>Precio Unitario *</label>
-                <input type="number" min="0" step="0.01" data-field="unit_price" required>
+                <label>Precio Unit. *</label>
+                <input type="number" min="0" step="0.01" data-field="unit_price" required readonly style="width: 100%; padding: 6px; background: #f9f9f9;">
             </div>
             <div class="form-group" style="display:flex; align-items:flex-end;">
                 <button class="btn btn-danger" type="button" data-remove-item="${id}">Quitar</button>
             </div>
         `;
         container.appendChild(row);
+
+        // Handle item selection
+        const itemSelect = row.querySelector('[data-field="item-select"]');
+        const priceInput = row.querySelector('[data-field="unit_price"]');
+        const descField = row.querySelector('[data-field="description"]');
+
+        itemSelect.addEventListener('change', (e) => {
+            const selectedValue = e.target.value;
+            if (selectedValue === 'custom:0') {
+                // For custom items, show prompt
+                const customDesc = prompt('Descripción del ítem:');
+                if (customDesc) {
+                    const customPrice = prompt('Precio unitario:');
+                    if (customPrice) {
+                        priceInput.value = customPrice;
+                        priceInput.dataset.description = customDesc;
+                    }
+                } else {
+                    itemSelect.value = '';
+                }
+            } else if (selectedValue.startsWith('service:') || selectedValue.startsWith('product:')) {
+                const item = itemsMap[selectedValue];
+                if (item) {
+                    priceInput.value = item.unit_price || 0;
+                    priceInput.dataset.itemType = selectedValue.split(':')[0];
+                    priceInput.dataset.itemId = selectedValue.split(':')[1];
+                }
+            }
+        });
     }
 
     collectInvoiceItems() {
@@ -272,19 +349,44 @@ class InvoicesView {
         const items = [];
 
         for (const row of rows) {
-            const description = row.querySelector('[data-field="description"]')?.value?.trim();
+            const itemSelect = row.querySelector('[data-field="item-select"]')?.value?.trim();
             const quantity = Number(row.querySelector('[data-field="quantity"]')?.value || 0);
             const unitPrice = Number(row.querySelector('[data-field="unit_price"]')?.value || 0);
+            const priceInput = row.querySelector('[data-field="unit_price"]');
 
-            if (!description || quantity <= 0 || unitPrice < 0) {
+            if (!itemSelect || quantity <= 0 || unitPrice < 0) {
                 continue;
             }
 
-            items.push({
-                description,
+            let item = {
                 quantity,
-                unit_price: unitPrice
-            });
+                unit_price: unitPrice,
+                service_id: null,
+                inventory_item_id: null,
+                description: ''
+            };
+
+            if (itemSelect === 'custom:0') {
+                // Custom items
+                item.source_type = 'custom';
+                item.description = priceInput.dataset.description || 'Item personalizado';
+            } else if (itemSelect.startsWith('service:')) {
+                // Service items
+                item.source_type = 'service';
+                const serviceId = parseInt(itemSelect.split(':')[1]);
+                const service = this.services.find(s => s.id === serviceId);
+                item.service_id = serviceId;
+                item.description = service?.name || 'Servicio';
+            } else if (itemSelect.startsWith('product:')) {
+                // Product items
+                item.source_type = 'product';
+                const productId = parseInt(itemSelect.split(':')[1]);
+                const product = this.inventory.find(p => p.id === productId);
+                item.inventory_item_id = productId;
+                item.description = product?.name || 'Producto';
+            }
+
+            items.push(item);
         }
 
         return items;

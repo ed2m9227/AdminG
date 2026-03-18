@@ -1187,10 +1187,76 @@ export class CashRegisterView {
             // Get server status to override local state
             const status = await apiService.get('/cashregister');
             this.cashRegisterOpen = (status?.status === 'open');
+            
+            // Check for stale/old session (opened in previous day)
+            if (this.cashRegisterOpen && status?.opened_at) {
+                const openDate = new Date(status.opened_at).toDateString();
+                const today = new Date().toDateString();
+                
+                if (openDate !== today) {
+                    // Caja was opened in a previous day - offer to close it
+                    console.warn('⚠️ Detected open session from previous day:', openDate);
+                    await this.handleStaleCashRegister(status);
+                }
+            }
+            
             console.log('✓ Cash status synced from server:', this.cashRegisterOpen);
         } catch (error) {
             console.warn('Could not sync with server, using local state');
             this.checkCashRegisterStatus();
+        }
+    }
+
+    async handleStaleCashRegister(status) {
+        const openDate = new Date(status.opened_at).toLocaleDateString('es-CO');
+        
+        const shouldClose = await modal.confirm({
+            title: '⚠️ Caja Abierta de Día Anterior',
+            message: `La caja fue abierta el ${openDate}.\n\n¿Desea cerrarla y generar un balance automático?\n\nSi selecciona "No", podrá continuar con la caja abierta del día anterior.`,
+            confirmText: 'Cerrar y Generar Balance',
+            cancelText: 'Continuar con Caja Anterior'
+        });
+
+        if (shouldClose) {
+            try {
+                const report = await apiService.post('/cashregister/close-previous-day');
+                
+                const reportDetails = `
+                    <div style="text-align: left; padding: 10px;">
+                        <p><strong>📅 Fecha Cierre:</strong> ${openDate}</p>
+                        <p><strong>💰 Total Ventas:</strong> ${this.formatCurrency(report.sales)}</p>
+                        <p><strong>📊 Total Gastos:</strong> ${this.formatCurrency(report.expenses)}</p>
+                        <p><strong>🏦 Base:</strong> ${this.formatCurrency(report.base)}</p>
+                        <hr style="margin: 12px 0;">
+                        <p><strong>💵 Balance Final:</strong> ${this.formatCurrency(report.final_balance)}</p>
+                        <p><strong>📋 Transacciones:</strong> ${report.transaction_count}</p>
+                    </div>
+                `;
+
+                await modal.alert({
+                    title: '✅ Caja Anterior Cerrada',
+                    message: reportDetails + '<p style="margin-top: 12px; font-size: 12px; color: #7f8c8d;">Puede proceder a abrir una nueva caja.</p>',
+                    type: 'success'
+                });
+
+                // Refresh status
+                this.cashRegisterOpen = false;
+                this.updateCashRegisterUI();
+            } catch (error) {
+                console.error('Error closing previous day cash:', error);
+                await modal.alert({
+                    title: '⚠️ Error al Cerrar',
+                    message: 'No se pudo cerrar la caja del día anterior. Intente manualmente.',
+                    type: 'warning'
+                });
+                // Force continue with open state
+                this.cashRegisterOpen = true;
+                this.updateCashRegisterUI();
+            }
+        } else {
+            // User chooses to continue with previous day's session
+            this.cashRegisterOpen = true;
+            this.updateCashRegisterUI();
         }
     }
 
