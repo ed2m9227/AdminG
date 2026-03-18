@@ -1,6 +1,6 @@
 /**
  * Inventory View
- * Responsabilidad: Gestionar vista de inventario
+ * Responsabilidad: Gestionar vista de inventario y servicios
  * Principio SOLID: Single Responsibility
  */
 
@@ -12,6 +12,8 @@ import modal from '../components/Modal.js';
 export class InventoryView {
     constructor() {
         this.items = [];
+        this.services = [];
+        this.activeTab = 'products'; // 'products' or 'services'
     }
 
     formatCurrency(value) {
@@ -32,22 +34,64 @@ export class InventoryView {
         return `
             <div class="card">
                 <div class="card-header">
-                    <h2 class="card-title">Inventario</h2>
+                    <h2 class="card-title">Inventario y Servicios</h2>
                     <div style="display: flex; gap: 10px;">
                         ${canCreateCategory ? '<button class="btn btn-primary" id="btnNewCategory">+ 📂 Nueva Categoría</button>' : ''}
-                        <button class="btn btn-success" id="btnNewProduct">
+                        <button class="btn btn-success" id="btnNewProduct" style="${this.activeTab === 'products' ? '' : 'display: none;'}">
                             + 📦 Nuevo Producto
+                        </button>
+                        <button class="btn btn-success" id="btnNewService" style="${this.activeTab === 'services' ? '' : 'display: none;'}">
+                            + 📋 Nuevo Servicio
                         </button>
                     </div>
                 </div>
+                
+                <!-- Tabs -->
+                <div class="tabs" style="border-bottom: 1px solid #e1e5e9; margin-bottom: 20px;">
+                    <button class="tab-button ${this.activeTab === 'products' ? 'active' : ''}" data-tab="products">
+                        📦 Productos
+                    </button>
+                    <button class="tab-button ${this.activeTab === 'services' ? 'active' : ''}" data-tab="services">
+                        📋 Servicios
+                    </button>
+                </div>
+                
                 <div class="card-body" id="inventoryTableContainer">
-                    ${this.renderTable()}
+                    ${this.activeTab === 'products' ? this.renderProductsTable() : this.renderServicesTable()}
                 </div>
             </div>
+            
+            <style>
+                .tabs {
+                    display: flex;
+                    background: #f8f9fa;
+                    border-radius: 8px 8px 0 0;
+                }
+                .tab-button {
+                    flex: 1;
+                    padding: 12px 20px;
+                    border: none;
+                    background: transparent;
+                    cursor: pointer;
+                    font-weight: 500;
+                    color: #6b7280;
+                    border-radius: 8px 8px 0 0;
+                    transition: all 0.2s;
+                }
+                .tab-button:hover {
+                    background: #e5e7eb;
+                    color: #374151;
+                }
+                .tab-button.active {
+                    background: white;
+                    color: #667eea;
+                    border-bottom: 2px solid #667eea;
+                }
+            </style>
         `;
     }
 
-    renderTable() {
+    renderProductsTable() {
         const user = authService.getCurrentUser();
         const isAdmin = user && user.role === 'admin';
         
@@ -78,9 +122,47 @@ export class InventoryView {
         });
     }
 
+    renderServicesTable() {
+        const user = authService.getCurrentUser();
+        const isAdmin = user && user.role === 'admin';
+        
+        const columns = [
+            { key: 'name', label: 'Nombre' },
+            { key: 'description', label: 'Descripción' },
+            { key: 'unit_price', label: 'Precio', formatter: (v) => this.formatCurrency(v || 0) },
+            { key: 'duration_minutes', label: 'Duración (min)', formatter: (v) => v ? `${v} min` : 'N/A' },
+            {
+                key: 'actions',
+                label: 'Acciones',
+                formatter: (_, row) => {
+                    let buttons = `<button class="btn btn-sm btn-primary" data-edit-service="${row.id}">✏️ Editar</button>`;
+                    if (isAdmin) {
+                        buttons += ` <button class="btn btn-sm btn-danger" data-delete-service="${row.id}">🗑️ Eliminar</button>`;
+                    }
+                    return buttons;
+                }
+            }
+        ];
+
+        return table.render({
+            columns,
+            data: this.services,
+            emptyMessage: 'No hay servicios registrados',
+            emptyIcon: '📋'
+        });
+    }
+
     async init() {
-        await this.loadInventory();
+        await this.loadData();
         this.attachEventListeners();
+    }
+
+    async loadData() {
+        if (this.activeTab === 'products') {
+            await this.loadInventory();
+        } else {
+            await this.loadServices();
+        }
     }
 
     async loadInventory() {
@@ -110,14 +192,48 @@ export class InventoryView {
         }
     }
 
-    updateTable() {
-        const container = document.getElementById('inventoryTableContainer');
-        if (container) {
-            container.innerHTML = this.renderTable();
+    async loadServices() {
+        try {
+            const services = await apiService.getServices();
+            this.services = Array.isArray(services) ? services : [];
+            this.updateTable();
+        } catch (error) {
+            console.error('Error loading services:', error);
+            modal.alert({
+                type: 'error',
+                title: 'Error',
+                message: 'No se pudo cargar los servicios: ' + error.message
+            });
         }
     }
 
+    updateTable() {
+        const container = document.getElementById('inventoryTableContainer');
+        if (container) {
+            container.innerHTML = this.activeTab === 'products' ? this.renderProductsTable() : this.renderServicesTable();
+        }
+        this.updateButtonVisibility();
+    }
+
+    updateButtonVisibility() {
+        const btnNewProduct = document.getElementById('btnNewProduct');
+        const btnNewService = document.getElementById('btnNewService');
+        
+        if (btnNewProduct) btnNewProduct.style.display = this.activeTab === 'products' ? '' : 'none';
+        if (btnNewService) btnNewService.style.display = this.activeTab === 'services' ? '' : 'none';
+    }
+
     attachEventListeners() {
+        // Tab switching
+        document.addEventListener('click', (e) => {
+            const tabBtn = e.target.closest('.tab-button');
+            if (tabBtn) {
+                const tab = tabBtn.dataset.tab;
+                this.switchTab(tab);
+            }
+        });
+
+        // Product buttons
         document.getElementById('btnNewProduct')?.addEventListener('click', () => {
             this.showProductModal();
         });
@@ -126,7 +242,14 @@ export class InventoryView {
             this.showCategoryModal();
         });
 
+        // Service buttons
+        document.getElementById('btnNewService')?.addEventListener('click', () => {
+            this.showServiceModal();
+        });
+
+        // Action buttons
         document.addEventListener('click', (e) => {
+            // Product actions
             const editBtn = e.target.closest('[data-edit]');
             if (editBtn) {
                 const productId = editBtn.dataset.edit;
@@ -138,7 +261,34 @@ export class InventoryView {
                 const itemId = deleteBtn.dataset.deleteItem;
                 this.deleteItem(itemId);
             }
+
+            // Service actions
+            const editServiceBtn = e.target.closest('[data-edit-service]');
+            if (editServiceBtn) {
+                const serviceId = editServiceBtn.dataset.editService;
+                this.editService(serviceId);
+            }
+            
+            const deleteServiceBtn = e.target.closest('[data-delete-service]');
+            if (deleteServiceBtn) {
+                const serviceId = deleteServiceBtn.dataset.deleteService;
+                this.deleteService(serviceId);
+            }
         });
+    }
+
+    switchTab(tab) {
+        if (this.activeTab === tab) return;
+        
+        this.activeTab = tab;
+        
+        // Update tab buttons
+        document.querySelectorAll('.tab-button').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.tab === tab);
+        });
+        
+        // Load data for the new tab
+        this.loadData();
     }
 
     async showProductModal(product = null) {
@@ -363,6 +513,126 @@ export class InventoryView {
                 });
             }
         });
+    }
+
+    async showServiceModal(service = null) {
+        const isEdit = !!service;
+        const title = isEdit ? 'Editar Servicio' : 'Nuevo Servicio';
+
+        const content = `
+            <form id="serviceForm" class="modal-form">
+                <div class="form-group">
+                    <label>Nombre *</label>
+                    <input type="text" name="name" value="${service?.name || ''}" required placeholder="Ej: Corte de cabello">
+                </div>
+                <div class="form-group">
+                    <label>Descripción</label>
+                    <textarea name="description" rows="3" placeholder="Descripción del servicio...">${service?.description || ''}</textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Precio *</label>
+                        <input type="number" step="0.01" name="unit_price" value="${service?.unit_price || ''}" required placeholder="0.00">
+                    </div>
+                    <div class="form-group">
+                        <label>Duración (minutos)</label>
+                        <input type="number" name="duration_minutes" value="${service?.duration_minutes || 60}" placeholder="60">
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="submit" class="btn btn-success">Guardar</button>
+                    <button type="button" class="btn" data-close>Cancelar</button>
+                </div>
+            </form>
+        `;
+
+        const serviceModal = modal.show({ title, content, size: 'medium' });
+
+        const form = document.getElementById('serviceForm');
+        form?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await this.saveService(e, serviceModal, service);
+        });
+    }
+
+    async saveService(e, modalElement, existingService = null) {
+        const form = e.target;
+        const formData = new FormData(form);
+
+        const serviceData = {
+            name: formData.get('name'),
+            description: formData.get('description') || null,
+            unit_price: parseFloat(formData.get('unit_price')),
+            duration_minutes: formData.get('duration_minutes') ? parseInt(formData.get('duration_minutes')) : 60
+        };
+
+        try {
+            if (existingService) {
+                await apiService.put(`/inventory/services/${existingService.id}`, serviceData);
+            } else {
+                await apiService.post('/inventory/services/', serviceData);
+            }
+            
+            modal.close(modalElement);
+            await this.loadServices();
+            
+            modal.alert({
+                type: 'success',
+                title: 'Éxito',
+                message: `Servicio ${existingService ? 'actualizado' : 'creado'} correctamente`
+            });
+        } catch (error) {
+            console.error('Error guardando servicio:', error);
+            let errorMsg = error.message || 'Error desconocido';
+            
+            if (error.detail) {
+                if (Array.isArray(error.detail)) {
+                    errorMsg = error.detail.map(err => `${err.loc?.join('.')}: ${err.msg}`).join(', ');
+                } else if (typeof error.detail === 'string') {
+                    errorMsg = error.detail;
+                }
+            }
+            
+            modal.alert({
+                type: 'error',
+                title: 'Error',
+                message: 'Error al guardar servicio: ' + errorMsg
+            });
+        }
+    }
+
+    editService(serviceId) {
+        const service = this.services.find(s => s.id == serviceId);
+        if (service) {
+            this.showServiceModal(service);
+        }
+    }
+    
+    async deleteService(serviceId) {
+        const confirmed = await modal.confirm({
+            title: 'Confirmar eliminación',
+            message: '¿Estás seguro de que quieres eliminar este servicio?',
+            confirmText: 'Eliminar',
+            cancelText: 'Cancelar'
+        });
+        
+        if (confirmed) {
+            try {
+                await apiService.delete(`/inventory/services/${serviceId}`);
+                await this.loadServices();
+                await modal.alert({ 
+                    title: 'Éxito', 
+                    message: 'Servicio eliminado correctamente',
+                    type: 'success'
+                });
+            } catch (error) {
+                await modal.alert({ 
+                    title: 'Error', 
+                    message: error.message,
+                    type: 'error'
+                });
+            }
+        }
     }
 }
 

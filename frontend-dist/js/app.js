@@ -21,7 +21,6 @@ import {
     paymentsView, 
     cashRegisterView, 
     reportsView,
-    servicesView,
     adminView 
 } from './views/OtherViews.js';
 import { masterAdminView, teamManagementView, teamMovementsView } from './views/AdminPanelView.js';
@@ -100,10 +99,6 @@ class App {
 
         router.register('inventory', async () => {
             await this.renderProtectedView(inventoryView);
-        });
-
-        router.register('services', async () => {
-            await this.renderProtectedView(servicesView);
         });
 
         router.register('payments', async () => {

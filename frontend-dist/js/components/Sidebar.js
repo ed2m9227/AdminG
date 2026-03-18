@@ -19,7 +19,6 @@ export class Sidebar {
             { id: 'customers', icon: '👥', label: 'Clientes', route: 'customers', requiredFeature: 'view_customers' },
             { id: 'appointments', icon: '📅', label: 'Citas', route: 'appointments', requiredFeature: 'view_appointments' },
             { id: 'inventory', icon: '📦', label: 'Inventario', route: 'inventory', requiredFeature: 'view_inventory' },
-            { id: 'services', icon: '📋', label: 'Servicios', route: 'services', requiredFeature: 'view_inventory' },
             { id: 'payments', icon: '💳', label: 'Pagos', route: 'payments', requiredFeature: 'view_payments' },
             { id: 'reports', icon: '📈', label: 'Reportes', route: 'reports', requiredFeature: 'view_reports' },
             { id: 'invoices', icon: '🧾', label: 'Facturas', route: 'invoices', requiredFeature: 'view_reports' },

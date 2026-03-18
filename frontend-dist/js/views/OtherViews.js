@@ -2011,8 +2011,7 @@ export class AdminView {
     }
 }
 
-// Services View
-export class ServicesView {
+// Services are now integrated in InventoryView
     constructor() {
         this.services = [];
     }
@@ -2276,5 +2275,4 @@ export const appointmentsView = new AppointmentsView();
 export const paymentsView = new PaymentsView();
 export const cashRegisterView = new CashRegisterView();
 export const reportsView = new ReportsView();
-export const servicesView = new ServicesView();
 export const adminView = new AdminView();
