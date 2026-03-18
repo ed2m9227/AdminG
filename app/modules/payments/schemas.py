@@ -15,8 +15,8 @@ class PaymentItemCreate(BaseModel):
     service_id: int | None = None
     inventory_item_id: int | None = None
     description: str
-    quantity: Decimal = Decimal('1')
-    unit_price: Decimal
+    quantity: Decimal | float = Decimal('1')
+    unit_price: Decimal | float
 
 class PaymentItemOut(BaseModel):
     id: int

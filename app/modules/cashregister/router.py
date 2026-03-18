@@ -267,7 +267,7 @@ async def close_cash_register(
     sales = sum(float(t.amount) for t in transactions if t.transaction_type == 'sale')
     expenses = sum(float(t.amount) for t in transactions if t.transaction_type == 'expense')
     base = sum(float(t.amount) for t in transactions if t.transaction_type == 'base')
-    final_balance = session.initial_amount + sales - expenses
+    final_balance = float(session.initial_amount) + sales - expenses
     
     # Close session
     session.is_active = False
@@ -358,7 +358,7 @@ async def close_previous_day_cash(
     sales = sum(float(t.amount) for t in transactions if t.transaction_type == 'sale')
     expenses = sum(float(t.amount) for t in transactions if t.transaction_type == 'expense')
     base = sum(float(t.amount) for t in transactions if t.transaction_type == 'base')
-    final_balance = session.initial_amount + sales - expenses
+    final_balance = float(session.initial_amount) + sales - expenses
     
     # Close the previous day's session
     session.is_active = False

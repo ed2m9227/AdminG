@@ -106,15 +106,19 @@ def create_payment(
     # Crear PaymentItems si se proporcionaron
     if payload.payment_items:
         for item in payload.payment_items:
-            subtotal = item.quantity * item.unit_price
+            # Asegurar que quantity y unit_price sean Decimal
+            qty = Decimal(str(item.quantity)) if isinstance(item.quantity, (int, float, str)) else item.quantity
+            price = Decimal(str(item.unit_price)) if isinstance(item.unit_price, (int, float, str)) else item.unit_price
+            subtotal = qty * price
+            
             payment_item = PaymentItem(
                 payment_id=payment.id,
                 source_type=item.source_type,
                 service_id=item.service_id,
                 inventory_item_id=item.inventory_item_id,
                 description=item.description,
-                quantity=item.quantity,
-                unit_price=item.unit_price,
+                quantity=qty,
+                unit_price=price,
                 subtotal=subtotal,
             )
             db.add(payment_item)

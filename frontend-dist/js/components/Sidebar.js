@@ -276,13 +276,13 @@ export class Sidebar {
         const overlay = document.getElementById('sidebarOverlay');
         const dashboardLayout = document.querySelector('.dashboard-layout');
         
-        if (sidebar) {
+        if (sidebar && sidebar.classList.contains('active')) {
             sidebar.classList.remove('active');
         }
-        if (overlay) {
+        if (overlay && overlay.classList.contains('active')) {
             overlay.classList.remove('active');
         }
-        if (dashboardLayout) {
+        if (dashboardLayout && dashboardLayout.classList.contains('sidebar-expanded')) {
             dashboardLayout.classList.remove('sidebar-expanded');
         }
     }
@@ -295,13 +295,13 @@ export class Sidebar {
         const overlay = document.getElementById('sidebarOverlay');
         const dashboardLayout = document.querySelector('.dashboard-layout');
         
-        if (sidebar) {
+        if (sidebar && !sidebar.classList.contains('active')) {
             sidebar.classList.add('active');
         }
-        if (overlay) {
+        if (overlay && !overlay.classList.contains('active')) {
             overlay.classList.add('active');
         }
-        if (dashboardLayout) {
+        if (dashboardLayout && !dashboardLayout.classList.contains('sidebar-expanded')) {
             dashboardLayout.classList.add('sidebar-expanded');
         }
     }
