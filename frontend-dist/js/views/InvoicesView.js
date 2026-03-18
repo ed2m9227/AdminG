@@ -552,6 +552,17 @@ class InvoicesView {
         services.forEach(s => itemsMap[`service:${s.id}`] = s);
         inventory.forEach(p => itemsMap[`product:${p.id}`] = p);
 
+        // Capture formatCurrency context
+        const formatCurrency = (value) => {
+            if (!value) return '$0';
+            return new Intl.NumberFormat('es-CO', {
+                style: 'currency',
+                currency: 'COP',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(value);
+        };
+
         const updateTotal = () => {
             const total = invoiceItems.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0);
             subtotalInput.value = total.toFixed(2);
@@ -562,9 +573,9 @@ class InvoicesView {
                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; background: #f9f9f9; border-radius: 4px; margin-bottom: 6px;">
                     <div style="flex: 1;">
                         <div style="font-weight: 500; font-size: 13px;">${item.description}</div>
-                        <div style="font-size: 11px; color: #7f8c8d;">Cantidad: ${item.quantity} × ${this.formatCurrency(item.unit_price)}</div>
+                        <div style="font-size: 11px; color: #7f8c8d;">Cantidad: ${item.quantity} × ${formatCurrency(item.unit_price)}</div>
                     </div>
-                    <div style="font-weight: 600; margin-right: 12px;">${this.formatCurrency(item.unit_price * item.quantity)}</div>
+                    <div style="font-weight: 600; margin-right: 12px;">${formatCurrency(item.unit_price * item.quantity)}</div>
                     <button type="button" class="btn btn-sm btn-danger" data-remove="${idx}" style="padding: 4px 8px; font-size: 11px;">✕</button>
                 </div>
             `).join('');

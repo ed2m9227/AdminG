@@ -69,6 +69,26 @@ export class Header {
      * Inicializar event listeners
      */
     init() {
+        // Click en logout
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.handleLogout();
+            });
+        }
+
+        // Hamburger menu toggle - event delegation AND direct
+        const toggleBtn = document.getElementById('sidebarToggle');
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                sidebar.toggleSidebar();
+            });
+        }
+
+        // Fallback: delegated event for cases where element is replaced
         document.addEventListener('click', (e) => {
             if (e.target.id === 'logoutBtn') {
                 this.handleLogout();
