@@ -30,6 +30,7 @@ class CashTransactionCreate(BaseModel):
     transaction_type: str  # 'sale', 'expense', 'base'
     amount: float
     customer_id: Optional[int] = None
+    payment_id: Optional[int] = None  # NUEVO: Vincular a Payment si existe
     description: Optional[str] = None
     items: Optional[List[ItemSale]] = None  # Items descargados en venta
 
@@ -158,6 +159,7 @@ async def create_transaction(
     db_transaction = CashTransaction(
         user_id=user.id,
         customer_id=transaction.customer_id,
+        payment_id=transaction.payment_id,  # NUEVO: Conectar a Payment
         transaction_type=transaction.transaction_type,
         amount=transaction.amount,
         description=transaction.description

@@ -9,6 +9,7 @@ class CashTransaction(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     customer_id = Column(Integer, ForeignKey("customers.id"), nullable=True)
+    payment_id = Column(Integer, ForeignKey("payments.id"), nullable=True)  # NUEVO: Vinculación a Payment
     transaction_type = Column(String(30), nullable=False)  # 'sale', 'expense', 'base'
     amount = Column(Numeric(10, 2), nullable=False)
     description = Column(String(500), nullable=True)
@@ -16,3 +17,4 @@ class CashTransaction(Base):
 
     user = relationship("User", foreign_keys=[user_id])
     customer = relationship("Customer", foreign_keys=[customer_id])
+    payment = relationship("Payment", foreign_keys=[payment_id])  # NUEVO

@@ -4,8 +4,11 @@ from datetime import datetime
 from decimal import Decimal
 from app.db.session import get_db
 from app.models.payment import Payment
+from app.models.payment_item import PaymentItem
 from app.models.user import User
 from app.models.customer import Customer
+from app.models.service import Service
+from app.models.inventory import InventoryItem
 from sqlalchemy import or_
 from app.modules.payments.schemas import (
     PaymentCreate,
@@ -42,26 +45,37 @@ def create_payment(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Create payment record
+    """Create payment record with optional items breakdown
     
     Features:
     - Support for multiple payment methods
     - MontelibanoGen 7% discount on AdminG plans
     - Automatic discount calculation
-    - Support for services and service packages
+    - Support for payment items (service, product, custom)
+    - Automatic calculation of subtotal from items if provided
     """
     # Validate customer exists and belongs to user
     customer = db.query(Customer).filter(Customer.id == payload.customer_id).first()
     if not customer:
         raise HTTPException(status_code=404, detail="Customer not found")
     
+    # If payment_items provided, calculate amount from items
+    calculated_amount = Decimal(0)
+    if payload.payment_items:
+        for item in payload.payment_items:
+            subtotal = item.quantity * item.unit_price
+            calculated_amount += subtotal
+    
+    # Use provided amount or calculated
+    final_amount_before_discount = payload.amount if payload.amount > 0 else calculated_amount
+    
     # Calculate discount if MontelibanoGen method
     discount_amount = Decimal(0)
     if payload.method.lower() == "montelibano_gen":
         if current_user["plan"] in APPLICABLE_PLANS_FOR_DISCOUNT:
-            discount_amount = payload.amount * Decimal(str(MONTELIBANO_GEN_DISCOUNT))
+            discount_amount = final_amount_before_discount * Decimal(str(MONTELIBANO_GEN_DISCOUNT))
     
-    final_amount = payload.amount - discount_amount
+    final_amount = final_amount_before_discount - discount_amount
     
     # Use provided status or determine by method
     payment_status = payload.status if payload.status else (
@@ -71,10 +85,11 @@ def create_payment(
     payment = Payment(
         user_id=current_user["id"],
         customer_id=payload.customer_id,
+        invoice_id=payload.invoice_id,  # NUEVO
         appointment_id=payload.appointment_id,
         service_id=payload.service_id,
         service_package_id=payload.service_package_id,
-        amount=payload.amount,
+        amount=final_amount_before_discount,
         discount_amount=discount_amount,
         final_amount=final_amount,
         concept=payload.concept,
@@ -86,6 +101,24 @@ def create_payment(
     )
     
     db.add(payment)
+    db.flush()  # Para obtener payment.id sin commitear
+    
+    # Crear PaymentItems si se proporcionaron
+    if payload.payment_items:
+        for item in payload.payment_items:
+            subtotal = item.quantity * item.unit_price
+            payment_item = PaymentItem(
+                payment_id=payment.id,
+                source_type=item.source_type,
+                service_id=item.service_id,
+                inventory_item_id=item.inventory_item_id,
+                description=item.description,
+                quantity=item.quantity,
+                unit_price=item.unit_price,
+                subtotal=subtotal,
+            )
+            db.add(payment_item)
+    
     db.commit()
     db.refresh(payment)
     

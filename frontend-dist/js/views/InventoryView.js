@@ -559,18 +559,25 @@ export class InventoryView {
         const form = e.target;
         const formData = new FormData(form);
 
+        // Generate SKU from name if not provided
+        let naming = formData.get('name');
+        let sku = naming ? naming.toUpperCase().slice(0, 3) : 'SVC';
+        
         const serviceData = {
+            sku: sku + '-' + Date.now(),
             name: formData.get('name'),
             description: formData.get('description') || null,
             unit_price: parseFloat(formData.get('unit_price')),
-            duration_minutes: formData.get('duration_minutes') ? parseInt(formData.get('duration_minutes')) : 60
+            category_id: null,
+            cost: null,
+            item_type: 'service'
         };
 
         try {
             if (existingService) {
                 await apiService.put(`/inventory/services/${existingService.id}`, serviceData);
             } else {
-                await apiService.post('/inventory/services/', serviceData);
+                await apiService.post('/inventory/services', serviceData);
             }
             
             modal.close(modalElement);

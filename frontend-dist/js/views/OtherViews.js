@@ -495,12 +495,14 @@ export class PaymentsView {
     }
 
     async showNewPaymentModal() {
-        // Cargar clientes y servicios EN PARALELO
+        // Cargar clientes, servicios E ITEMS EN PARALELO
         let customersOptions = '<option value="">Cargando clientes...</option>';
-        let servicesOptions = '<option value="">Cargar servicios...</option>';
+        let itemsOptions = '<option value="">Seleccionar item...</option>';
+        let customers = [];
+        let services = [];
         
         try {
-            const [customers, services] = await Promise.all([
+            [customers, services] = await Promise.all([
                 apiService.getCustomers(),
                 apiService.getServices()
             ]);
@@ -515,17 +517,15 @@ export class PaymentsView {
             }
             
             if (Array.isArray(services) && services.length > 0) {
-                servicesOptions = '<option value="">Sin servicio específico</option>';
+                itemsOptions = '<optgroup label="Servicios">';
                 services.forEach(s => {
-                    servicesOptions += `<option value="${s.id}">${s.name || 'Sin nombre'} (${this.formatCurrency(s.unit_price || 0)})</option>`;
+                    itemsOptions += `<option value="service:${s.id}" data-price="${s.unit_price || 0}">${s.name || 'Sin nombre'} (${this.formatCurrency(s.unit_price || 0)})</option>`;
                 });
-            } else {
-                servicesOptions = '<option value="">No hay servicios disponibles</option>';
+                itemsOptions += '</optgroup>';
             }
         } catch (error) {
             console.error('Error loading data:', error);
             customersOptions = '<option value="">Error al cargar clientes</option>';
-            servicesOptions = '<option value="">Error al cargar servicios</option>';
         }
 
         const html = `
@@ -536,10 +536,7 @@ export class PaymentsView {
                         ${customersOptions}
                     </select>
                 </div>
-                <div class="form-group">
-                    <label>Monto *</label>
-                    <input type="number" name="amount" step="0.01" placeholder="0.00" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
-                </div>
+
                 <div class="form-group">
                     <label>Método de Pago *</label>
                     <select name="method" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
@@ -549,16 +546,42 @@ export class PaymentsView {
                         <option value="check">Cheque</option>
                     </select>
                 </div>
+
                 <div class="form-group">
-                    <label>Servicio</label>
-                    <select name="service_id" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
-                        ${servicesOptions}
-                    </select>
+                    <label>Items del Pago</label>
+                    <div style="border: 1px solid #eee; border-radius: 4px; padding: 12px; margin-bottom: 12px;">
+                        <div id="paymentItems" style="margin-bottom: 12px;">
+                            <!-- Items agregados aquí -->
+                        </div>
+                        <div class="form-row" style="display: flex; gap: 8px; align-items: flex-end;">
+                            <div style="flex: 1;">
+                                <label style="font-size: 12px; display: block; margin-bottom: 4px;">Ítem</label>
+                                <select id="itemSelect" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;">
+                                    ${itemsOptions}
+                                    <optgroup label="Otros">
+                                        <option value="custom:0">Descripción personalizada</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+                            <div style="width: 80px;">
+                                <label style="font-size: 12px; display: block; margin-bottom: 4px;">Cant.</label>
+                                <input type="number" id="itemQty" min="1" value="1" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;">
+                            </div>
+                            <button type="button" id="btnAddItem" style="padding: 6px 12px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">+ Agregar</button>
+                        </div>
+                    </div>
                 </div>
+
                 <div class="form-group">
-                    <label>Concepto</label>
-                    <input type="text" name="concept" placeholder="Ej: Corte + Peinado" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
+                    <label>Total</label>
+                    <input type="number" id="paymentAmount" name="amount" step="0.01" placeholder="0.00" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px; font-weight: bold; font-size: 16px; background: #f9f9f9;" readonly>
                 </div>
+
+                <div class="form-group">
+                    <label>Notas</label>
+                    <textarea name="notes" placeholder="Notas adicionales..." style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px; height: 60px;"></textarea>
+                </div>
+
                 <div class="form-group">
                     <label>Estado</label>
                     <select name="status" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
@@ -567,8 +590,9 @@ export class PaymentsView {
                         <option value="cancelled">Cancelado</option>
                     </select>
                 </div>
+
                 <div class="modal-actions">
-                    <button type="submit" class="btn btn-success">Guardar</button>
+                    <button type="submit" class="btn btn-success">Guardar Pago</button>
                     <button type="button" class="btn" data-close>Cancelar</button>
                 </div>
             </form>
@@ -580,18 +604,109 @@ export class PaymentsView {
             size: 'medium' 
         });
 
+        // Setup item management
+        const paymentItems = [];
+        const itemsContainer = document.getElementById('paymentItems');
+        const itemSelect = document.getElementById('itemSelect');
+        const itemQty = document.getElementById('itemQty');
+        const btnAddItem = document.getElementById('btnAddItem');
+        const amountInput = document.getElementById('paymentAmount');
+        
+        // Store services/products for reference
+        const itemsMap = {};
+        services.forEach(s => itemsMap[`service:${s.id}`] = s);
+
+        const updateTotal = () => {
+            const total = paymentItems.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0);
+            amountInput.value = total.toFixed(2);
+        };
+
+        const renderItems = () => {
+            itemsContainer.innerHTML = paymentItems.map((item, idx) => `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; background: #f9f9f9; border-radius: 4px; margin-bottom: 6px;">
+                    <div style="flex: 1;">
+                        <div style="font-weight: 500; font-size: 13px;">${item.description}</div>
+                        <div style="font-size: 11px; color: #7f8c8d;">Cantidad: ${item.quantity} × ${this.formatCurrency(item.unit_price)}</div>
+                    </div>
+                    <div style="font-weight: 600; margin-right: 12px;">${this.formatCurrency(item.unit_price * item.quantity)}</div>
+                    <button type="button" class="btn btn-sm btn-danger" data-remove="${idx}" style="padding: 4px 8px; font-size: 11px;">✕</button>
+                </div>
+            `).join('');
+
+            // Attach remove handlers
+            itemsContainer.querySelectorAll('[data-remove]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const idx = parseInt(e.target.dataset.remove);
+                    paymentItems.splice(idx, 1);
+                    renderItems();
+                    updateTotal();
+                });
+            });
+        };
+
+        btnAddItem.addEventListener('click', () => {
+            const selectedValue = itemSelect.value;
+            const quantity = parseInt(itemQty.value) || 1;
+
+            if (!selectedValue) {
+                alert('Por favor selecciona un ítem');
+                return;
+            }
+
+            let item = null;
+            if (selectedValue.startsWith('service:')) {
+                const serviceId = parseInt(selectedValue.split(':')[1]);
+                const service = itemsMap[selectedValue];
+                if (service) {
+                    item = {
+                        source_type: 'service',
+                        service_id: serviceId,
+                        description: service.name,
+                        unit_price: parseFloat(service.unit_price),
+                        quantity: quantity
+                    };
+                }
+            } else if (selectedValue === 'custom:0') {
+                const customDesc = prompt('Descripción del ítem:');
+                if (customDesc) {
+                    const customPrice = prompt('Precio unitario:');
+                    if (customPrice) {
+                        item = {
+                            source_type: 'custom',
+                            description: customDesc,
+                            unit_price: parseFloat(customPrice),
+                            quantity: quantity
+                        };
+                    }
+                }
+            }
+
+            if (item) {
+                paymentItems.push(item);
+                renderItems();
+                updateTotal();
+                itemQty.value = 1;
+                itemSelect.value = '';
+            }
+        });
+
         const form = document.getElementById('paymentForm');
         form?.addEventListener('submit', async (e) => {
             e.preventDefault();
             const formData = new FormData(form);
             
+            if (paymentItems.length === 0) {
+                alert('Por favor agrega al menos un ítem al pago');
+                return;
+            }
+            
             const paymentData = {
                 customer_id: parseInt(formData.get('customer_id')),
                 amount: parseFloat(formData.get('amount')),
                 method: formData.get('method'),
-                service_id: formData.get('service_id') ? parseInt(formData.get('service_id')) : null,
-                concept: formData.get('concept') || null,
-                status: formData.get('status') || 'completed'
+                status: formData.get('status') || 'completed',
+                notes: formData.get('notes') || null,
+                payment_items: paymentItems  // NUEVO: Enviar items
             };
             
             try {
@@ -2008,265 +2123,6 @@ export class AdminView {
 
     init() {
         // Placeholder
-    }
-}
-
-// Services are now integrated in InventoryView
-    constructor() {
-        this.services = [];
-    }
-
-    formatCurrency(value) {
-        return new Intl.NumberFormat('es-CO', { 
-            style: 'currency', 
-            currency: 'COP',
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0
-        }).format(value);
-    }
-
-    render() {
-        return `
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">📋 Servicios</h2>
-                    <button class="btn btn-success" id="btnNewService">+ ➕ Nuevo Servicio</button>
-                </div>
-                <div class="card-body" id="servicesContainer">
-                    ${this.renderTable()}
-                </div>
-            </div>
-        `;
-    }
-
-    renderTable() {
-        const user = authService.getCurrentUser();
-        const isParent = user && !user.parent_user_id; // Only parent users can manage services
-        
-        const columns = [
-            { key: 'name', label: 'Nombre del Servicio' },
-            { key: 'unit_price', label: 'Precio', formatter: (v) => this.formatCurrency(v || 0) },
-            { key: 'category', label: 'Categoría' },
-            { key: 'description', label: 'Descripción' }
-        ];
-        
-        if (isParent) {
-            columns.push({
-                key: 'actions',
-                label: 'Acciones',
-                formatter: (_, row) => `
-                    <button class="btn btn-sm btn-primary" data-edit-service="${row.id}">✏️ Editar</button>
-                    <button class="btn btn-sm btn-danger" data-delete-service="${row.id}">🗑️ Eliminar</button>
-                `
-            });
-        }
-
-        return table.render({
-            columns,
-            data: this.services,
-            emptyMessage: 'No hay servicios registrados',
-            emptyIcon: '📋'
-        });
-    }
-
-    async init() {
-        const user = authService.getCurrentUser();
-        const isParent = user && !user.parent_user_id;
-
-        if (!isParent) {
-            // Show message if not parent user
-            const container = document.getElementById('servicesContainer');
-            if (container) {
-                container.innerHTML = '<p style="color: #7f8c8d; text-align: center;">Solo usuarios padre pueden gestionar servicios</p>';
-            }
-            return;
-        }
-
-        try {
-            this.services = await apiService.getServices();
-            const container = document.getElementById('servicesContainer');
-            if (container) container.innerHTML = this.renderTable();
-        } catch (error) {
-            console.error('Error loading services:', error);
-        }
-
-        // Event listeners
-        const btnNew = document.getElementById('btnNewService');
-        if (btnNew) {
-            btnNew.addEventListener('click', () => this.showNewServiceModal());
-        }
-        
-        // Delete service listener
-        document.addEventListener('click', async (e) => {
-            const deleteBtn = e.target.closest('[data-delete-service]');
-            if (deleteBtn) {
-                const serviceId = deleteBtn.dataset.deleteService;
-                const confirmed = await modal.confirm({
-                    title: 'Confirmar eliminación',
-                    message: '¿Estás seguro de que quieres eliminar este servicio?',
-                    confirmText: 'Eliminar',
-                    cancelText: 'Cancelar'
-                });
-                
-                if (confirmed) {
-                    try {
-                        await apiService.delete(`/inventory/services/${serviceId}`);
-                        await this.init();
-                        await modal.alert({ title: 'Éxito', message: 'Servicio eliminado correctamente', type: 'success' });
-                    } catch (error) {
-                        console.error('Error deleting service:', error);
-                        let errorMsg = error.message || 'Error desconocido';
-                        if (error.detail) {
-                            errorMsg = typeof error.detail === 'string' ? error.detail : JSON.stringify(error.detail);
-                        }
-                        await modal.alert({ title: 'Error', message: errorMsg, type: 'error' });
-                    }
-                }
-            }
-        });
-
-        // Edit service listener
-        document.addEventListener('click', async (e) => {
-            const editBtn = e.target.closest('[data-edit-service]');
-            if (editBtn) {
-                const serviceId = editBtn.dataset.editService;
-                const service = this.services.find(s => s.id === parseInt(serviceId));
-                if (service) {
-                    this.showEditServiceModal(service);
-                }
-            }
-        });
-    }
-
-    async showNewServiceModal() {
-        const html = `
-            <form id="serviceForm">
-                <div class="form-group">
-                    <label>Nombre del Servicio *</label>
-                    <input type="text" name="name" placeholder="Ej: Corte de cabello" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
-                </div>
-                <div class="form-group">
-                    <label>Descripción</label>
-                    <textarea name="description" placeholder="Descripción detallada del servicio" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px; height: 80px;"></textarea>
-                </div>
-                <div class="form-group">
-                    <label>Precio (COP) *</label>
-                    <input type="number" name="unit_price" placeholder="0.00" step="0.01" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
-                </div>
-                <div class="form-group">
-                    <label>Categoría</label>
-                    <input type="text" name="category" placeholder="Ej: Peluquería, Spa" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
-                </div>
-                <div class="form-group">
-                    <label>Cantidad Disponible (Stock)</label>
-                    <input type="number" name="quantity_available" placeholder="Dejar vacío si no aplica" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
-                </div>
-                <div class="modal-actions">
-                    <button type="submit" class="btn btn-success">Guardar</button>
-                    <button type="button" class="btn" data-close>Cancelar</button>
-                </div>
-            </form>
-        `;
-
-        const serviceModal = modal.show({ 
-            title: 'Nuevo Servicio', 
-            content: html, 
-            size: 'medium' 
-        });
-
-        const form = document.getElementById('serviceForm');
-        form?.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new FormData(form);
-            
-            const serviceData = {
-                name: formData.get('name'),
-                description: formData.get('description') || null,
-                unit_price: parseFloat(formData.get('unit_price')),
-                category: formData.get('category') || null,
-                quantity_available: formData.get('quantity_available') ? parseInt(formData.get('quantity_available')) : null,
-                item_type: 'service'
-            };
-            
-            try {
-                await apiService.post('/inventory/services', serviceData);
-                modal.close(serviceModal);
-                await this.init();
-                await modal.alert({ title: 'Éxito', message: 'Servicio creado correctamente', type: 'success' });
-            } catch (error) {
-                console.error('Error creating service:', error);
-                let errorMsg = error.message || 'Error desconocido';
-                if (error.detail) {
-                    errorMsg = typeof error.detail === 'string' ? error.detail : JSON.stringify(error.detail);
-                }
-                await modal.alert({ title: 'Error', message: errorMsg, type: 'error' });
-            }
-        });
-    }
-
-    async showEditServiceModal(service) {
-        const html = `
-            <form id="serviceForm">
-                <div class="form-group">
-                    <label>Nombre del Servicio *</label>
-                    <input type="text" name="name" value="${service.name || ''}" placeholder="Ej: Corte de cabello" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
-                </div>
-                <div class="form-group">
-                    <label>Descripción</label>
-                    <textarea name="description" placeholder="Descripción detallada del servicio" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px; height: 80px;">${service.description || ''}</textarea>
-                </div>
-                <div class="form-group">
-                    <label>Precio (COP) *</label>
-                    <input type="number" name="unit_price" value="${service.unit_price || 0}" placeholder="0.00" step="0.01" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
-                </div>
-                <div class="form-group">
-                    <label>Categoría</label>
-                    <input type="text" name="category" value="${service.category || ''}" placeholder="Ej: Peluquería, Spa" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
-                </div>
-                <div class="form-group">
-                    <label>Cantidad Disponible (Stock)</label>
-                    <input type="number" name="quantity_available" value="${service.quantity_available || ''}" placeholder="Dejar vacío si no aplica" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
-                </div>
-                <div class="modal-actions">
-                    <button type="submit" class="btn btn-success">Actualizar</button>
-                    <button type="button" class="btn" data-close>Cancelar</button>
-                </div>
-            </form>
-        `;
-
-        const serviceModal = modal.show({ 
-            title: 'Editar Servicio', 
-            content: html, 
-            size: 'medium' 
-        });
-
-        const form = document.getElementById('serviceForm');
-        form?.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new FormData(form);
-            
-            const serviceData = {
-                name: formData.get('name'),
-                description: formData.get('description') || null,
-                unit_price: parseFloat(formData.get('unit_price')),
-                category: formData.get('category') || null,
-                quantity_available: formData.get('quantity_available') ? parseInt(formData.get('quantity_available')) : null
-            };
-            
-            try {
-                await apiService.put(`/inventory/services/${service.id}`, serviceData);
-                modal.close(serviceModal);
-                await this.init();
-                await modal.alert({ title: 'Éxito', message: 'Servicio actualizado correctamente', type: 'success' });
-            } catch (error) {
-                console.error('Error updating service:', error);
-                let errorMsg = error.message || 'Error desconocido';
-                if (error.detail) {
-                    errorMsg = typeof error.detail === 'string' ? error.detail : JSON.stringify(error.detail);
-                }
-                await modal.alert({ title: 'Error', message: errorMsg, type: 'error' });
-            }
-        });
     }
 }
 

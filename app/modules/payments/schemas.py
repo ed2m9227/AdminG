@@ -9,21 +9,48 @@ class CustomerInfo(BaseModel):
     class Config:
         from_attributes = True
 
+# ============ PAYMENT ITEM ============
+class PaymentItemCreate(BaseModel):
+    source_type: str  # 'service', 'product', 'custom'
+    service_id: int | None = None
+    inventory_item_id: int | None = None
+    description: str
+    quantity: Decimal = Decimal('1')
+    unit_price: Decimal
+
+class PaymentItemOut(BaseModel):
+    id: int
+    payment_id: int
+    source_type: str
+    service_id: int | None = None
+    inventory_item_id: int | None = None
+    description: str
+    quantity: Decimal
+    unit_price: Decimal
+    subtotal: Decimal
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+# ============ PAYMENT ============
 class PaymentCreate(BaseModel):
     customer_id: int
+    invoice_id: int | None = None  # NUEVO: Vincular a factura
     appointment_id: int | None = None
-    service_id: int | None = None
-    service_package_id: int | None = None
+    service_id: int | None = None  # DEPRECATED
+    service_package_id: int | None = None  # DEPRECATED
     amount: Decimal
     method: str  # "cash", "card", "transfer", "montelibano_gen"
-    concept: str | None = None  # Descripción del concepto de pago
+    concept: str | None = None  # DEPRECATED: Usar payment_items en su lugar
     reference: str | None = None
     notes: str | None = None
     status: str | None = None
+    payment_items: list[PaymentItemCreate] | None = None  # NUEVO: Items desagregados
 
 class PaymentUpdate(BaseModel):
     status: str | None = None
-    concept: str | None = None
+    concept: str | None = None  # DEPRECATED
     service_id: int | None = None
     notes: str | None = None
 
@@ -31,7 +58,8 @@ class PaymentOut(BaseModel):
     id: int
     customer_id: int
     customer: CustomerInfo | None = None
-    appointment_id: int | None
+    invoice_id: int | None = None  # NUEVO
+    appointment_id: int | None = None
     service_id: int | None = None
     service_package_id: int | None = None
     amount: Decimal
@@ -42,6 +70,7 @@ class PaymentOut(BaseModel):
     status: str
     reference: str | None = None
     paid_at: datetime | None = None
+    payment_items: list[PaymentItemOut] = []  # NUEVO: Items del pago
     created_at: datetime
     
     class Config:
@@ -64,3 +93,4 @@ class MontelibanoGenIntegration(BaseModel):
     discount_percentage: float  # 7% para AdminG Basic
     applicable_plans: list[str]
     is_active: bool
+
