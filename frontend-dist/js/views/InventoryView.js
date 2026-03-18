@@ -641,6 +641,263 @@ export class InventoryView {
             }
         }
     }
+
+    async showInvoiceModal() {
+        // Cargar clientes, servicios e inventario EN PARALELO
+        let customersOptions = '<option value="">Cargando clientes...</option>';
+        let itemsOptions = '<option value="">Seleccionar item...</option>';
+        let customers = [];
+        let services = [];
+        let inventory = [];
+        
+        try {
+            [customers, services, inventory] = await Promise.all([
+                apiService.getCustomers(),
+                apiService.getServices(),
+                apiService.getInventoryItems()
+            ]);
+            
+            if (Array.isArray(customers) && customers.length > 0) {
+                customersOptions = '<option value="">Seleccionar cliente...</option>';
+                customers.forEach(c => {
+                    customersOptions += `<option value="${c.id}">${c.full_name || 'Sin nombre'}</option>`;
+                });
+            } else {
+                customersOptions = '<option value="">No hay clientes registrados</option>';
+            }
+            
+            // SERVICIOS
+            if (Array.isArray(services) && services.length > 0) {
+                itemsOptions = '<optgroup label="Servicios">';
+                services.forEach(s => {
+                    itemsOptions += `<option value="service:${s.id}" data-price="${s.unit_price || 0}">${s.name || 'Sin nombre'} (${this.formatCurrency(s.unit_price || 0)})</option>`;
+                });
+                itemsOptions += '</optgroup>';
+            }
+            
+            // PRODUCTOS
+            if (Array.isArray(inventory) && inventory.length > 0) {
+                itemsOptions += '<optgroup label="Productos">';
+                inventory.forEach(p => {
+                    if (p.item_type === 'product' && p.is_active) {
+                        itemsOptions += `<option value="product:${p.id}" data-price="${p.unit_price || 0}">${p.name || 'Sin nombre'} (${this.formatCurrency(p.unit_price || 0)})</option>`;
+                    }
+                });
+                itemsOptions += '</optgroup>';
+            }
+        } catch (error) {
+            console.error('Error loading data:', error);
+            customersOptions = '<option value="">Error al cargar clientes</option>';
+        }
+
+        const html = `
+            <form id="invoiceForm">
+                <div class="form-group">
+                    <label>Cliente *</label>
+                    <select name="customer_id" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
+                        ${customersOptions}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Items de Factura</label>
+                    <div style="border: 1px solid #eee; border-radius: 4px; padding: 12px; margin-bottom: 12px;">
+                        <div id="invoiceItems" style="margin-bottom: 12px;">
+                            <!-- Items agregados aquí -->
+                        </div>
+                        <div class="form-row" style="display: flex; gap: 8px; align-items: flex-end;">
+                            <div style="flex: 1;">
+                                <label style="font-size: 12px; display: block; margin-bottom: 4px;">Ítem</label>
+                                <select id="itemSelect" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;">
+                                    ${itemsOptions}
+                                    <optgroup label="Otros">
+                                        <option value="custom:0">Descripción personalizada</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+                            <div style="width: 80px;">
+                                <label style="font-size: 12px; display: block; margin-bottom: 4px;">Cant.</label>
+                                <input type="number" id="itemQty" min="1" value="1" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;">
+                            </div>
+                            <button type="button" id="btnAddItem" style="padding: 6px 12px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">+ Agregar</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Subtotal</label>
+                    <input type="number" id="invoiceSubtotal" name="subtotal" step="0.01" placeholder="0.00" readonly style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px; background: #f9f9f9;">
+                </div>
+
+                <div class="form-group">
+                    <label>Notas</label>
+                    <textarea name="notes" placeholder="Notas adicionales..." style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px; height: 60px;"></textarea>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="submit" class="btn btn-success">Generar Factura</button>
+                    <button type="button" class="btn" data-close>Cancelar</button>
+                </div>
+            </form>
+        `;
+
+        const invoiceModal = modal.show({ 
+            title: 'Nueva Factura', 
+            content: html, 
+            size: 'medium' 
+        });
+
+        // Setup item management
+        const invoiceItems = [];
+        const itemsContainer = document.getElementById('invoiceItems');
+        const itemSelect = document.getElementById('itemSelect');
+        const itemQty = document.getElementById('itemQty');
+        const btnAddItem = document.getElementById('btnAddItem');
+        const subtotalInput = document.getElementById('invoiceSubtotal');
+        
+        // Store services/products for reference
+        const itemsMap = {};
+        services.forEach(s => itemsMap[`service:${s.id}`] = s);
+        inventory.forEach(p => itemsMap[`product:${p.id}`] = p);
+
+        const updateTotal = () => {
+            const total = invoiceItems.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0);
+            subtotalInput.value = total.toFixed(2);
+        };
+
+        const renderItems = () => {
+            itemsContainer.innerHTML = invoiceItems.map((item, idx) => `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; background: #f9f9f9; border-radius: 4px; margin-bottom: 6px;">
+                    <div style="flex: 1;">
+                        <div style="font-weight: 500; font-size: 13px;">${item.description}</div>
+                        <div style="font-size: 11px; color: #7f8c8d;">Cantidad: ${item.quantity} × ${this.formatCurrency(item.unit_price)}</div>
+                    </div>
+                    <div style="font-weight: 600; margin-right: 12px;">${this.formatCurrency(item.unit_price * item.quantity)}</div>
+                    <button type="button" class="btn btn-sm btn-danger" data-remove="${idx}" style="padding: 4px 8px; font-size: 11px;">✕</button>
+                </div>
+            `).join('');
+
+            // Attach remove handlers
+            itemsContainer.querySelectorAll('[data-remove]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const idx = parseInt(e.target.dataset.remove);
+                    invoiceItems.splice(idx, 1);
+                    renderItems();
+                    updateTotal();
+                });
+            });
+        };
+
+        btnAddItem.addEventListener('click', () => {
+            const selectedValue = itemSelect.value;
+            const quantity = parseInt(itemQty.value) || 1;
+
+            if (!selectedValue) {
+                alert('Por favor selecciona un ítem');
+                return;
+            }
+
+            let item = null;
+            if (selectedValue.startsWith('service:')) {
+                const serviceId = parseInt(selectedValue.split(':')[1]);
+                const service = itemsMap[selectedValue];
+                if (service) {
+                    item = {
+                        source_type: 'service',
+                        service_id: serviceId,
+                        description: service.name,
+                        unit_price: parseFloat(service.unit_price),
+                        quantity: quantity
+                    };
+                }
+            } else if (selectedValue.startsWith('product:')) {
+                const productId = parseInt(selectedValue.split(':')[1]);
+                const product = itemsMap[selectedValue];
+                if (product) {
+                    item = {
+                        source_type: 'product',
+                        inventory_item_id: productId,
+                        description: product.name,
+                        unit_price: parseFloat(product.unit_price),
+                        quantity: quantity
+                    };
+                }
+            } else if (selectedValue === 'custom:0') {
+                const customDesc = prompt('Descripción del ítem:');
+                if (customDesc) {
+                    const customPrice = prompt('Precio unitario:');
+                    if (customPrice) {
+                        item = {
+                            source_type: 'custom',
+                            description: customDesc,
+                            unit_price: parseFloat(customPrice),
+                            quantity: quantity
+                        };
+                    }
+                }
+            }
+
+            if (item) {
+                invoiceItems.push(item);
+                renderItems();
+                updateTotal();
+                itemQty.value = 1;
+                itemSelect.value = '';
+            }
+        });
+
+        const form = document.getElementById('invoiceForm');
+        form?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
+            
+            if (invoiceItems.length === 0) {
+                alert('Por favor agrega al menos un ítem a la factura');
+                return;
+            }
+            
+            // Convertir items al formato de InvoiceItem
+            const invoiceItemsData = invoiceItems.map(item => ({
+                source_type: item.source_type,
+                service_id: item.service_id || null,
+                inventory_item_id: item.inventory_item_id || null,
+                description: item.description,
+                quantity: item.quantity,
+                unit_price: item.unit_price
+            }));
+            
+            const invoiceData = {
+                customer_id: parseInt(formData.get('customer_id')),
+                items: invoiceItemsData,
+                notes: formData.get('notes') || null
+            };
+            
+            try {
+                const response = await apiService.post('/invoices/generate', invoiceData);
+                modal.close(invoiceModal);
+                
+                await modal.alert({ 
+                    title: 'Éxito', 
+                    message: `Factura ${response.invoice_number} generada correctamente`,
+                    type: 'success'
+                });
+                
+                // Reload data if needed
+                await this.loadData();
+            } catch (error) {
+                console.error('Error creating invoice:', error);
+                let errorMsg = error.message || 'Error desconocido';
+                if (error.detail) {
+                    errorMsg = typeof error.detail === 'string' ? error.detail : JSON.stringify(error.detail);
+                }
+                await modal.alert({ 
+                    title: 'Error', 
+                    message: errorMsg, 
+                    type: 'error'
+                });
+            }
+        });
+    }
 }
 
 export default new InventoryView();

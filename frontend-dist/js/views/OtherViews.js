@@ -495,16 +495,18 @@ export class PaymentsView {
     }
 
     async showNewPaymentModal() {
-        // Cargar clientes, servicios E ITEMS EN PARALELO
+        // Cargar clientes, servicios E INVENTARIO EN PARALELO
         let customersOptions = '<option value="">Cargando clientes...</option>';
         let itemsOptions = '<option value="">Seleccionar item...</option>';
         let customers = [];
         let services = [];
+        let inventory = [];
         
         try {
-            [customers, services] = await Promise.all([
+            [customers, services, inventory] = await Promise.all([
                 apiService.getCustomers(),
-                apiService.getServices()
+                apiService.getServices(),
+                apiService.getInventoryItems()
             ]);
             
             if (Array.isArray(customers) && customers.length > 0) {
@@ -516,10 +518,22 @@ export class PaymentsView {
                 customersOptions = '<option value="">No hay clientes registrados</option>';
             }
             
+            // SERVICIOS
             if (Array.isArray(services) && services.length > 0) {
                 itemsOptions = '<optgroup label="Servicios">';
                 services.forEach(s => {
                     itemsOptions += `<option value="service:${s.id}" data-price="${s.unit_price || 0}">${s.name || 'Sin nombre'} (${this.formatCurrency(s.unit_price || 0)})</option>`;
+                });
+                itemsOptions += '</optgroup>';
+            }
+            
+            // PRODUCTOS
+            if (Array.isArray(inventory) && inventory.length > 0) {
+                itemsOptions += '<optgroup label="Productos">';
+                inventory.forEach(p => {
+                    if (p.item_type === 'product' && p.is_active) {
+                        itemsOptions += `<option value="product:${p.id}" data-price="${p.unit_price || 0}">${p.name || 'Sin nombre'} (${this.formatCurrency(p.unit_price || 0)})</option>`;
+                    }
                 });
                 itemsOptions += '</optgroup>';
             }
@@ -615,6 +629,7 @@ export class PaymentsView {
         // Store services/products for reference
         const itemsMap = {};
         services.forEach(s => itemsMap[`service:${s.id}`] = s);
+        inventory.forEach(p => itemsMap[`product:${p.id}`] = p);
 
         const updateTotal = () => {
             const total = paymentItems.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0);
@@ -663,6 +678,18 @@ export class PaymentsView {
                         service_id: serviceId,
                         description: service.name,
                         unit_price: parseFloat(service.unit_price),
+                        quantity: quantity
+                    };
+                }
+            } else if (selectedValue.startsWith('product:')) {
+                const productId = parseInt(selectedValue.split(':')[1]);
+                const product = itemsMap[selectedValue];
+                if (product) {
+                    item = {
+                        source_type: 'product',
+                        inventory_item_id: productId,
+                        description: product.name,
+                        unit_price: parseFloat(product.unit_price),
                         quantity: quantity
                     };
                 }

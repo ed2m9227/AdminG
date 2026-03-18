@@ -10,6 +10,7 @@ class InvoiceItemCreate(BaseModel):
     unit_price: Decimal = Field(ge=0)
     inventory_item_id: Optional[int] = None
     service_id: Optional[int] = None
+    source_type: Optional[str] = None  # 'service', 'product', or 'custom' - for reference only
 
 
 class InvoiceItemResponse(BaseModel):
