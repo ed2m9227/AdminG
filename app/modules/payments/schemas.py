@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, model_validator
 from datetime import datetime
 from decimal import Decimal
 
@@ -18,6 +18,34 @@ class PaymentItemCreate(BaseModel):
     description: str
     quantity: float | int = 1
     unit_price: float | int
+    
+    @model_validator(mode='before')
+    @classmethod
+    def coerce_types(cls, data):
+        """Convert numeric strings and ensure correct types before validation"""
+        if isinstance(data, dict):
+            # Coerce IDs
+            for id_field in ['service_id', 'inventory_item_id']:
+                if id_field in data and data[id_field] is not None:
+                    val = data[id_field]
+                    if isinstance(val, str):
+                        try:
+                            data[id_field] = int(val) if val.strip() else None
+                        except (ValueError, AttributeError):
+                            data[id_field] = None
+                    elif isinstance(val, float):
+                        data[id_field] = int(val) if val else None
+            
+            # Coerce numeric values
+            for num_field in ['quantity', 'unit_price']:
+                if num_field in data:
+                    val = data[num_field]
+                    if isinstance(val, str):
+                        try:
+                            data[num_field] = float(val)
+                        except ValueError:
+                            data[num_field] = 0
+        return data
 
 class PaymentItemOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
