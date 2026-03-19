@@ -94,17 +94,34 @@ def generate_invoice(
     invoice_items_data = []
 
     for item_data in data.items:
-        qty = Decimal(str(item_data.quantity)) if isinstance(item_data.quantity, (int, float, str)) else item_data.quantity
-        price = Decimal(str(item_data.unit_price)) if isinstance(item_data.unit_price, (int, float, str)) else item_data.unit_price
+        # Safely convert numeric values to Decimal
+        qty = Decimal(str(item_data.quantity)) if item_data.quantity else Decimal('1')
+        price = Decimal(str(item_data.unit_price)) if item_data.unit_price else Decimal('0')
         item_subtotal = to_money(qty * price)
         subtotal += item_subtotal
+        
+        # Safely convert IDs
+        service_id_int = None
+        if item_data.service_id:
+            try:
+                service_id_int = int(item_data.service_id) if isinstance(item_data.service_id, str) else item_data.service_id
+            except (ValueError, TypeError):
+                service_id_int = None
+        
+        inventory_id_int = None
+        if item_data.inventory_item_id:
+            try:
+                inventory_id_int = int(item_data.inventory_item_id) if isinstance(item_data.inventory_item_id, str) else item_data.inventory_item_id
+            except (ValueError, TypeError):
+                inventory_id_int = None
+        
         invoice_items_data.append({
             "description": item_data.description,
             "quantity": qty,
             "unit_price": price,
             "subtotal": item_subtotal,
-            "inventory_item_id": item_data.inventory_item_id,
-            "service_id": item_data.service_id
+            "inventory_item_id": inventory_id_int,
+            "service_id": service_id_int
         })
     
     # Determinar tasa de IVA

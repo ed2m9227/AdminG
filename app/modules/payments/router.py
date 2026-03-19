@@ -63,7 +63,10 @@ def create_payment(
     calculated_amount = Decimal(0)
     if payload.payment_items:
         for item in payload.payment_items:
-            subtotal = item.quantity * item.unit_price
+            # Safely convert to Decimal
+            qty = Decimal(str(item.quantity)) if item.quantity else Decimal('0')
+            price = Decimal(str(item.unit_price)) if item.unit_price else Decimal('0')
+            subtotal = qty * price
             calculated_amount += subtotal
     
     # Use provided amount or calculated
@@ -106,16 +109,31 @@ def create_payment(
     # Crear PaymentItems si se proporcionaron
     if payload.payment_items:
         for item in payload.payment_items:
-            # Asegurar que quantity y unit_price sean Decimal
-            qty = Decimal(str(item.quantity)) if isinstance(item.quantity, (int, float, str)) else item.quantity
-            price = Decimal(str(item.unit_price)) if isinstance(item.unit_price, (int, float, str)) else item.unit_price
+            # Safely convert all types
+            qty = Decimal(str(item.quantity)) if item.quantity else Decimal('1')
+            price = Decimal(str(item.unit_price)) if item.unit_price else Decimal('0')
             subtotal = qty * price
+            
+            # Safely convert IDs
+            service_id_int = None
+            if item.service_id:
+                try:
+                    service_id_int = int(item.service_id) if isinstance(item.service_id, str) else item.service_id
+                except (ValueError, TypeError):
+                    service_id_int = None
+            
+            inventory_id_int = None
+            if item.inventory_item_id:
+                try:
+                    inventory_id_int = int(item.inventory_item_id) if isinstance(item.inventory_item_id, str) else item.inventory_item_id
+                except (ValueError, TypeError):
+                    inventory_id_int = None
             
             payment_item = PaymentItem(
                 payment_id=payment.id,
                 source_type=item.source_type,
-                service_id=item.service_id,
-                inventory_item_id=item.inventory_item_id,
+                service_id=service_id_int,
+                inventory_item_id=inventory_id_int,
                 description=item.description,
                 quantity=qty,
                 unit_price=price,
