@@ -28,6 +28,7 @@ router = APIRouter(
 MONTELIBANO_GEN_DISCOUNT = 0.07
 MONTELIBANO_PROMO_CODE = "MONTELIBANO7"
 APPLICABLE_PLANS_FOR_DISCOUNT = ["basic", "plus"]
+WALK_IN_CUSTOMER_NAME = "Cliente Mostrador"
 
 def get_user_ids_for_data_sharing(user_id: int, db: Session):
     """Retorna list de user_ids a incluir en queries (para compartir datos padre-hijo)"""
@@ -38,6 +39,26 @@ def get_user_ids_for_data_sharing(user_id: int, db: Session):
     else:
         # Usuario padre/admin: incluir datos propios
         return [user.id]
+
+
+def get_or_create_walk_in_customer(user_id: int, db: Session) -> Customer:
+    """Get or create a default walk-in customer for retail sales."""
+    customer = db.query(Customer).filter(
+        Customer.user_id == user_id,
+        Customer.full_name == WALK_IN_CUSTOMER_NAME,
+    ).first()
+
+    if customer:
+        return customer
+
+    customer = Customer(
+        user_id=user_id,
+        full_name=WALK_IN_CUSTOMER_NAME,
+        notes="Creado automáticamente para ventas retail sin cliente.",
+    )
+    db.add(customer)
+    db.flush()
+    return customer
 
 @router.post("/", response_model=PaymentOut, status_code=status.HTTP_201_CREATED)
 def create_payment(
@@ -54,10 +75,17 @@ def create_payment(
     - Support for payment items (service, product, custom)
     - Automatic calculation of subtotal from items if provided
     """
-    # Validate customer exists and belongs to user
-    customer = db.query(Customer).filter(Customer.id == payload.customer_id).first()
-    if not customer:
-        raise HTTPException(status_code=404, detail="Customer not found")
+    # Resolve customer: allow retail sales without explicit customer
+    user_ids = get_user_ids_for_data_sharing(current_user["id"], db)
+    if payload.customer_id is None:
+        customer = get_or_create_walk_in_customer(current_user["id"], db)
+    else:
+        customer = db.query(Customer).filter(
+            Customer.id == payload.customer_id,
+            Customer.user_id.in_(user_ids),
+        ).first()
+        if not customer:
+            raise HTTPException(status_code=404, detail="Customer not found")
     
     # Safely convert amount to Decimal
     amount_value = Decimal(str(payload.amount)) if payload.amount else Decimal('0')
@@ -90,7 +118,7 @@ def create_payment(
     
     payment = Payment(
         user_id=current_user["id"],
-        customer_id=payload.customer_id,
+        customer_id=customer.id,
         invoice_id=payload.invoice_id,  # NUEVO
         appointment_id=payload.appointment_id,
         service_id=payload.service_id,
