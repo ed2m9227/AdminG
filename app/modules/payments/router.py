@@ -59,6 +59,9 @@ def create_payment(
     if not customer:
         raise HTTPException(status_code=404, detail="Customer not found")
     
+    # Safely convert amount to Decimal
+    amount_value = Decimal(str(payload.amount)) if payload.amount else Decimal('0')
+    
     # If payment_items provided, calculate amount from items
     calculated_amount = Decimal(0)
     if payload.payment_items:
@@ -70,7 +73,7 @@ def create_payment(
             calculated_amount += subtotal
     
     # Use provided amount or calculated
-    final_amount_before_discount = payload.amount if payload.amount > 0 else calculated_amount
+    final_amount_before_discount = amount_value if amount_value > 0 else calculated_amount
     
     # Calculate discount if MontelibanoGen method
     discount_amount = Decimal(0)

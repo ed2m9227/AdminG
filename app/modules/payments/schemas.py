@@ -35,12 +35,14 @@ class PaymentItemOut(BaseModel):
 
 # ============ PAYMENT ============
 class PaymentCreate(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True)
+    
     customer_id: int
-    invoice_id: int | None = None  # NUEVO: Vincular a factura
-    appointment_id: int | None = None
-    service_id: int | None = None  # DEPRECATED
-    service_package_id: int | None = None  # DEPRECATED
-    amount: Decimal
+    invoice_id: int | str | None = None  # Accept flexible types
+    appointment_id: int | str | None = None  # Accept flexible types
+    service_id: int | str | None = None  # DEPRECATED
+    service_package_id: int | str | None = None  # DEPRECATED
+    amount: Decimal | float | int | str  # Accept any numeric type
     method: str  # "cash", "card", "transfer", "montelibano_gen"
     concept: str | None = None  # DEPRECATED: Usar payment_items en su lugar
     reference: str | None = None
