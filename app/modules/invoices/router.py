@@ -94,12 +94,14 @@ def generate_invoice(
     invoice_items_data = []
 
     for item_data in data.items:
-        item_subtotal = to_money(item_data.quantity * item_data.unit_price)
+        qty = Decimal(str(item_data.quantity)) if isinstance(item_data.quantity, (int, float, str)) else item_data.quantity
+        price = Decimal(str(item_data.unit_price)) if isinstance(item_data.unit_price, (int, float, str)) else item_data.unit_price
+        item_subtotal = to_money(qty * price)
         subtotal += item_subtotal
         invoice_items_data.append({
             "description": item_data.description,
-            "quantity": item_data.quantity,
-            "unit_price": item_data.unit_price,
+            "quantity": qty,
+            "unit_price": price,
             "subtotal": item_subtotal,
             "inventory_item_id": item_data.inventory_item_id,
             "service_id": item_data.service_id

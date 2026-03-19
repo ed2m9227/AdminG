@@ -1665,11 +1665,11 @@ export class CashRegisterView {
             };
             
             if (item.type === 'service') {
-                baseItem.service_id = item.id;
+                baseItem.service_id = parseInt(item.id) || null;
                 baseItem.inventory_item_id = null;
             } else {
                 baseItem.service_id = null;
-                baseItem.inventory_item_id = item.id;
+                baseItem.inventory_item_id = parseInt(item.id) || null;
             }
             
             return baseItem;

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 from decimal import Decimal
 
@@ -6,31 +6,22 @@ class CustomerInfo(BaseModel):
     id: int
     full_name: str
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # ============ PAYMENT ITEM ============
 class PaymentItemCreate(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True)
+    
     source_type: str  # 'service', 'product', 'custom'
     service_id: int | None = None
     inventory_item_id: int | None = None
     description: str
-    quantity: Decimal | float | int = Decimal('1')
-    unit_price: Decimal | float | int
-    
-    @field_validator('quantity', 'unit_price', mode='before')
-    @classmethod
-    def convert_to_decimal(cls, v):
-        """Ensure all monetary values are Decimal"""
-        if v is None:
-            return None
-        if isinstance(v, Decimal):
-            return v
-        if isinstance(v, (int, float, str)):
-            return Decimal(str(v))
-        return v
+    quantity: float | int = 1
+    unit_price: float | int
 
 class PaymentItemOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: int
     payment_id: int
     source_type: str
@@ -41,9 +32,6 @@ class PaymentItemOut(BaseModel):
     unit_price: Decimal
     subtotal: Decimal
     created_at: datetime
-    
-    class Config:
-        from_attributes = True
 
 # ============ PAYMENT ============
 class PaymentCreate(BaseModel):
@@ -67,6 +55,8 @@ class PaymentUpdate(BaseModel):
     notes: str | None = None
 
 class PaymentOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: int
     customer_id: int
     customer: CustomerInfo | None = None
@@ -84,9 +74,6 @@ class PaymentOut(BaseModel):
     paid_at: datetime | None = None
     payment_items: list[PaymentItemOut] = []  # NUEVO: Items del pago
     created_at: datetime
-    
-    class Config:
-        from_attributes = True
 
 class PlanUpgradeRequest(BaseModel):
     new_plan: str  # "basic", "plus", "start", "max"

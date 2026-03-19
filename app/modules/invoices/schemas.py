@@ -1,29 +1,23 @@
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime
 from typing import Optional, List
 from decimal import Decimal
 
 
 class InvoiceItemCreate(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True)
+    
     description: str
-    quantity: Decimal | float | int = Field(default=1, ge=0)
-    unit_price: Decimal | float | int = Field(ge=0)
+    quantity: float | int = Field(default=1, ge=0)
+    unit_price: float | int = Field(ge=0)
     inventory_item_id: Optional[int] = None
     service_id: Optional[int] = None
     source_type: Optional[str] = None  # 'service', 'product', or 'custom' - for reference only
-    
-    @field_validator('quantity', 'unit_price', mode='before')
-    @classmethod
-    def convert_to_decimal(cls, v):
-        """Ensure all monetary values are Decimal"""
-        if isinstance(v, Decimal):
-            return v
-        if isinstance(v, (int, float, str)):
-            return Decimal(str(v))
-        return v
 
 
 class InvoiceItemResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: int
     description: str
     quantity: Decimal
@@ -31,9 +25,6 @@ class InvoiceItemResponse(BaseModel):
     subtotal: Decimal
     inventory_item_id: Optional[int] = None
     service_id: Optional[int] = None
-
-    class Config:
-        from_attributes = True
 
 
 class InvoiceCreate(BaseModel):
@@ -48,6 +39,8 @@ class InvoiceCreate(BaseModel):
 
 
 class InvoiceResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: int
     invoice_number: str
     user_id: int
@@ -65,9 +58,6 @@ class InvoiceResponse(BaseModel):
     due_date: Optional[datetime] = None
     items: List[InvoiceItemResponse] = Field(default_factory=list)
 
-    class Config:
-        from_attributes = True
-
 
 class TaxConfigCreate(BaseModel):
     name: str
@@ -79,6 +69,8 @@ class TaxConfigCreate(BaseModel):
 
 
 class TaxConfigResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: int
     name: str
     tax_type: str
@@ -88,6 +80,3 @@ class TaxConfigResponse(BaseModel):
     applies_to: str
     created_at: datetime
     updated_at: datetime
-
-    class Config:
-        from_attributes = True
