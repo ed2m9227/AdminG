@@ -214,10 +214,14 @@ export class AppointmentsView {
             e.preventDefault();
             const formData = new FormData(form);
             
+            // Safely parse service_id - check for empty/null/NaN
+            const serviceIdStr = (formData.get('service_id') || '').trim();
+            const parsedServiceId = serviceIdStr ? parseInt(serviceIdStr) : null;
+            
             const appointmentData = {
                 customer_id: parseInt(formData.get('customer_id')),
                 scheduled_at: formData.get('scheduled_at'),
-                service_id: formData.get('service_id') ? parseInt(formData.get('service_id')) : null,
+                service_id: !isNaN(parsedServiceId) ? parsedServiceId : null,
                 duration_minutes: 60,
                 status: formData.get('status') || 'scheduled',
                 notes: formData.get('notes')
@@ -322,10 +326,14 @@ export class AppointmentsView {
             e.preventDefault();
             const formData = new FormData(form);
             
+            // Safely parse service_id - check for empty/null/NaN
+            const serviceIdStr = (formData.get('service_id') || '').trim();
+            const parsedServiceId = serviceIdStr ? parseInt(serviceIdStr) : null;
+            
             const appointmentData = {
                 customer_id: parseInt(formData.get('customer_id')),
                 scheduled_at: formData.get('scheduled_at'),
-                service_id: formData.get('service_id') ? parseInt(formData.get('service_id')) : null,
+                service_id: !isNaN(parsedServiceId) ? parsedServiceId : null,
                 duration_minutes: 60,
                 status: formData.get('status') || 'scheduled',
                 notes: formData.get('notes')

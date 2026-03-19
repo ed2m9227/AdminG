@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from datetime import datetime
 from typing import Optional, List
 from decimal import Decimal
@@ -6,11 +6,21 @@ from decimal import Decimal
 
 class InvoiceItemCreate(BaseModel):
     description: str
-    quantity: Decimal = Field(default=1, ge=0)
-    unit_price: Decimal = Field(ge=0)
+    quantity: Decimal | float | int = Field(default=1, ge=0)
+    unit_price: Decimal | float | int = Field(ge=0)
     inventory_item_id: Optional[int] = None
     service_id: Optional[int] = None
     source_type: Optional[str] = None  # 'service', 'product', or 'custom' - for reference only
+    
+    @field_validator('quantity', 'unit_price', mode='before')
+    @classmethod
+    def convert_to_decimal(cls, v):
+        """Ensure all monetary values are Decimal"""
+        if isinstance(v, Decimal):
+            return v
+        if isinstance(v, (int, float, str)):
+            return Decimal(str(v))
+        return v
 
 
 class InvoiceItemResponse(BaseModel):

@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from datetime import datetime
 from decimal import Decimal
 
@@ -15,8 +15,20 @@ class PaymentItemCreate(BaseModel):
     service_id: int | None = None
     inventory_item_id: int | None = None
     description: str
-    quantity: Decimal | float = Decimal('1')
-    unit_price: Decimal | float
+    quantity: Decimal | float | int = Decimal('1')
+    unit_price: Decimal | float | int
+    
+    @field_validator('quantity', 'unit_price', mode='before')
+    @classmethod
+    def convert_to_decimal(cls, v):
+        """Ensure all monetary values are Decimal"""
+        if v is None:
+            return None
+        if isinstance(v, Decimal):
+            return v
+        if isinstance(v, (int, float, str)):
+            return Decimal(str(v))
+        return v
 
 class PaymentItemOut(BaseModel):
     id: int
