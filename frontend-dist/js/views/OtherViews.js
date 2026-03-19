@@ -1651,8 +1651,8 @@ export class CashRegisterView {
         const items = this.cart.map(item => {
             const baseItem = {
                 description: item.name,
-                unit_price: item.price,
-                quantity: item.quantity,
+                unit_price: parseFloat(item.price),
+                quantity: parseFloat(item.quantity),
                 source_type: item.type || 'product'
             };
             
@@ -1673,8 +1673,8 @@ export class CashRegisterView {
         const paymentData = {
             customer_id: parsedCustomerId,
             payment_items: items,
-            amount: calculatedTotal,  // Backend recalcula, pero enviamos para consistencia
-            final_amount: calculatedTotal
+            amount: calculatedTotal,
+            method: 'cash'
         };
 
         try {
@@ -2041,7 +2041,7 @@ export class ReportsView {
                     ` : ''}
 
                     ${data.by_payment_method ? `
-                        <div style="margin-top: 20px;">
+                        <div style="flex-flow: row; margin-top: 20px;">
                             <h4>Por Metodo de Pago</h4>
                             <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
                                 <tr style="border-bottom: 1px solid #eee;">
