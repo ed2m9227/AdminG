@@ -4,8 +4,6 @@
  * Principio SOLID: Single Responsibility
  */
 
-import modal from '../components/Modal.js';
-
 const API_BASE_URL = 'http://127.0.0.1:8000';
 
 export class ApiService {
@@ -60,14 +58,6 @@ export class ApiService {
                     }
                 } catch (_parseError) {
                     // Keep default message when response is not JSON.
-                }
-
-                if (response.status === 403) {
-                    const warningMsg = 'Tu plan actual no incluye esta operación. Actualiza tu plan para continuar.';
-                    if (this.lastWarning !== warningMsg) {
-                        modal.showWarning(warningMsg);
-                        this.lastWarning = warningMsg;
-                    }
                 }
 
                 const requestError = new Error(errorMessage);

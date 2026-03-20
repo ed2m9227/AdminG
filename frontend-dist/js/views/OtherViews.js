@@ -124,46 +124,44 @@ export class AppointmentsView {
         // Cargar clientes y servicios EN PARALELO
         let customersOptions = '<option value="">Cargando clientes...</option>';
         let servicesOptions = '<option value="">Cargar servicios...</option>';
-        
-        try {
-            const [customers, services] = await Promise.all([
-                apiService.getCustomers(),
-                apiService.getServices()
-            ]);
-            
-            // Capturar formatCurrency antes de usarlo
-            const formatCurrency = (value) => {
-                if (!value) return '$0';
-                return new Intl.NumberFormat('es-CO', {
-                    style: 'currency',
-                    currency: 'COP',
-                    minimumFractionDigits: 0,
-                    maximumFractionDigits: 0
-                }).format(value);
-            };
-            
-            if (Array.isArray(customers) && customers.length > 0) {
-                customersOptions = '<option value="">Seleccionar cliente...</option>';
-                customers.forEach(c => {
-                    customersOptions += `<option value="${c.id}">${c.full_name || 'Sin nombre'}</option>`;
-                });
-            } else {
-                customersOptions = '<option value="">No hay clientes registrados</option>';
-            }
-            
-            if (Array.isArray(services) && services.length > 0) {
-                servicesOptions = '<option value="">Seleccionar servicio...</option>';
-                services.forEach(s => {
-                    const servicePrice = s.price ?? s.unit_price ?? 0;
-                    servicesOptions += `<option value="${s.id}">${s.name || 'Sin nombre'} (${formatCurrency(servicePrice)})</option>`;
-                });
-            } else {
-                servicesOptions = '<option value="">No hay servicios disponibles</option>';
-            }
-        } catch (error) {
-            console.error('Error loading data:', error);
+
+        const [customersResult, servicesResult] = await Promise.allSettled([
+            apiService.getCustomers(),
+            apiService.getServices()
+        ]);
+
+        const customers = customersResult.status === 'fulfilled' ? customersResult.value : null;
+        const services = servicesResult.status === 'fulfilled' ? servicesResult.value : null;
+
+        const formatCurrency = (value) => {
+            if (!value) return '$0';
+            return new Intl.NumberFormat('es-CO', {
+                style: 'currency',
+                currency: 'COP',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(value);
+        };
+
+        if (Array.isArray(customers) && customers.length > 0) {
+            customersOptions = '<option value="">Seleccionar cliente...</option>';
+            customers.forEach(c => {
+                customersOptions += `<option value="${c.id}">${c.full_name || 'Sin nombre'}</option>`;
+            });
+        } else if (!customers) {
             customersOptions = '<option value="">Error al cargar clientes</option>';
-            servicesOptions = '<option value="">Error al cargar servicios</option>';
+        } else {
+            customersOptions = '<option value="">No hay clientes registrados</option>';
+        }
+
+        if (Array.isArray(services) && services.length > 0) {
+            servicesOptions = '<option value="">Seleccionar servicio...</option>';
+            services.forEach(s => {
+                const servicePrice = s.price ?? s.unit_price ?? 0;
+                servicesOptions += `<option value="${s.id}">${s.name || 'Sin nombre'} (${formatCurrency(servicePrice)})</option>`;
+            });
+        } else {
+            servicesOptions = '<option value="">No hay servicios disponibles</option>';
         }
 
         const html = `
@@ -248,31 +246,32 @@ export class AppointmentsView {
         // Cargar clientes y servicios EN PARALELO
         let customersOptions = '<option value="">Cargando clientes...</option>';
         let servicesOptions = '<option value="">Cargar servicios...</option>';
-        
-        try {
-            const [customers, services] = await Promise.all([
-                apiService.getCustomers(),
-                apiService.getServices()
-            ]);
-            
-            if (Array.isArray(customers) && customers.length > 0) {
-                customersOptions = '';
-                customers.forEach(c => {
-                    const selected = c.id === appointment.customer_id ? 'selected' : '';
-                    customersOptions += `<option value="${c.id}" ${selected}>${c.full_name || 'Sin nombre'}</option>`;
-                });
-            }
-            
-            if (Array.isArray(services) && services.length > 0) {
-                servicesOptions = '<option value="">Seleccionar servicio...</option>';
-                services.forEach(s => {
-                    const selected = s.id === appointment.service_id ? 'selected' : '';
-                    const servicePrice = s.price ?? s.unit_price ?? 0;
-                    servicesOptions += `<option value="${s.id}" ${selected}>${s.name || 'Sin nombre'} (${this.formatCurrency(servicePrice)})</option>`;
-                });
-            }
-        } catch (error) {
-            console.error('Error loading data:', error);
+
+        const [customersResult, servicesResult] = await Promise.allSettled([
+            apiService.getCustomers(),
+            apiService.getServices()
+        ]);
+
+        const customers = customersResult.status === 'fulfilled' ? customersResult.value : null;
+        const services = servicesResult.status === 'fulfilled' ? servicesResult.value : null;
+
+        if (Array.isArray(customers) && customers.length > 0) {
+            customersOptions = '';
+            customers.forEach(c => {
+                const selected = c.id === appointment.customer_id ? 'selected' : '';
+                customersOptions += `<option value="${c.id}" ${selected}>${c.full_name || 'Sin nombre'}</option>`;
+            });
+        }
+
+        if (Array.isArray(services) && services.length > 0) {
+            servicesOptions = '<option value="">Seleccionar servicio...</option>';
+            services.forEach(s => {
+                const selected = s.id === appointment.service_id ? 'selected' : '';
+                const servicePrice = s.price ?? s.unit_price ?? 0;
+                servicesOptions += `<option value="${s.id}" ${selected}>${s.name || 'Sin nombre'} (${this.formatCurrency(servicePrice)})</option>`;
+            });
+        } else {
+            servicesOptions = '<option value="">No hay servicios disponibles</option>';
         }
 
         // Format the datetime-local input from ISO string
@@ -379,7 +378,10 @@ export class PaymentsView {
             <div class="card">
                 <div class="card-header">
                     <h2 class="card-title">Pagos</h2>
-                    <button class="btn btn-success" id="btnNewPayment">+ 💳 Nuevo Pago</button>
+                    <div style="display:flex;gap:8px;align-items:center;">
+                        <button class="btn" id="btnVerPlanes" style="background:#f0f0ff;color:#667eea;border:1px solid #c5c8f0;">📋 Ver Planes</button>
+                        <button class="btn btn-success" id="btnNewPayment">+ 💳 Nuevo Pago</button>
+                    </div>
                 </div>
                 <div class="card-body" id="paymentsContainer">
                     ${this.renderTable()}
@@ -453,6 +455,14 @@ export class PaymentsView {
     }
 
     attachEventListeners() {
+        // Ver Planes button
+        const btnPlanes = document.getElementById('btnVerPlanes');
+        if (btnPlanes) {
+            const clone = btnPlanes.cloneNode(true);
+            btnPlanes.parentNode.replaceChild(clone, btnPlanes);
+            clone.addEventListener('click', () => this.showPlanesModal());
+        }
+
         // New payment button - remove old listener first
         const btnNew = document.getElementById('btnNewPayment');
         if (btnNew) {
@@ -515,6 +525,50 @@ export class PaymentsView {
         }
     }
 
+    showPlanesModal() {
+        const user = authService.getCurrentUser();
+        const currentPlan = user?.plan || 'free';
+        const plans = [
+            {
+                id: 'basic', name: 'Basic', price: '5.000',
+                features: ['Clientes ilimitados', 'Agenda de citas', 'Reportes básicos']
+            },
+            {
+                id: 'plus', name: 'Plus', price: '30.000',
+                features: ['Todo Basic', 'Inventario y productos', 'Caja registradora', 'Equipo de trabajo']
+            },
+            {
+                id: 'start', name: 'Starter', price: '50.000',
+                features: ['Todo Plus', 'Reportes avanzados', 'Documentos', 'Autorizaciones']
+            },
+            {
+                id: 'max', name: 'Max', price: '100.000',
+                features: ['Todo Starter', 'Analíticas avanzadas', 'Sin límites', 'Soporte prioritario']
+            },
+        ];
+        const html = `
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;min-width:480px">
+                ${plans.map(p => `
+                    <div style="border:2px solid ${p.id===currentPlan?'#667eea':'#e8ecef'};border-radius:10px;padding:16px;${p.id===currentPlan?'background:#f4f4ff;':''};">
+                        <div style="font-weight:700;font-size:15px;margin-bottom:4px">${p.name}</div>
+                        <div style="font-size:22px;font-weight:800;color:#667eea;margin-bottom:10px">
+                            $${p.price}<span style="font-size:11px;font-weight:400;color:#999">/mes</span>
+                        </div>
+                        <ul style="list-style:none;padding:0;margin:0 0 10px;font-size:12px;color:#555;line-height:1.8">
+                            ${p.features.map(f => `<li>✓ ${f}</li>`).join('')}
+                        </ul>
+                        ${p.id===currentPlan
+                            ? `<div style="text-align:center;color:#667eea;font-size:11px;font-weight:700;padding:6px;background:#ebebff;border-radius:4px">✓ Plan actual</div>`
+                            : `<button class="btn btn-primary" style="width:100%;font-size:12px" onclick="alert('Para cambiar de plan contacta soporte o usa la opción de pago.')">Elegir ${p.name}</button>`
+                        }
+                    </div>
+                `).join('')}
+            </div>
+            <p style="text-align:center;font-size:11px;color:#aaa;margin-top:14px">Precios en pesos colombianos (COP) • Facturado mensualmente</p>
+        `;
+        modal.show({ title: '📋 Planes y Precios', content: html, size: 'large' });
+    }
+
     async showNewPaymentModal() {
         // Cargar clientes, servicios E INVENTARIO EN PARALELO
         let customersOptions = '<option value="">Cargando clientes...</option>';
@@ -523,45 +577,43 @@ export class PaymentsView {
         let services = [];
         let inventory = [];
         
-        try {
-            [customers, services, inventory] = await Promise.all([
-                apiService.getCustomers(),
-                apiService.getServices(),
-                apiService.getInventoryItems()
-            ]);
-            
-            if (Array.isArray(customers) && customers.length > 0) {
-                customersOptions = '<option value="">Seleccionar cliente...</option>';
-                customers.forEach(c => {
-                    customersOptions += `<option value="${c.id}">${c.full_name || 'Sin nombre'}</option>`;
-                });
-            } else {
-                customersOptions = '<option value="">No hay clientes registrados</option>';
-            }
-            
-            // SERVICIOS
-            if (Array.isArray(services) && services.length > 0) {
-                itemsOptions = '<optgroup label="Servicios">';
-                services.forEach(s => {
-                    const servicePrice = s.price ?? s.unit_price ?? 0;
-                    itemsOptions += `<option value="service:${s.id}" data-price="${servicePrice}">${s.name || 'Sin nombre'} (${this.formatCurrency(servicePrice)})</option>`;
-                });
-                itemsOptions += '</optgroup>';
-            }
-            
-            // PRODUCTOS
-            if (Array.isArray(inventory) && inventory.length > 0) {
-                itemsOptions += '<optgroup label="Productos">';
-                inventory.forEach(p => {
-                    if (p.item_type === 'product' && p.is_active) {
-                        itemsOptions += `<option value="product:${p.id}" data-price="${p.unit_price || 0}">${p.name || 'Sin nombre'} (${this.formatCurrency(p.unit_price || 0)})</option>`;
-                    }
-                });
-                itemsOptions += '</optgroup>';
-            }
-        } catch (error) {
-            console.error('Error loading data:', error);
-            customersOptions = '<option value="">Error al cargar clientes</option>';
+        const [customersResult, servicesResult, inventoryResult] = await Promise.allSettled([
+            apiService.getCustomers(),
+            apiService.getServices(),
+            apiService.getInventoryItems()
+        ]);
+        customers = customersResult.status === 'fulfilled' ? (customersResult.value || []) : [];
+        services = servicesResult.status === 'fulfilled' ? (servicesResult.value || []) : [];
+        inventory = inventoryResult.status === 'fulfilled' ? (inventoryResult.value || []) : [];
+
+        if (customers.length > 0) {
+            customersOptions = '<option value="">Seleccionar cliente...</option>';
+            customers.forEach(c => {
+                customersOptions += `<option value="${c.id}">${c.full_name || 'Sin nombre'}</option>`;
+            });
+        } else {
+            customersOptions = '<option value="">No hay clientes registrados</option>';
+        }
+
+        // SERVICIOS
+        if (services.length > 0) {
+            itemsOptions = '<optgroup label="Servicios">';
+            services.forEach(s => {
+                const servicePrice = s.price ?? s.unit_price ?? 0;
+                itemsOptions += `<option value="service:${s.id}" data-price="${servicePrice}">${s.name || 'Sin nombre'} (${this.formatCurrency(servicePrice)})</option>`;
+            });
+            itemsOptions += '</optgroup>';
+        }
+
+        // PRODUCTOS
+        if (inventory.length > 0) {
+            itemsOptions += '<optgroup label="Productos">';
+            inventory.forEach(p => {
+                if (p.item_type === 'product' && p.is_active) {
+                    itemsOptions += `<option value="product:${p.id}" data-price="${p.unit_price || 0}">${p.name || 'Sin nombre'} (${this.formatCurrency(p.unit_price || 0)})</option>`;
+                }
+            });
+            itemsOptions += '</optgroup>';
         }
 
         const html = `
@@ -778,30 +830,30 @@ export class PaymentsView {
         // Cargar clientes y servicios EN PARALELO
         let customersOptions = '<option value="">Cargando clientes...</option>';
         let servicesOptions = '<option value="">Cargar servicios...</option>';
-        
-        try {
-            const [customers, services] = await Promise.all([
-                apiService.getCustomers(),
-                apiService.getServices()
-            ]);
-            
-            if (Array.isArray(customers) && customers.length > 0) {
-                customersOptions = '';
-                customers.forEach(c => {
-                    const selected = c.id === payment.customer_id ? 'selected' : '';
-                    customersOptions += `<option value="${c.id}" ${selected}>${c.full_name || 'Sin nombre'}</option>`;
-                });
-            }
-            
-            if (Array.isArray(services) && services.length > 0) {
-                servicesOptions = '<option value="">Sin servicio específico</option>';
-                services.forEach(s => {
-                    const selected = s.id === payment.service_id ? 'selected' : '';
-                    servicesOptions += `<option value="${s.id}" ${selected}>${s.name || 'Sin nombre'} (${this.formatCurrency(s.unit_price || 0)})</option>`;
-                });
-            }
-        } catch (error) {
-            console.error('Error loading data:', error);
+
+        const [customersResult2, servicesResult2] = await Promise.allSettled([
+            apiService.getCustomers(),
+            apiService.getServices()
+        ]);
+        const editCustomers = customersResult2.status === 'fulfilled' ? customersResult2.value : null;
+        const editServices = servicesResult2.status === 'fulfilled' ? servicesResult2.value : null;
+
+        if (Array.isArray(editCustomers) && editCustomers.length > 0) {
+            customersOptions = '';
+            editCustomers.forEach(c => {
+                const selected = c.id === payment.customer_id ? 'selected' : '';
+                customersOptions += `<option value="${c.id}" ${selected}>${c.full_name || 'Sin nombre'}</option>`;
+            });
+        }
+
+        if (Array.isArray(editServices) && editServices.length > 0) {
+            servicesOptions = '<option value="">Sin servicio específico</option>';
+            editServices.forEach(s => {
+                const selected = s.id === payment.service_id ? 'selected' : '';
+                servicesOptions += `<option value="${s.id}" ${selected}>${s.name || 'Sin nombre'} (${this.formatCurrency(s.unit_price || 0)})</option>`;
+            });
+        } else {
+            servicesOptions = '<option value="">No hay servicios disponibles</option>';
         }
 
         const html = `

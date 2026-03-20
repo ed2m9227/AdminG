@@ -251,7 +251,6 @@ class App {
                         customers: 'view_customers',
                         appointments: 'view_appointments',
                         inventory: 'view_inventory',
-                        payments: 'view_payments',
                         reports: 'view_reports',
                         cashregister: 'use_cashregister',
                         team: 'view_team',
