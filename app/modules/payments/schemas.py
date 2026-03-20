@@ -37,7 +37,7 @@ class PaymentItemOut(BaseModel):
 class PaymentCreate(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
     
-    customer_id: int
+    customer_id: int | None = None
     invoice_id: int | str | None = None  # Accept flexible types
     appointment_id: int | str | None = None  # Accept flexible types
     service_id: int | str | None = None  # DEPRECATED

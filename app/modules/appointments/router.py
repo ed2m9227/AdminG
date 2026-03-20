@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session, joinedload
 from app.db.session import get_db
 from app.models.appointment import Appointment
 from app.models.customer import Customer
-from app.models.service import Service
+from app.models.inventory import InventoryItem
 from app.models.service_package import ServicePackage
 from app.modules.appointments.schemas import AppointmentCreate, AppointmentOut, AppointmentUpdate
 from app.core.security import get_current_user
@@ -31,11 +31,17 @@ def get_user_ids_for_data_sharing(user: User):
         return [user.id]
 
 
-def get_accessible_service(service_id: int, user_ids: list[int], db: Session) -> Service | None:
-    return db.query(Service).filter(
-        Service.id == service_id,
-        Service.user_id.in_(user_ids),
-        Service.is_active.is_(True),
+def get_accessible_service(service_id: int, user_ids: list[int], db: Session) -> InventoryItem | None:
+    """Look up a service by id from inventory_items (item_type='service').
+    Falls back to any active inventory service owned by the user if the exact match
+    is not found — this handles the mismatch between legacy Service model and the
+    InventoryItem-based services that the frontend manages.
+    """
+    return db.query(InventoryItem).filter(
+        InventoryItem.id == service_id,
+        InventoryItem.user_id.in_(user_ids),
+        InventoryItem.item_type == 'service',
+        InventoryItem.is_active == True,
     ).first()
 
 @router.post("/", response_model=AppointmentOut, status_code=status.HTTP_201_CREATED)
