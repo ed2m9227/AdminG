@@ -149,6 +149,12 @@ export class Sidebar {
             
             // Los admins globales no deben quedar bloqueados por plan en secciones de administración.
             const hasFeature = isAdmin || item.alwaysShow || !item.requiredFeature || this.userFeatures.includes(item.requiredFeature);
+
+            // Para usuarios hijo, ocultar modulos bloqueados en lugar de mostrarlos con candado.
+            if (isSubUser && !hasFeature && !item.alwaysShow) {
+                return false;
+            }
+
             this.itemAccessMap[item.route] = {
                 isBlocked: !hasFeature,
                 label: item.label,

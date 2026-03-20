@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from app.db.session import get_db
 from app.models.inventory import InventoryItem, InventoryCategory, InventoryMovement
 from app.models.inventory_package import InventoryPackage, InventoryPackageItem
@@ -57,6 +58,31 @@ def check_inventory_access(user: User):
         return True
     raise HTTPException(status_code=403, detail="Feature not available in your plan")
 
+
+def build_unique_sku(base_sku: str, owner_id: int, db: Session) -> str:
+    """Build a globally unique SKU while preserving the original value as much as possible.
+
+    This is a compatibility layer for legacy global UNIQUE(sku) constraint.
+    """
+    sku = (base_sku or "").strip()
+    if not sku:
+        return sku
+
+    exists = db.query(InventoryItem).filter(InventoryItem.sku == sku).first()
+    if not exists:
+        return sku
+
+    candidate = f"{sku}-{owner_id}"
+    if not db.query(InventoryItem).filter(InventoryItem.sku == candidate).first():
+        return candidate
+
+    seq = 2
+    while True:
+        candidate = f"{sku}-{owner_id}-{seq}"
+        if not db.query(InventoryItem).filter(InventoryItem.sku == candidate).first():
+            return candidate
+        seq += 1
+
 # ============ CATEGORIES ============
 
 @router.post("/categories", response_model=InventoryCategoryOut, status_code=status.HTTP_201_CREATED)
@@ -109,10 +135,23 @@ def create_item(
     """
     check_inventory_access(current_user)
     
-    # Validate SKU uniqueness
-    existing = db.query(InventoryItem).filter(InventoryItem.sku == payload.sku).first()
-    if existing:
+    user_ids = get_user_ids_for_data_sharing(current_user)
+    normalized_sku = (payload.sku or "").strip()
+    payload.sku = normalized_sku
+
+    # Validate SKU uniqueness in current scope (parent/child share)
+    existing_scope = db.query(InventoryItem).filter(
+        InventoryItem.sku == normalized_sku,
+        InventoryItem.user_id.in_(user_ids),
+    ).first()
+    if existing_scope:
         raise HTTPException(status_code=400, detail="SKU already exists")
+
+    # Legacy DB has global UNIQUE(sku). If duplicate exists in another account,
+    # auto-adjust SKU to allow creation in this account.
+    existing_global = db.query(InventoryItem).filter(InventoryItem.sku == normalized_sku).first()
+    if existing_global and existing_global.user_id not in user_ids:
+        payload.sku = build_unique_sku(normalized_sku, current_user.id, db)
     
     # Validate category if provided
     if payload.category_id:
@@ -142,7 +181,17 @@ def create_item(
         item_type=payload.item_type,
     )
     db.add(item)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError as e:
+        db.rollback()
+        if "sku" in str(e).lower():
+            payload.sku = build_unique_sku(normalized_sku, current_user.id, db)
+            item.sku = payload.sku
+            db.add(item)
+            db.commit()
+        else:
+            raise
     db.refresh(item)
     return item
 
@@ -237,11 +286,25 @@ def update_item(
     
     update_data = payload.model_dump(exclude_unset=True)
     
-    # Validate SKU uniqueness if changed
+    # Validate SKU uniqueness if changed (within owner scope)
+    user_ids = get_user_ids_for_data_sharing(current_user)
     if "sku" in update_data and update_data["sku"] != item.sku:
-        existing = db.query(InventoryItem).filter(InventoryItem.sku == update_data["sku"]).first()
+        update_data["sku"] = (update_data["sku"] or "").strip()
+        existing = db.query(InventoryItem).filter(
+            InventoryItem.sku == update_data["sku"],
+            InventoryItem.user_id.in_(user_ids),
+            InventoryItem.id != item.id,
+        ).first()
         if existing:
             raise HTTPException(status_code=400, detail="SKU already exists")
+
+        # Legacy global unique fallback
+        existing_global = db.query(InventoryItem).filter(
+            InventoryItem.sku == update_data["sku"],
+            InventoryItem.id != item.id,
+        ).first()
+        if existing_global and existing_global.user_id not in user_ids:
+            update_data["sku"] = build_unique_sku(update_data["sku"], current_user.id, db)
 
     # If item_type is changed to service or package, reset stock fields
     if update_data.get("item_type") in ['service', 'package']:
@@ -252,7 +315,16 @@ def update_item(
         setattr(item, field, value)
     
     db.add(item)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError as e:
+        db.rollback()
+        if "sku" in str(e).lower() and "sku" in update_data:
+            item.sku = build_unique_sku(update_data["sku"], current_user.id, db)
+            db.add(item)
+            db.commit()
+        else:
+            raise
     db.refresh(item)
     return item
 

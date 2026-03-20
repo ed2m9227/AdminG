@@ -1150,9 +1150,11 @@ export class CashRegisterView {
     }
 
     renderProducts(filter = '') {
-        // Combinar inventario (productos) y servicios
+        // Combinar inventario (solo productos) y servicios, evitando duplicados.
+        const inventoryProducts = this.inventory.filter(item => (item.item_type || 'product') === 'product');
+
         const allItems = [
-            ...this.inventory.map(item => ({
+            ...inventoryProducts.map(item => ({
                 ...item,
                 type: 'product',
                 name: item.name || item.product_name,
@@ -1164,8 +1166,12 @@ export class CashRegisterView {
                 quantity: service.max_capacity || Infinity  // Servicios no tienen stock limitado
             }))
         ];
+
+        const deduped = Array.from(new Map(
+            allItems.map(item => [`${item.type}:${item.id}`, item])
+        ).values());
         
-        const filtered = allItems.filter(item => 
+        const filtered = deduped.filter(item => 
             !filter || (item.name || '').toLowerCase().includes(filter.toLowerCase())
         );
 
