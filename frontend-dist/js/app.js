@@ -293,6 +293,18 @@ class App {
             try {
                 const user = await authService.loadCurrentUser();
                 await authService.loadFeatures();
+
+                if (user?.plan_expired) {
+                    const expiredNoticeKey = `plan-expired-notice-${user.id}`;
+                    if (sessionStorage.getItem(expiredNoticeKey) !== 'shown') {
+                        await modal.alert({
+                            title: 'Plan vencido',
+                            message: 'Tu plan vencio y tu cuenta paso temporalmente a FREE en modo visualizacion. Tu informacion se conserva tal como quedo. Ve a Pagos > Ver Planes para renovar.',
+                            type: 'warning'
+                        });
+                        sessionStorage.setItem(expiredNoticeKey, 'shown');
+                    }
+                }
                 
                 // Check if onboarding was already completed
                 const onboardingCompleted = localStorage.getItem('onboarding_completed') === 'true';

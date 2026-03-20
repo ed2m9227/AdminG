@@ -261,26 +261,29 @@ def upgrade_plan(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Upgrade user plan with payment
-    
-    Plans:
-    - basic: $5,000/mes
-    - plus: $30,000/mes
-    - start: $50,000/mes
-    - max: $100,000/mes
-    """
+    """Upgrade user plan with payment (aligned with onboarding plans)."""
     PLAN_PRICES = {
-        "basic": Decimal("5000"),
-        "plus": Decimal("30000"),
-        "start": Decimal("50000"),
-        "max": Decimal("100000"),
+        "starter": Decimal("39900"),
+        "pro": Decimal("99900"),
+        "max": Decimal("249900"),
     }
-    
-    if request.new_plan not in PLAN_PRICES:
+    PLAN_ALIASES = {
+        "basic": "starter",
+        "AdminG_Basic": "starter",
+        "plus": "pro",
+        "start": "pro",
+        "AdminG_Plus": "pro",
+        "AdminPro_Start": "pro",
+        "AdminPro_Max": "max",
+    }
+
+    normalized_plan = PLAN_ALIASES.get(request.new_plan, request.new_plan)
+
+    if normalized_plan not in PLAN_PRICES:
         raise HTTPException(status_code=400, detail="Invalid plan")
     
     # Create payment record for upgrade
-    amount = PLAN_PRICES[request.new_plan]
+    amount = PLAN_PRICES[normalized_plan]
     
     upgrade_payment = Payment(
         user_id=current_user["id"],
@@ -290,7 +293,7 @@ def upgrade_plan(
         final_amount=amount,
         method=request.payment_method,
         status="pending",
-        notes=f"Plan upgrade from {current_user['plan']} to {request.new_plan}",
+        notes=f"Plan upgrade from {current_user['plan']} to {normalized_plan}",
     )
     
     db.add(upgrade_payment)
@@ -299,7 +302,8 @@ def upgrade_plan(
     # Update user plan (get User object from DB)
     user = db.query(User).filter(User.id == current_user["id"]).first()
     if user:
-        user.plan = request.new_plan
+        user.plan = normalized_plan
+        user.plan_start_date = datetime.utcnow()
         db.add(user)
     else:
         raise HTTPException(status_code=404, detail="User not found")
@@ -308,8 +312,8 @@ def upgrade_plan(
     
     return PlanUpgradeResponse(
         success=True,
-        message=f"Plan upgraded to {request.new_plan}",
-        new_plan=request.new_plan,
+        message=f"Plan upgraded to {normalized_plan}",
+        new_plan=normalized_plan,
         payment_id=upgrade_payment.id,
         upgrade_date=datetime.utcnow(),
     )

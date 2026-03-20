@@ -7,6 +7,7 @@ import table from '../components/Table.js';
 import apiService from '../services/api.service.js';
 import modal from '../components/Modal.js';
 import authService from '../services/auth.service.js';
+import { PLAN_CATALOG, normalizePlanCode } from '../utils/plans.js';
 
 // Utility function to extract error message
 function getErrorMessage(error) {
@@ -527,39 +528,24 @@ export class PaymentsView {
 
     showPlanesModal() {
         const user = authService.getCurrentUser();
-        const currentPlan = user?.plan || 'free';
-        const plans = [
-            {
-                id: 'basic', name: 'Basic', price: '5.000',
-                features: ['Clientes ilimitados', 'Agenda de citas', 'Reportes básicos']
-            },
-            {
-                id: 'plus', name: 'Plus', price: '30.000',
-                features: ['Todo Basic', 'Inventario y productos', 'Caja registradora', 'Equipo de trabajo']
-            },
-            {
-                id: 'start', name: 'Starter', price: '50.000',
-                features: ['Todo Plus', 'Reportes avanzados', 'Documentos', 'Autorizaciones']
-            },
-            {
-                id: 'max', name: 'Max', price: '100.000',
-                features: ['Todo Starter', 'Analíticas avanzadas', 'Sin límites', 'Soporte prioritario']
-            },
-        ];
+        const currentPlan = normalizePlanCode(user?.plan || 'free');
+        const plans = PLAN_CATALOG;
         const html = `
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;min-width:480px">
                 ${plans.map(p => `
-                    <div style="border:2px solid ${p.id===currentPlan?'#667eea':'#e8ecef'};border-radius:10px;padding:16px;${p.id===currentPlan?'background:#f4f4ff;':''};">
+                    <div style="border:2px solid ${p.code===currentPlan?'#667eea':'#e8ecef'};border-radius:10px;padding:16px;${p.code===currentPlan?'background:#f4f4ff;':''};">
                         <div style="font-weight:700;font-size:15px;margin-bottom:4px">${p.name}</div>
                         <div style="font-size:22px;font-weight:800;color:#667eea;margin-bottom:10px">
-                            $${p.price}<span style="font-size:11px;font-weight:400;color:#999">/mes</span>
+                            ${p.priceCOP === 0 ? 'GRATIS' : `$${p.priceCOP.toLocaleString('es-CO')}`}<span style="font-size:11px;font-weight:400;color:#999">/mes</span>
                         </div>
                         <ul style="list-style:none;padding:0;margin:0 0 10px;font-size:12px;color:#555;line-height:1.8">
                             ${p.features.map(f => `<li>✓ ${f}</li>`).join('')}
                         </ul>
-                        ${p.id===currentPlan
+                        ${p.code===currentPlan
                             ? `<div style="text-align:center;color:#667eea;font-size:11px;font-weight:700;padding:6px;background:#ebebff;border-radius:4px">✓ Plan actual</div>`
-                            : `<button class="btn btn-primary" style="width:100%;font-size:12px" onclick="alert('Para cambiar de plan contacta soporte o usa la opción de pago.')">Elegir ${p.name}</button>`
+                            : (p.nequiLink
+                                ? `<a href="${p.nequiLink}" target="_blank" class="btn btn-primary" style="display:block;width:100%;font-size:12px;text-align:center;text-decoration:none;">Renovar ${p.name}</a>`
+                                : `<div style="text-align:center;color:#666;font-size:11px;font-weight:600;padding:6px;background:#f4f4f4;border-radius:4px">Plan de entrada</div>`)
                         }
                     </div>
                 `).join('')}

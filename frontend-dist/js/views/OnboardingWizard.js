@@ -6,18 +6,14 @@
 import apiService from '../services/api.service.js';
 import authService from '../services/auth.service.js';
 import modal from '../components/Modal.js';
+import { PLAN_CATALOG } from '../utils/plans.js';
 
 class OnboardingWizard {
     constructor() {
         this.currentStep = 1;
         this.totalSteps = 3;
         this.businessTypes = [];
-        this.plans = [
-            { code: 'free', name: 'GRATUITO', price: 0, priceCOP: 0, color: 'gray', features: ['1 usuario', 'Funciones básicas', 'Solo lectura', 'Ideal para pruebas'], limits: '1 usuario, solo lectura', nequiLink: null },
-            { code: 'starter', name: 'STARTER', price: 10, priceCOP: 39900, color: 'blue', features: ['Hasta 5 usuarios', 'Hasta 100 clientes', 'Hasta 200 citas', 'CRUD completo', 'Reportes básicos'], limits: '5 usuarios, 100 clientes', nequiLink: 'https://buy.nequi.com.co/AdminG-Starter' },
-            { code: 'pro', name: 'PRO', price: 25, priceCOP: 99900, color: 'purple', features: ['Hasta 25 usuarios', 'Hasta 1000 clientes', 'Citas ilimitadas', 'Reportes avanzados', 'Exportar datos', 'API acceso'], limits: '25 usuarios, 1000 clientes', nequiLink: 'https://buy.nequi.com.co/AdminG-Pro' },
-            { code: 'max', name: 'MAX', price: 62, priceCOP: 249900, color: 'indigo', features: ['Hasta 100 usuarios', 'Clientes ilimitados', 'Citas ilimitadas', 'Analytics avanzado', 'API completa', 'IA integrada', 'Soporte prioritario'], limits: 'Ilimitado', nequiLink: 'https://buy.nequi.com.co/AdminG-Max' }
-        ];
+        this.plans = PLAN_CATALOG;
         this.formData = {
             business_type: '',
             business_name: '',
@@ -225,7 +221,7 @@ class OnboardingWizard {
                             <div class="plan-card plan-card-content ${plan.code}">
                                 <div class="plan-price-header">
                                     <h3 class="plan-name">${plan.name}</h3>
-                                    <div class="plan-price">${plan.price === 0 ? 'GRATIS' : `$${plan.priceCOP.toLocaleString('es-CO')}`}<span class="plan-price-period">/mes</span></div>
+                                    <div class="plan-price">${plan.priceCOP === 0 ? 'GRATIS' : `$${plan.priceCOP.toLocaleString('es-CO')}`}<span class="plan-price-period">/mes</span></div>
                                 </div>
                                 <p class="plan-limits">${plan.limits}</p>
                                 <ul class="plan-features">

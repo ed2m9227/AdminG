@@ -27,6 +27,9 @@ class UserUpdate(BaseModel):
 class UserOut(UserBase):
     id: int
     is_active: bool
+    plan_start_date: datetime
+    plan_expires_at: datetime | None = None
+    plan_expired: bool = False
     onboarding_completed: bool
     parent_user_id: int | None = None
     created_at: datetime

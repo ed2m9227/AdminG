@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.db.session import get_db
@@ -10,6 +12,37 @@ from app.models.user import User
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
+PAID_PLAN_ALIASES = {
+    "starter", "pro", "max",
+    "basic", "plus", "start",
+    "AdminG_Basic", "AdminG_Plus",
+    "AdminPro_Start", "AdminPro_Max",
+}
+PLAN_DURATION_DAYS = 30
+
+
+def enforce_plan_expiration(user: User, db: Session) -> tuple[bool, datetime | None]:
+    """Downgrade expired paid plans to free and return expiration state."""
+    if user.plan == "free" or user.plan == "admin":
+        return False, None
+
+    if user.plan not in PAID_PLAN_ALIASES:
+        return False, None
+
+    if not user.plan_start_date:
+        return False, None
+
+    expires_at = user.plan_start_date + timedelta(days=PLAN_DURATION_DAYS)
+    if datetime.utcnow() <= expires_at:
+        return False, expires_at
+
+    user.plan = "free"
+    user.plan_start_date = datetime.utcnow()
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return True, expires_at
+
 @router.get("/me", response_model=UserOut)
 def get_current_user_info(
     current_user=Depends(get_current_user),
@@ -19,11 +52,22 @@ def get_current_user_info(
     user = db.query(User).filter(User.id == int(current_user["id"])).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    if user.role == "admin" and user.plan != "max":
-        user.plan = "max"
-        db.commit()
-        db.refresh(user)
-    return user
+
+    plan_expired, plan_expires_at = enforce_plan_expiration(user, db)
+    return {
+        "id": user.id,
+        "email": user.email,
+        "role": user.role,
+        "plan": user.plan,
+        "is_active": user.is_active,
+        "plan_start_date": user.plan_start_date,
+        "plan_expires_at": plan_expires_at,
+        "plan_expired": plan_expired,
+        "onboarding_completed": user.onboarding_completed,
+        "parent_user_id": user.parent_user_id,
+        "created_at": user.created_at,
+        "updated_at": user.updated_at,
+    }
 
 @router.get("/")
 def list_users(current_user=Depends(get_current_user)):
@@ -70,6 +114,8 @@ def get_user_features(
     user = db.query(User).filter(User.id == int(current_user["id"])).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+
+    plan_expired, plan_expires_at = enforce_plan_expiration(user, db)
     
     features = get_available_features(user.plan, user.role)
     limits = get_plan_limits(user.plan)
@@ -78,5 +124,8 @@ def get_user_features(
         "plan": user.plan,
         "role": user.role,
         "features": features,
-        "limits": limits
+        "limits": limits,
+        "plan_expired": plan_expired,
+        "plan_expires_at": plan_expires_at,
+        "available_plans": ["free", "starter", "pro", "max"],
     }

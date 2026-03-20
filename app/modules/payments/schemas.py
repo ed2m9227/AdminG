@@ -78,7 +78,7 @@ class PaymentOut(BaseModel):
     created_at: datetime
 
 class PlanUpgradeRequest(BaseModel):
-    new_plan: str  # "basic", "plus", "start", "max"
+    new_plan: str  # "starter", "pro", "max" (legacy aliases: basic/plus/start)
     payment_method: str  # "card", "transfer"
 
 class PlanUpgradeResponse(BaseModel):
