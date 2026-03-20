@@ -111,10 +111,10 @@ class App {
 
         router.register('reports', async () => {
             await this.renderProtectedView(reportsView);
+        });
 
-                router.register('invoices', async () => {
-                    await this.renderProtectedView(invoicesView);
-                });
+        router.register('invoices', async () => {
+            await this.renderProtectedView(invoicesView);
         });
 
         router.register('documents', async () => {

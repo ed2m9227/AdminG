@@ -1,5 +1,6 @@
 ﻿import apiService from '../services/api.service.js';
 import modal from '../components/Modal.js';
+import table from '../components/Table.js';
 
 class InvoicesView {
     constructor() {
@@ -215,44 +216,20 @@ class InvoicesView {
             return;
         }
 
-        const rows = this.invoices.map((invoice) => {
-            const customerName = this.customerById.get(invoice.customer_id) || `Cliente #${invoice.customer_id}`;
-            const issued = invoice.issued_at ? new Date(invoice.issued_at).toLocaleString('es-CO') : '-';
-            return `
-                <tr>
-                    <td>${invoice.invoice_number}</td>
-                    <td>${customerName}</td>
-                    <td>${Number(invoice.subtotal).toFixed(2)}</td>
-                    <td>${Number(invoice.iva_amount).toFixed(2)}</td>
-                    <td>${Number(invoice.retencion_amount).toFixed(2)}</td>
-                    <td><strong>${Number(invoice.total).toFixed(2)}</strong></td>
-                    <td>${invoice.status}</td>
-                    <td>${issued}</td>
-                    <td>
-                        <button class="btn btn-sm btn-secondary" data-download-pdf="${invoice.id}">PDF</button>
-                    </td>
-                </tr>
-            `;
-        }).join('');
-
-        container.innerHTML = `
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Numero</th>
-                        <th>Cliente</th>
-                        <th>Subtotal</th>
-                        <th>IVA</th>
-                        <th>Retencion</th>
-                        <th>Total</th>
-                        <th>Estado</th>
-                        <th>Fecha</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>${rows}</tbody>
-            </table>
-        `;
+        container.innerHTML = table.render({
+            data: this.invoices,
+            columns: [
+                { key: 'invoice_number', label: 'Numero' },
+                { key: 'customer_id', label: 'Cliente', formatter: (value) => this.customerById.get(value) || `Cliente #${value}` },
+                { key: 'subtotal', label: 'Subtotal', formatter: (value) => Number(value || 0).toFixed(2) },
+                { key: 'iva_amount', label: 'IVA', formatter: (value) => Number(value || 0).toFixed(2) },
+                { key: 'retencion_amount', label: 'Retencion', formatter: (value) => Number(value || 0).toFixed(2) },
+                { key: 'total', label: 'Total', formatter: (value) => `<strong>${Number(value || 0).toFixed(2)}</strong>` },
+                { key: 'status', label: 'Estado' },
+                { key: 'issued_at', label: 'Fecha', formatter: (value) => value ? new Date(value).toLocaleString('es-CO') : '-' },
+                { key: 'id', label: 'Acciones', formatter: (value) => `<button class="btn btn-sm btn-secondary" data-download-pdf="${value}">PDF</button>` },
+            ],
+        });
     }
 
     addInvoiceItem() {
@@ -268,7 +245,7 @@ class InvoicesView {
             this.services.forEach(s => {
                 const key = `service:${s.id}`;
                 itemsMap[key] = s;
-                itemsOptions += `<option value="${key}" data-price="${s.unit_price || 0}">${s.name || 'Sin nombre'}</option>`;
+                itemsOptions += `<option value="${key}" data-price="${s.price ?? s.unit_price ?? 0}">${s.name || 'Sin nombre'}</option>`;
             });
             itemsOptions += '</optgroup>';
         }
@@ -336,7 +313,7 @@ class InvoicesView {
             } else if (selectedValue.startsWith('service:') || selectedValue.startsWith('product:')) {
                 const item = itemsMap[selectedValue];
                 if (item) {
-                    priceInput.value = item.unit_price || 0;
+                    priceInput.value = item.price ?? item.unit_price ?? 0;
                     priceInput.dataset.itemType = selectedValue.split(':')[0];
                     priceInput.dataset.itemId = selectedValue.split(':')[1];
                 }
@@ -564,7 +541,8 @@ class InvoicesView {
             if (Array.isArray(services) && services.length > 0) {
                 itemsOptions = '<optgroup label="Servicios">';
                 services.forEach(s => {
-                    itemsOptions += `<option value="service:${s.id}" data-price="${s.unit_price || 0}">${s.name || 'Sin nombre'} (${this.formatCurrency(s.unit_price || 0)})</option>`;
+                    const servicePrice = s.price ?? s.unit_price ?? 0;
+                    itemsOptions += `<option value="service:${s.id}" data-price="${servicePrice}">${s.name || 'Sin nombre'} (${this.formatCurrency(servicePrice)})</option>`;
                 });
                 itemsOptions += '</optgroup>';
             }
@@ -711,7 +689,7 @@ class InvoicesView {
                         source_type: 'service',
                         service_id: serviceId,
                         description: service.name,
-                        unit_price: parseFloat(service.unit_price),
+                        unit_price: parseFloat(service.price ?? service.unit_price ?? 0),
                         quantity: quantity
                     };
                 }

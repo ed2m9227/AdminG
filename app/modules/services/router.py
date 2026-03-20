@@ -30,6 +30,12 @@ def resolve_user(
     return user
 
 
+def get_user_ids_for_data_sharing(user: User):
+    if user.parent_user_id:
+        return [user.id, user.parent_user_id]
+    return [user.id]
+
+
 def check_services_access(user: User):
     """Verify user has access to services module - NOT available in free plan."""
     if user.role == "admin":
@@ -140,7 +146,8 @@ def list_services(
 ):
     check_services_access(current_user)
 
-    query = db.query(Service).filter(Service.user_id == current_user.id)
+    user_ids = get_user_ids_for_data_sharing(current_user)
+    query = db.query(Service).filter(Service.user_id.in_(user_ids))
     if not include_inactive:
         query = query.filter(Service.is_active)
 
@@ -155,9 +162,11 @@ def get_service(
 ):
     check_services_access(current_user)
 
+    user_ids = get_user_ids_for_data_sharing(current_user)
+
     service = db.query(Service).filter(
         Service.id == service_id,
-        Service.user_id == current_user.id,
+        Service.user_id.in_(user_ids),
     ).first()
     if not service:
         raise HTTPException(status_code=404, detail="Service not found")

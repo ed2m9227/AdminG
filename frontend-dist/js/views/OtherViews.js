@@ -154,7 +154,8 @@ export class AppointmentsView {
             if (Array.isArray(services) && services.length > 0) {
                 servicesOptions = '<option value="">Seleccionar servicio...</option>';
                 services.forEach(s => {
-                    servicesOptions += `<option value="${s.id}">${s.name || 'Sin nombre'} (${formatCurrency(s.unit_price || 0)})</option>`;
+                    const servicePrice = s.price ?? s.unit_price ?? 0;
+                    servicesOptions += `<option value="${s.id}">${s.name || 'Sin nombre'} (${formatCurrency(servicePrice)})</option>`;
                 });
             } else {
                 servicesOptions = '<option value="">No hay servicios disponibles</option>';
@@ -266,7 +267,8 @@ export class AppointmentsView {
                 servicesOptions = '<option value="">Seleccionar servicio...</option>';
                 services.forEach(s => {
                     const selected = s.id === appointment.service_id ? 'selected' : '';
-                    servicesOptions += `<option value="${s.id}" ${selected}>${s.name || 'Sin nombre'} (${this.formatCurrency(s.unit_price || 0)})</option>`;
+                    const servicePrice = s.price ?? s.unit_price ?? 0;
+                    servicesOptions += `<option value="${s.id}" ${selected}>${s.name || 'Sin nombre'} (${this.formatCurrency(servicePrice)})</option>`;
                 });
             }
         } catch (error) {
@@ -541,7 +543,8 @@ export class PaymentsView {
             if (Array.isArray(services) && services.length > 0) {
                 itemsOptions = '<optgroup label="Servicios">';
                 services.forEach(s => {
-                    itemsOptions += `<option value="service:${s.id}" data-price="${s.unit_price || 0}">${s.name || 'Sin nombre'} (${this.formatCurrency(s.unit_price || 0)})</option>`;
+                    const servicePrice = s.price ?? s.unit_price ?? 0;
+                    itemsOptions += `<option value="service:${s.id}" data-price="${servicePrice}">${s.name || 'Sin nombre'} (${this.formatCurrency(servicePrice)})</option>`;
                 });
                 itemsOptions += '</optgroup>';
             }
@@ -696,7 +699,7 @@ export class PaymentsView {
                         source_type: 'service',
                         service_id: serviceId,
                         description: service.name,
-                        unit_price: parseFloat(service.unit_price),
+                        unit_price: parseFloat(service.price ?? service.unit_price ?? 0),
                         quantity: quantity
                     };
                 }
@@ -1781,7 +1784,7 @@ export class ReportsView {
                         <h3>💰 Ventas del Mes</h3>
                         <div class="value">${this.formatCurrency(this.metrics?.total_revenue_month || 0)}</div>
                         <p style="font-size: 12px; color: #7f8c8d; margin-top: 5px;">
-                            ${this.metrics?.total_appointments_month || 0} transacciones
+                            ${this.metrics?.total_transactions_month || 0} transacciones
                         </p>
                     </div>
                     
@@ -1795,7 +1798,7 @@ export class ReportsView {
                         <h3>📅 Citas del Mes</h3>
                         <div class="value">${this.metrics?.total_appointments_month || 0}</div>
                         <p style="font-size: 12px; color: #7f8c8d; margin-top: 5px;">
-                            Ticket: ${this.formatCurrency(this.metrics?.average_ticket || 0)}
+                            Promedio por venta: ${this.formatCurrency(this.metrics?.average_ticket || 0)}
                         </p>
                     </div>
                     
@@ -1862,6 +1865,7 @@ export class ReportsView {
             this.metrics = {
                 total_customers: 0,
                 total_appointments_month: 0,
+                total_transactions_month: 0,
                 total_revenue_month: 0,
                 average_ticket: 0,
                 pending_payments: 0,

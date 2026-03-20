@@ -108,7 +108,8 @@ def get_dashboard_metrics(
         CashTransaction.transaction_type == "sale",
         CashTransaction.created_at >= month_start
     ).all()
-    cash_sales_total = sum(t.amount for t in cash_sales) or Decimal(0)
+    standalone_cash_sales = [t for t in cash_sales if not t.payment_id]
+    cash_sales_total = sum(t.amount for t in standalone_cash_sales) or Decimal(0)
     
     # Cash register expenses this month
     cash_expenses = db.query(CashTransaction).filter(
@@ -118,12 +119,12 @@ def get_dashboard_metrics(
     ).all()
     cash_expenses_total = sum(t.amount for t in cash_expenses) or Decimal(0)
     
-    # Total revenue = Payments + Cash Sales - Cash Expenses
+    # Total revenue = completed payments + standalone cash sales - cash expenses
     total_revenue = payment_revenue + cash_sales_total - cash_expenses_total
     
-    # Average ticket (only from payments and cash sales, not expenses)
+    # Average ticket based on unique sale transactions only.
     completed_payments = revenue_query.count()
-    total_transactions = completed_payments + len(cash_sales)
+    total_transactions = completed_payments + len(standalone_cash_sales)
     average_ticket = float((payment_revenue + cash_sales_total) / total_transactions) if total_transactions > 0 else 0
     
     # Pending payments
@@ -142,6 +143,7 @@ def get_dashboard_metrics(
     return DashboardMetrics(
         total_customers=total_customers,
         total_appointments_month=appointments_month,
+        total_transactions_month=total_transactions,
         total_revenue_month=float(total_revenue),
         average_ticket=average_ticket,
         pending_payments=float(pending_amount),

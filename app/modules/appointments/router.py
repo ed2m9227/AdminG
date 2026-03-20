@@ -30,6 +30,14 @@ def get_user_ids_for_data_sharing(user: User):
         # Usuario padre/admin: incluir datos propios
         return [user.id]
 
+
+def get_accessible_service(service_id: int, user_ids: list[int], db: Session) -> Service | None:
+    return db.query(Service).filter(
+        Service.id == service_id,
+        Service.user_id.in_(user_ids),
+        Service.is_active.is_(True),
+    ).first()
+
 @router.post("/", response_model=AppointmentOut, status_code=status.HTTP_201_CREATED)
 def create_appointment(
     payload: AppointmentCreate, 
@@ -46,7 +54,7 @@ def create_appointment(
         raise HTTPException(status_code=404, detail="Customer not found")
 
     if payload.service_id is not None:
-        service = db.get(Service, payload.service_id)
+        service = get_accessible_service(payload.service_id, user_ids, db)
         if not service:
             raise HTTPException(status_code=404, detail="Service not found")
     
@@ -125,7 +133,7 @@ def update_appointment(
 
     update_data = payload.model_dump(exclude_unset=True)
     if "service_id" in update_data and update_data["service_id"] is not None:
-        service = db.get(Service, update_data["service_id"])
+        service = get_accessible_service(update_data["service_id"], user_ids, db)
         if not service:
             raise HTTPException(status_code=404, detail="Service not found")
 
