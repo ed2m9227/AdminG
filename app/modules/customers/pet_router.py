@@ -20,11 +20,20 @@ def resolve_user(
     return user
 
 
+def get_user_ids_for_scope(user: User):
+    """Shared scope: self + parent (for sub-users) or self + children (for parent)."""
+    if user.parent_user_id:
+        return [user.id, user.parent_user_id]
+    child_ids = [child.id for child in (user.sub_users or [])]
+    return [user.id, *child_ids]
+
+
 def get_customer_or_404(customer_id: int, current_user: User, db: Session):
-    """Verify customer exists and belongs to current user"""
+    """Verify customer exists within the shared parent-child scope."""
+    user_ids = get_user_ids_for_scope(current_user)
     customer = db.query(Customer).filter(
         Customer.id == customer_id,
-        Customer.user_id == current_user.id
+        Customer.user_id.in_(user_ids)
     ).first()
     if not customer:
         raise HTTPException(status_code=404, detail="Customer not found")

@@ -42,7 +42,7 @@ def get_user_ids_for_data_sharing(user: User):
         return [user.id, user.parent_user_id]
     else:
         # Usuario padre/admin: incluir datos propios y de sub-usuarios
-        child_ids = [child.id for child in (user.sub_users or [])]
+        child_ids = [child.id for child in (user.parent_user or [])]
         return [user.id, *child_ids]
 
 def check_inventory_access(user: User, required_feature: Feature = Feature.VIEW_INVENTORY):

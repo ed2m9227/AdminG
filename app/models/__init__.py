@@ -5,6 +5,7 @@ from app.models.business_config import BusinessConfiguration
 from app.models.service import Service
 from app.models.appointment import Appointment
 from app.models.payment import Payment
+from app.models.payment_item import PaymentItem
 from app.models.plan import Plan, PlanLimit, PlanFeature
 from app.models.inventory import InventoryItem, InventoryCategory, InventoryMovement
 from app.models.inventory_package import InventoryPackage, InventoryPackageItem
@@ -22,6 +23,7 @@ __all__ = [
     "Service", 
     "Appointment", 
     "Payment", 
+    "PaymentItem",
     "Plan", 
     "PlanLimit", 
     "PlanFeature",

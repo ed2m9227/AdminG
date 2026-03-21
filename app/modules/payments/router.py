@@ -68,10 +68,12 @@ def require_payment_manage_access(user: User):
     return True
 
 
-def get_or_create_walk_in_customer(user_id: int, db: Session) -> Customer:
-    """Get or create a default walk-in customer for retail sales."""
+def get_or_create_walk_in_customer(user: User, db: Session) -> Customer:
+    """Get or create a shared walk-in customer. Always owned by the parent account."""
+    # Always anchor to the parent so the whole family group shares one record
+    owner_id = user.parent_user_id if user.parent_user_id else user.id
     customer = db.query(Customer).filter(
-        Customer.user_id == user_id,
+        Customer.user_id == owner_id,
         Customer.full_name == WALK_IN_CUSTOMER_NAME,
     ).first()
 
@@ -79,7 +81,7 @@ def get_or_create_walk_in_customer(user_id: int, db: Session) -> Customer:
         return customer
 
     customer = Customer(
-        user_id=user_id,
+        user_id=owner_id,
         full_name=WALK_IN_CUSTOMER_NAME,
         notes="Creado automáticamente para ventas retail sin cliente.",
     )
@@ -106,7 +108,7 @@ def create_payment(
     require_payment_feature(current_user, Feature.CREATE_PAYMENTS)
     user_ids = get_user_ids_for_data_sharing(current_user.id, db)
     if payload.customer_id is None:
-        customer = get_or_create_walk_in_customer(current_user.id, db)
+        customer = get_or_create_walk_in_customer(current_user, db)
     else:
         customer = db.query(Customer).filter(
             Customer.id == payload.customer_id,
