@@ -1437,8 +1437,24 @@ export class CashRegisterView {
         const btnOpen = document.getElementById('btnOpenCash');
         const btnClose = document.getElementById('btnCloseCash');
         const statusDiv = document.getElementById('cashRegisterStatus');
+        const isSubUser = !!authService.getCurrentUser()?.parent_user_id;
 
         if (!btnOpen || !btnClose || !statusDiv) return;
+
+        if (isSubUser) {
+            btnOpen.style.display = 'none';
+            btnClose.style.display = 'none';
+            if (this.cashRegisterOpen) {
+                statusDiv.innerHTML = '✅ Caja Abierta (sesion del padre)';
+                statusDiv.style.background = 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)';
+                statusDiv.style.color = '#065f46';
+            } else {
+                statusDiv.innerHTML = '🔒 Caja Cerrada (esperando apertura del padre)';
+                statusDiv.style.background = 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)';
+                statusDiv.style.color = '#991b1b';
+            }
+            return;
+        }
 
         if (this.cashRegisterOpen) {
             // Caja abierta: mostrar botón cerrar

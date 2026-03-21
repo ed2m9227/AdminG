@@ -119,10 +119,9 @@ export class Sidebar {
 
         if (plan === 'starter' && !isParentAccount) {
             return features.filter(feature => ![
-                'create_customers', 'edit_customers', 'delete_customers',
-                'create_appointments', 'edit_appointments', 'delete_appointments',
-                'create_products', 'edit_products', 'delete_products',
-                'create_payments'
+                'edit_customers', 'delete_customers',
+                'edit_appointments', 'delete_appointments',
+                'edit_products', 'delete_products'
             ].includes(feature));
         }
 

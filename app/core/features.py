@@ -244,16 +244,12 @@ ROLE_PERMISSIONS: Dict[str, Set[str]] = {
 
 STARTER_PARENT_ONLY_PLANS = {"starter", "basic", "AdminG_Basic"}
 STARTER_PARENT_ONLY_FEATURES = {
-    Feature.CREATE_CUSTOMERS,
     Feature.EDIT_CUSTOMERS,
     Feature.DELETE_CUSTOMERS,
-    Feature.CREATE_APPOINTMENTS,
     Feature.EDIT_APPOINTMENTS,
     Feature.DELETE_APPOINTMENTS,
-    Feature.CREATE_PRODUCTS,
     Feature.EDIT_PRODUCTS,
     Feature.DELETE_PRODUCTS,
-    Feature.CREATE_PAYMENTS,
 }
 
 

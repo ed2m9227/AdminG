@@ -48,6 +48,11 @@ class CashTransactionOut(BaseModel):
 class OpenCashRegister(BaseModel):
     initial_amount: float
 
+
+def get_cash_owner_id(user: User) -> int:
+    """Sub-users operate over the parent cash register session."""
+    return user.parent_user_id if user.parent_user_id else user.id
+
 @router.get("/")
 async def get_cash_register_status(
     current_user: User = Depends(get_current_user_with_plan_check),
@@ -55,22 +60,11 @@ async def get_cash_register_status(
 ):
     """Obtener estado actual de la caja registradora"""
     user = db.query(User).filter(User.id == int(current_user["id"])).first()
-    
-    # For team users, check if parent has open session
-    if user.parent_user_id:
-        parent_session = db.query(CashRegisterSession).filter(
-            CashRegisterSession.user_id == user.parent_user_id,
-            CashRegisterSession.is_active == True
-        ).first()
-        if not parent_session:
-            return {
-                "status": "closed",
-                "message": "La caja debe ser abierta por el usuario padre primero"
-            }
-    
-    # Check if user has active session
+    owner_user_id = get_cash_owner_id(user)
+
+    # Check active session for owner (parent for sub-users)
     session = db.query(CashRegisterSession).filter(
-        CashRegisterSession.user_id == user.id,
+        CashRegisterSession.user_id == owner_user_id,
         CashRegisterSession.is_active == True
     ).first()
     
@@ -79,7 +73,7 @@ async def get_cash_register_status(
     
     # Calcular totales desde apertura
     transactions = db.query(CashTransaction).filter(
-        CashTransaction.user_id == user.id,
+        CashTransaction.user_id == owner_user_id,
         CashTransaction.created_at >= session.opened_at
     ).all()
     
@@ -109,22 +103,11 @@ async def create_transaction(
     Para ventas: descuenta automáticamente stock de los items incluidos
     """
     user = db.query(User).filter(User.id == int(current_user["id"])).first()
-    
-    # For team users, check if parent has open session
-    if user.parent_user_id:
-        parent_session = db.query(CashRegisterSession).filter(
-            CashRegisterSession.user_id == user.parent_user_id,
-            CashRegisterSession.is_active == True
-        ).first()
-        if not parent_session:
-            raise HTTPException(
-                status_code=400, 
-                detail="La caja debe ser abierta por el usuario padre primero"
-            )
-    
+    owner_user_id = get_cash_owner_id(user)
+
     # Check if session is open
     session = db.query(CashRegisterSession).filter(
-        CashRegisterSession.user_id == user.id,
+        CashRegisterSession.user_id == owner_user_id,
         CashRegisterSession.is_active == True
     ).first()
     if not session:
@@ -139,7 +122,7 @@ async def create_transaction(
         for item_sale in transaction.items:
             item = db.query(InventoryItem).filter(
                 InventoryItem.id == item_sale.item_id,
-                InventoryItem.user_id == user.id
+                InventoryItem.user_id == owner_user_id
             ).first()
             
             if not item:
@@ -157,7 +140,7 @@ async def create_transaction(
     
     # Crear transacción
     db_transaction = CashTransaction(
-        user_id=user.id,
+        user_id=owner_user_id,
         customer_id=transaction.customer_id,
         payment_id=transaction.payment_id,  # NUEVO: Conectar a Payment
         transaction_type=transaction.transaction_type,
@@ -179,9 +162,10 @@ async def get_transactions(
 ):
     """Listar transacciones de caja del usuario actual"""
     user = db.query(User).filter(User.id == int(current_user["id"])).first()
+    owner_user_id = get_cash_owner_id(user)
     
     transactions = db.query(CashTransaction).filter(
-        CashTransaction.user_id == user.id
+        CashTransaction.user_id == owner_user_id
     ).order_by(CashTransaction.created_at.desc()).limit(limit).all()
     
     return transactions
@@ -194,18 +178,10 @@ async def open_cash_register(
 ):
     """Abrir caja registradora con monto inicial"""
     user = db.query(User).filter(User.id == int(current_user["id"])).first()
-    
-    # For team users, check if parent has open session
+
+    # Sub-users operate with parent's cash and cannot open independently
     if user.parent_user_id:
-        parent_session = db.query(CashRegisterSession).filter(
-            CashRegisterSession.user_id == user.parent_user_id,
-            CashRegisterSession.is_active == True
-        ).first()
-        if not parent_session:
-            raise HTTPException(
-                status_code=400, 
-                detail="La caja debe ser abierta por el usuario padre primero"
-            )
+        raise HTTPException(status_code=403, detail="Solo el usuario padre puede abrir caja")
     
     # Check if already open
     existing = db.query(CashRegisterSession).filter(
@@ -249,6 +225,10 @@ async def close_cash_register(
 ):
     """Cerrar caja registradora y generar reporte"""
     user = db.query(User).filter(User.id == int(current_user["id"])).first()
+
+    # Sub-users operate with parent's cash and cannot close independently
+    if user.parent_user_id:
+        raise HTTPException(status_code=403, detail="Solo el usuario padre puede cerrar caja")
     
     # Get active session
     session = db.query(CashRegisterSession).filter(

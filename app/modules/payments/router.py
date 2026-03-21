@@ -58,6 +58,13 @@ def require_payment_feature(user: User, feature: Feature):
     raise HTTPException(status_code=403, detail="Feature not available in your plan")
 
 
+def require_payment_manage_access(user: User):
+    """Starter sub-users can create payments, but parent keeps full payment management."""
+    if user.parent_user_id and user.plan in ["starter", "basic", "AdminG_Basic"]:
+        raise HTTPException(status_code=403, detail="Solo el usuario padre puede editar o eliminar pagos")
+    return True
+
+
 def get_or_create_walk_in_customer(user_id: int, db: Session) -> Customer:
     """Get or create a default walk-in customer for retail sales."""
     customer = db.query(Customer).filter(
@@ -244,7 +251,7 @@ def update_payment(
     current_user: User = Depends(resolve_user),
 ):
     """Update payment status, concept, or service"""
-    require_payment_feature(current_user, Feature.CREATE_PAYMENTS)
+    require_payment_manage_access(current_user)
     user_ids = get_user_ids_for_data_sharing(current_user.id, db)
     payment = db.query(Payment).filter(
         Payment.id == payment_id,
@@ -346,7 +353,7 @@ def delete_payment(
     current_user: User = Depends(resolve_user),
 ):
     """Delete payment (admin only)"""
-    require_payment_feature(current_user, Feature.CREATE_PAYMENTS)
+    require_payment_manage_access(current_user)
     payment = db.query(Payment).filter(
         Payment.id == payment_id,
         Payment.user_id == current_user.id
