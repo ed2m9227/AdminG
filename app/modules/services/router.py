@@ -32,8 +32,12 @@ def resolve_user(
 
 def get_user_ids_for_data_sharing(user: User):
     if user.parent_user_id:
-        return [user.id, user.parent_user_id]
-    return [user.id]
+        parent = user.sub_users
+        sibling_ids = [child.id for child in (parent.parent_user or [])] if parent else []
+        return list(dict.fromkeys([user.parent_user_id, user.id, *sibling_ids]))
+
+    child_ids = [child.id for child in (user.parent_user or [])]
+    return [user.id, *child_ids]
 
 
 def check_services_access(user: User):

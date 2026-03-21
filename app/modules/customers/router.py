@@ -22,8 +22,10 @@ def resolve_user(
 def get_user_ids_for_data_sharing(user: User):
     """Retorna list de user_ids a incluir en queries (para compartir datos padre-hijo)"""
     if user.parent_user_id:
-        # Sub-usuario: incluir datos del padre y propio
-        return [user.id, user.parent_user_id]
+        # Sub-usuario: incluir padre, propio y hermanos
+        parent = user.sub_users
+        sibling_ids = [child.id for child in (parent.parent_user or [])] if parent else []
+        return list(dict.fromkeys([user.parent_user_id, user.id, *sibling_ids]))
     else:
         # Usuario padre/admin: incluir datos propios y de sub-usuarios
         child_ids = [child.id for child in (user.parent_user or [])]

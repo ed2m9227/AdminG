@@ -21,10 +21,13 @@ def resolve_user(
 
 
 def get_user_ids_for_scope(user: User):
-    """Shared scope: self + parent (for sub-users) or self + children (for parent)."""
+    """Shared scope: parent + self + siblings (sub-user) or self + children (parent)."""
     if user.parent_user_id:
-        return [user.id, user.parent_user_id]
-    child_ids = [child.id for child in (user.sub_users or [])]
+        parent = user.sub_users
+        sibling_ids = [child.id for child in (parent.parent_user or [])] if parent else []
+        return list(dict.fromkeys([user.parent_user_id, user.id, *sibling_ids]))
+
+    child_ids = [child.id for child in (user.parent_user or [])]
     return [user.id, *child_ids]
 
 
