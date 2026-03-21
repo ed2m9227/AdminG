@@ -65,6 +65,8 @@ export class ApiService {
                 throw requestError;
             }
 
+            // 204 No Content (DELETE) has no body to parse
+            if (response.status === 204) return null;
             return await response.json();
         } catch (error) {
             console.error(`API Error [${method} ${endpoint}]:`, error);

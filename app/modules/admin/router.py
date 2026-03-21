@@ -420,7 +420,7 @@ def create_team_user(
         if existing:
             raise HTTPException(status_code=400, detail="El email ya está registrado")
 
-        if role not in ["viewer", "manager", "admin"]:
+        if role not in ["viewer", "editor", "manager", "admin"]:
             raise HTTPException(status_code=400, detail="Rol inválido")
 
         # Crear usuario hijo con onboarding ya completado

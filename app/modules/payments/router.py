@@ -201,7 +201,21 @@ def create_payment(
                 subtotal=subtotal,
             )
             db.add(payment_item)
-    
+
+            # Descontar stock para items de inventario (productos)
+            if inventory_id_int:
+                inv_item = db.query(InventoryItem).filter(
+                    InventoryItem.id == inventory_id_int,
+                    InventoryItem.user_id.in_(user_ids)
+                ).first()
+                if inv_item and inv_item.item_type == 'product':
+                    qty_int = int(qty)
+                    if inv_item.quantity >= qty_int:
+                        inv_item.quantity -= qty_int
+                    else:
+                        inv_item.quantity = 0  # no quedarse en negativo
+                    db.add(inv_item)
+
     db.commit()
     db.refresh(payment)
     

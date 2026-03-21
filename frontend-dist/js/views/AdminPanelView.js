@@ -402,9 +402,9 @@ export class TeamManagementView {
                                                   border-radius: 6px; font-size: 14px; box-sizing: border-box;
                                                   background: white; cursor: pointer;
                                                   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
+                        <option value="editor" selected>Editor (lectura y creación)</option>
+                        <option value="manager">Gerente (acceso completo)</option>
                         <option value="viewer">Espectador (solo lectura)</option>
-                        <option value="editor">Editor (lectura y escritura)</option>
-                        <option value="manager">Gerente (control total)</option>
                     </select>
                 </div>
 
@@ -521,9 +521,9 @@ export class TeamManagementView {
                                                   border-radius: 6px; font-size: 14px; box-sizing: border-box;
                                                   background: white; cursor: pointer;
                                                   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
+                        <option value="editor" selected>Editor (lectura y creación)</option>
+                        <option value="manager">Gerente (acceso completo)</option>
                         <option value="viewer">Espectador (solo lectura)</option>
-                        <option value="editor">Editor (lectura y escritura)</option>
-                        <option value="manager">Gerente (control total)</option>
                     </select>
                 </div>
 

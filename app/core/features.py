@@ -243,6 +243,8 @@ ROLE_PERMISSIONS: Dict[str, Set[str]] = {
 }
 
 STARTER_PARENT_ONLY_PLANS = {"starter", "basic", "AdminG_Basic"}
+
+# editor role: can create but NOT edit or delete (current sub-user default)
 STARTER_PARENT_ONLY_FEATURES = {
     Feature.EDIT_CUSTOMERS,
     Feature.DELETE_CUSTOMERS,
@@ -250,6 +252,17 @@ STARTER_PARENT_ONLY_FEATURES = {
     Feature.DELETE_APPOINTMENTS,
     Feature.EDIT_PRODUCTS,
     Feature.DELETE_PRODUCTS,
+}
+
+# viewer role: strictly read-only — all write operations are blocked
+VIEWER_BLOCKED_FEATURES = {
+    Feature.CREATE_CUSTOMERS, Feature.EDIT_CUSTOMERS, Feature.DELETE_CUSTOMERS,
+    Feature.CREATE_APPOINTMENTS, Feature.EDIT_APPOINTMENTS, Feature.DELETE_APPOINTMENTS,
+    Feature.CREATE_PRODUCTS, Feature.EDIT_PRODUCTS, Feature.DELETE_PRODUCTS,
+    Feature.CREATE_PAYMENTS,
+    Feature.OPEN_REGISTER, Feature.CLOSE_REGISTER,
+    Feature.CREATE_DOCUMENTS, Feature.EDIT_DOCUMENTS, Feature.DELETE_DOCUMENTS,
+    Feature.CREATE_AUTHORIZATIONS, Feature.MANAGE_AUTHORIZATIONS,
 }
 
 
@@ -282,13 +295,21 @@ def has_feature(plan: str, feature: Feature, role: str = "viewer", is_parent_acc
     """
     if plan == "admin" or role == "admin":
         return True
-    
+
     features = PLAN_FEATURES.get(plan, set())
     if feature not in features:
         return False
 
-    if plan in STARTER_PARENT_ONLY_PLANS and not is_parent_account:
-        return feature not in STARTER_PARENT_ONLY_FEATURES
+    if not is_parent_account:
+        # viewer: read-only — block all write features
+        if role == "viewer":
+            return feature not in VIEWER_BLOCKED_FEATURES
+        # manager: full access regardless of parent/child status
+        if role == "manager":
+            return True
+        # editor (default sub-user): can create, cannot edit/delete
+        if plan in STARTER_PARENT_ONLY_PLANS:
+            return feature not in STARTER_PARENT_ONLY_FEATURES
 
     return True
 
