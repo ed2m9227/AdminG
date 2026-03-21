@@ -64,9 +64,10 @@ async def disable_cache_middleware(request: Request, call_next):
 # Manejador global de excepciones
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
+    import json as _json
     logger.error(f"Error no manejado: {exc}", exc_info=True)
     return Response(
-        content=f"{{\"detail\": \"Error interno del servidor: {str(exc)}\"}}",
+        content=_json.dumps({"detail": f"Error interno del servidor: {str(exc)}"}),
         status_code=500,
         media_type="application/json"
     )

@@ -19,16 +19,17 @@ def resolve_user(
         raise HTTPException(status_code=404, detail="User not found")
     return user
 
-def get_user_ids_for_data_sharing(user: User):
+def get_user_ids_for_data_sharing(user: User, db: Session):
     """Retorna list de user_ids a incluir en queries (para compartir datos padre-hijo)"""
     if user.parent_user_id:
         # Sub-usuario: incluir padre, propio y hermanos
-        parent = user.sub_users
-        sibling_ids = [child.id for child in (parent.parent_user or [])] if parent else []
+        sibling_ids = [
+            uid for (uid,) in db.query(User.id).filter(User.parent_user_id == user.parent_user_id).all()
+        ]
         return list(dict.fromkeys([user.parent_user_id, user.id, *sibling_ids]))
     else:
         # Usuario padre/admin: incluir datos propios y de sub-usuarios
-        child_ids = [child.id for child in (user.parent_user or [])]
+        child_ids = [uid for (uid,) in db.query(User.id).filter(User.parent_user_id == user.id).all()]
         return [user.id, *child_ids]
 
 def require_customer_feature(user: User, feature: Feature):
@@ -63,7 +64,7 @@ def list_customers(
     current_user: User = Depends(resolve_user)
 ):
     require_customer_feature(current_user, Feature.VIEW_CUSTOMERS)
-    user_ids = get_user_ids_for_data_sharing(current_user)
+    user_ids = get_user_ids_for_data_sharing(current_user, db)
     return db.query(Customer).filter(
         Customer.user_id.in_(user_ids)
     ).offset(skip).limit(limit).all()
@@ -75,7 +76,7 @@ def get_customer(
     current_user: User = Depends(resolve_user)
 ):
     require_customer_feature(current_user, Feature.VIEW_CUSTOMERS)
-    user_ids = get_user_ids_for_data_sharing(current_user)
+    user_ids = get_user_ids_for_data_sharing(current_user, db)
     customer = db.query(Customer).filter(
         Customer.id == customer_id,
         Customer.user_id.in_(user_ids)
@@ -92,7 +93,7 @@ def update_customer(
     current_user: User = Depends(resolve_user)
 ):
     require_customer_feature(current_user, Feature.EDIT_CUSTOMERS)
-    user_ids = get_user_ids_for_data_sharing(current_user)
+    user_ids = get_user_ids_for_data_sharing(current_user, db)
     customer = db.query(Customer).filter(
         Customer.id == customer_id,
         Customer.user_id.in_(user_ids)
@@ -116,7 +117,7 @@ def delete_customer(
     current_user: User = Depends(resolve_user)
 ):
     require_customer_feature(current_user, Feature.DELETE_CUSTOMERS)
-    user_ids = get_user_ids_for_data_sharing(current_user)
+    user_ids = get_user_ids_for_data_sharing(current_user, db)
     customer = db.query(Customer).filter(
         Customer.id == customer_id,
         Customer.user_id.in_(user_ids)

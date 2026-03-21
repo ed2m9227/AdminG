@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+﻿from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from app.db.session import get_db
@@ -35,16 +35,17 @@ def resolve_user(
         raise HTTPException(status_code=404, detail="User not found")
     return user
 
-def get_user_ids_for_data_sharing(user: User):
+def get_user_ids_for_data_sharing(user: User, db: Session):
     """Retorna list de user_ids a incluir en queries (para compartir datos padre-hijo)"""
     if user.parent_user_id:
         # Sub-usuario: incluir padre, propio y hermanos
-        parent = user.sub_users
-        sibling_ids = [child.id for child in (parent.parent_user or [])] if parent else []
+        sibling_ids = [
+            uid for (uid,) in db.query(User.id).filter(User.parent_user_id == user.parent_user_id).all()
+        ]
         return list(dict.fromkeys([user.parent_user_id, user.id, *sibling_ids]))
     else:
         # Usuario padre/admin: incluir datos propios y de sub-usuarios
-        child_ids = [child.id for child in (user.parent_user or [])]
+        child_ids = [uid for (uid,) in db.query(User.id).filter(User.parent_user_id == user.id).all()]
         return [user.id, *child_ids]
 
 def check_inventory_access(user: User, required_feature: Feature = Feature.VIEW_INVENTORY):
@@ -121,7 +122,7 @@ def list_categories(
     """List all inventory categories - Only AdminPro Start/Max"""
     check_inventory_access(current_user, Feature.VIEW_INVENTORY)
     
-    user_ids = get_user_ids_for_data_sharing(current_user)
+    user_ids = get_user_ids_for_data_sharing(current_user, db)
     return db.query(InventoryCategory).filter(
         InventoryCategory.user_id.in_(user_ids)
     ).offset(skip).limit(limit).all()
@@ -142,8 +143,8 @@ def create_item(
     """
     check_inventory_access(current_user, Feature.CREATE_PRODUCTS)
     
-    user_ids = get_user_ids_for_data_sharing(current_user)
-    normalized_sku = (payload.sku or "").strip() or None  # blank → None, skip uniqueness
+    user_ids = get_user_ids_for_data_sharing(current_user, db)
+    normalized_sku = (payload.sku or "").strip() or None  # blank â†’ None, skip uniqueness
     payload.sku = normalized_sku
 
     if normalized_sku:
@@ -167,7 +168,7 @@ def create_item(
         if not category or category.user_id not in user_ids:
             raise HTTPException(status_code=404, detail="Category not found")
     
-    # Validar según tipo de item
+    # Validar segÃºn tipo de item
     if payload.item_type in ['service', 'package']:
         # Servicios y paquetes no usan stock propio
         quantity = 0
@@ -220,7 +221,7 @@ def list_items(
     """
     check_inventory_access(current_user, Feature.VIEW_INVENTORY)
     
-    user_ids = get_user_ids_for_data_sharing(current_user)
+    user_ids = get_user_ids_for_data_sharing(current_user, db)
     query = db.query(InventoryItem).filter(InventoryItem.user_id.in_(user_ids))
     
     if low_stock:
@@ -246,7 +247,7 @@ def list_low_stock_alerts(
     if threshold < 0:
         raise HTTPException(status_code=400, detail="Threshold must be >= 0")
 
-    user_ids = get_user_ids_for_data_sharing(current_user)
+    user_ids = get_user_ids_for_data_sharing(current_user, db)
     query = db.query(InventoryItem).filter(
         InventoryItem.user_id.in_(user_ids),
         InventoryItem.quantity <= threshold
@@ -262,7 +263,7 @@ def get_item(
     """Get inventory item by ID - Only AdminPro Start/Max"""
     check_inventory_access(current_user, Feature.VIEW_INVENTORY)
     
-    user_ids = get_user_ids_for_data_sharing(current_user)
+    user_ids = get_user_ids_for_data_sharing(current_user, db)
     item = db.query(InventoryItem).filter(
         InventoryItem.id == item_id,
         InventoryItem.user_id.in_(user_ids)
@@ -283,7 +284,7 @@ def update_item(
     """Update inventory item - Only AdminPro Start/Max"""
     check_inventory_access(current_user, Feature.EDIT_PRODUCTS)
     
-    user_ids = get_user_ids_for_data_sharing(current_user)
+    user_ids = get_user_ids_for_data_sharing(current_user, db)
     item = db.query(InventoryItem).filter(
         InventoryItem.id == item_id,
         InventoryItem.user_id.in_(user_ids)
@@ -295,7 +296,7 @@ def update_item(
     update_data = payload.model_dump(exclude_unset=True)
     
     # Validate SKU uniqueness if changed (within owner scope)
-    user_ids = get_user_ids_for_data_sharing(current_user)
+    user_ids = get_user_ids_for_data_sharing(current_user, db)
 
     if "category_id" in update_data and update_data["category_id"]:
         category = db.get(InventoryCategory, update_data["category_id"])
@@ -303,7 +304,7 @@ def update_item(
             raise HTTPException(status_code=404, detail="Category not found")
 
     if "sku" in update_data and update_data["sku"] != item.sku:
-        new_sku = (update_data["sku"] or "").strip() or None  # blank → None
+        new_sku = (update_data["sku"] or "").strip() or None  # blank â†’ None
         update_data["sku"] = new_sku
         if new_sku:
             existing = db.query(InventoryItem).filter(
@@ -353,7 +354,7 @@ def delete_item(
     """Delete inventory item - Only AdminPro Start/Max"""
     check_inventory_access(current_user, Feature.DELETE_PRODUCTS)
     
-    user_ids = get_user_ids_for_data_sharing(current_user)
+    user_ids = get_user_ids_for_data_sharing(current_user, db)
     item = db.query(InventoryItem).filter(
         InventoryItem.id == item_id,
         InventoryItem.user_id.in_(user_ids)
@@ -518,7 +519,7 @@ def create_movement(
     Solo productos afectan el stock. Servicios y paquetes no tienen movimientos.
     """
     check_inventory_access(current_user, Feature.CREATE_PRODUCTS)
-    user_ids = get_user_ids_for_data_sharing(current_user)
+    user_ids = get_user_ids_for_data_sharing(current_user, db)
     
     item = db.query(InventoryItem).filter(
         InventoryItem.id == payload.item_id,
@@ -569,7 +570,7 @@ def list_movements(
 ):
     """List movements for an item"""
     check_inventory_access(current_user, Feature.VIEW_INVENTORY)
-    user_ids = get_user_ids_for_data_sharing(current_user)
+    user_ids = get_user_ids_for_data_sharing(current_user, db)
     
     item = db.query(InventoryItem).filter(
         InventoryItem.id == item_id,
@@ -595,7 +596,7 @@ def list_services(
     """List all services (InventoryItems with type='service')"""
     check_inventory_access(current_user, Feature.VIEW_INVENTORY)
     
-    user_ids = get_user_ids_for_data_sharing(current_user)
+    user_ids = get_user_ids_for_data_sharing(current_user, db)
     return db.query(InventoryItem).filter(
         InventoryItem.user_id.in_(user_ids),
         InventoryItem.item_type == 'service',
@@ -689,7 +690,7 @@ def get_service(
     """Get service details"""
     check_inventory_access(current_user, Feature.VIEW_INVENTORY)
     
-    user_ids = get_user_ids_for_data_sharing(current_user)
+    user_ids = get_user_ids_for_data_sharing(current_user, db)
     service = db.query(InventoryItem).filter(
         InventoryItem.id == service_id,
         InventoryItem.user_id.in_(user_ids),

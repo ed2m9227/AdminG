@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+﻿from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session, joinedload
 from app.db.session import get_db
 from app.models.appointment import Appointment
@@ -22,23 +22,24 @@ def resolve_user(
         raise HTTPException(status_code=404, detail="User not found")
     return user
 
-def get_user_ids_for_data_sharing(user: User):
+def get_user_ids_for_data_sharing(user: User, db: Session):
     """Retorna list de user_ids a incluir en queries (para compartir datos padre-hijo)"""
     if user.parent_user_id:
         # Sub-usuario: incluir padre, propio y hermanos
-        parent = user.sub_users
-        sibling_ids = [child.id for child in (parent.parent_user or [])] if parent else []
+        sibling_ids = [
+            uid for (uid,) in db.query(User.id).filter(User.parent_user_id == user.parent_user_id).all()
+        ]
         return list(dict.fromkeys([user.parent_user_id, user.id, *sibling_ids]))
     else:
         # Usuario padre/admin: incluir datos propios y de sub-usuarios
-        child_ids = [child.id for child in (user.parent_user or [])]
+        child_ids = [uid for (uid,) in db.query(User.id).filter(User.parent_user_id == user.id).all()]
         return [user.id, *child_ids]
 
 
 def get_accessible_service(service_id: int, user_ids: list[int], db: Session) -> InventoryItem | None:
     """Look up a service by id from inventory_items (item_type='service').
     Falls back to any active inventory service owned by the user if the exact match
-    is not found — this handles the mismatch between legacy Service model and the
+    is not found â€” this handles the mismatch between legacy Service model and the
     InventoryItem-based services that the frontend manages.
     """
     return db.query(InventoryItem).filter(
@@ -61,7 +62,7 @@ def create_appointment(
 ):
     """Crear cita - los sub-usuarios pueden crear citas para clientes del padre"""
     require_appointment_feature(current_user, Feature.CREATE_APPOINTMENTS)
-    user_ids = get_user_ids_for_data_sharing(current_user)
+    user_ids = get_user_ids_for_data_sharing(current_user, db)
     customer = db.query(Customer).filter(
         Customer.id == payload.customer_id,
         Customer.user_id.in_(user_ids)
@@ -102,7 +103,7 @@ def list_appointments(
 ):
     """Listar citas de clientes del usuario actual y del padre si es sub-usuario"""
     require_appointment_feature(current_user, Feature.VIEW_APPOINTMENTS)
-    user_ids = get_user_ids_for_data_sharing(current_user)
+    user_ids = get_user_ids_for_data_sharing(current_user, db)
     return (
         db.query(Appointment)
         .join(Customer)
@@ -121,7 +122,7 @@ def get_appointment(
 ):
     """Obtener detalles de una cita"""
     require_appointment_feature(current_user, Feature.VIEW_APPOINTMENTS)
-    user_ids = get_user_ids_for_data_sharing(current_user)
+    user_ids = get_user_ids_for_data_sharing(current_user, db)
     appointment = db.query(Appointment).join(Customer).filter(
         Appointment.id == appointment_id,
         Customer.user_id.in_(user_ids)
@@ -141,7 +142,7 @@ def update_appointment(
 ):
     """Actualizar cita - los sub-usuarios pueden actualizar citas del padre"""
     require_appointment_feature(current_user, Feature.EDIT_APPOINTMENTS)
-    user_ids = get_user_ids_for_data_sharing(current_user)
+    user_ids = get_user_ids_for_data_sharing(current_user, db)
     appointment = db.query(Appointment).join(Customer).filter(
         Appointment.id == appointment_id,
         Customer.user_id.in_(user_ids)
@@ -172,7 +173,7 @@ def delete_appointment(
 ):
     """Eliminar cita - los sub-usuarios pueden eliminar citas del padre"""
     require_appointment_feature(current_user, Feature.DELETE_APPOINTMENTS)
-    user_ids = get_user_ids_for_data_sharing(current_user)
+    user_ids = get_user_ids_for_data_sharing(current_user, db)
     appointment = db.query(Appointment).join(Customer).filter(
         Appointment.id == appointment_id,
         Customer.user_id.in_(user_ids)
