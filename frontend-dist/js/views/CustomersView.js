@@ -34,13 +34,16 @@ export class CustomersView {
     }
 
     render() {
+        const user = authService.getCurrentUser();
+        const isAdmin = user && user.role === 'admin';
+        const features = authService.getFeatures();
+        const canCreateCustomers = isAdmin || features.includes('create_customers');
+
         return `
             <div class="card">
                 <div class="card-header">
                     <h2 class="card-title">Lista de Clientes</h2>
-                    <button class="btn btn-success" id="btnNewCustomer">
-                        + Nuevo Cliente
-                    </button>
+                    ${canCreateCustomers ? `<button class="btn btn-success" id="btnNewCustomer">+ Nuevo Cliente</button>` : ''}
                 </div>
                 <div class="card-body" id="customersTableContainer">
                     ${this.renderTable()}
@@ -51,7 +54,10 @@ export class CustomersView {
 
     renderTable() {
         const user = authService.getCurrentUser();
-        const isSubUser = !!user?.parent_user_id;
+        const isAdmin = user && user.role === 'admin';
+        const features = authService.getFeatures();
+        const canEditCustomers = isAdmin || features.includes('edit_customers');
+        const canDeleteCustomers = isAdmin || features.includes('delete_customers');
         
         const columns = [
             { key: 'full_name', label: 'Nombre' },
@@ -66,15 +72,20 @@ export class CustomersView {
             }
         ];
         
-        // Solo mostrar acciones si es admin (no es sub-usuario)
-        if (!isSubUser) {
+        if (canEditCustomers || canDeleteCustomers) {
             columns.push({
                 key: 'actions',
                 label: 'Acciones',
-                formatter: (_, row) => `
-                    <button class="btn btn-sm" data-edit="${row.id}">✏️ Editar</button>
-                    <button class="btn btn-sm btn-danger" data-delete="${row.id}">🗑️ Eliminar</button>
-                `
+                formatter: (_, row) => {
+                    let html = '';
+                    if (canEditCustomers) {
+                        html += `<button class="btn btn-sm" data-edit="${row.id}">✏️ Editar</button>`;
+                    }
+                    if (canDeleteCustomers) {
+                        html += ` <button class="btn btn-sm btn-danger" data-delete="${row.id}">🗑️ Eliminar</button>`;
+                    }
+                    return html || '-';
+                }
             });
         }
 

@@ -29,7 +29,8 @@ export class InventoryView {
         const user = authService.getCurrentUser();
         const isAdmin = user && user.role === 'admin';
         const features = authService.getFeatures();
-        const canCreateCategory = isAdmin || features.includes('create_products');
+        const canCreateProducts = isAdmin || features.includes('create_products');
+        const canCreateCategory = canCreateProducts;
         
         return `
             <div class="card">
@@ -37,12 +38,8 @@ export class InventoryView {
                     <h2 class="card-title">Inventario y Servicios</h2>
                     <div style="display: flex; gap: 10px;">
                         ${canCreateCategory ? '<button class="btn btn-primary" id="btnNewCategory">+ 📂 Nueva Categoría</button>' : ''}
-                        <button class="btn btn-success" id="btnNewProduct" style="${this.activeTab === 'products' ? '' : 'display: none;'}">
-                            + 📦 Nuevo Producto
-                        </button>
-                        <button class="btn btn-success" id="btnNewService" style="${this.activeTab === 'services' ? '' : 'display: none;'}">
-                            + 📋 Nuevo Servicio
-                        </button>
+                        ${canCreateProducts ? `<button class="btn btn-success" id="btnNewProduct" style="${this.activeTab === 'products' ? '' : 'display: none;'}">+ 📦 Nuevo Producto</button>` : ''}
+                        ${canCreateProducts ? `<button class="btn btn-success" id="btnNewService" style="${this.activeTab === 'services' ? '' : 'display: none;'}">+ 📋 Nuevo Servicio</button>` : ''}
                     </div>
                 </div>
                 
@@ -94,6 +91,9 @@ export class InventoryView {
     renderProductsTable() {
         const user = authService.getCurrentUser();
         const isAdmin = user && user.role === 'admin';
+        const features = authService.getFeatures();
+        const canEditProducts = isAdmin || features.includes('edit_products');
+        const canDeleteProducts = isAdmin || features.includes('delete_products');
         
         const columns = [
             { key: 'sku', label: 'SKU' },
@@ -105,11 +105,14 @@ export class InventoryView {
                 key: 'actions',
                 label: 'Acciones',
                 formatter: (_, row) => {
-                    let buttons = `<button class="btn btn-sm btn-primary" data-edit="${row.id}">✏️ Editar</button>`;
-                    if (isAdmin) {
+                    let buttons = '';
+                    if (canEditProducts) {
+                        buttons += `<button class="btn btn-sm btn-primary" data-edit="${row.id}">✏️ Editar</button>`;
+                    }
+                    if (canDeleteProducts) {
                         buttons += ` <button class="btn btn-sm btn-danger" data-delete-item="${row.id}">🗑️ Eliminar</button>`;
                     }
-                    return buttons;
+                    return buttons || '-';
                 }
             }
         ];
@@ -125,6 +128,9 @@ export class InventoryView {
     renderServicesTable() {
         const user = authService.getCurrentUser();
         const isAdmin = user && user.role === 'admin';
+        const features = authService.getFeatures();
+        const canEditServices = isAdmin || features.includes('edit_products');
+        const canDeleteServices = isAdmin || features.includes('delete_products');
         
         const columns = [
             { key: 'name', label: 'Nombre' },
@@ -135,11 +141,14 @@ export class InventoryView {
                 key: 'actions',
                 label: 'Acciones',
                 formatter: (_, row) => {
-                    let buttons = `<button class="btn btn-sm btn-primary" data-edit-service="${row.id}">✏️ Editar</button>`;
-                    if (isAdmin) {
+                    let buttons = '';
+                    if (canEditServices) {
+                        buttons += `<button class="btn btn-sm btn-primary" data-edit-service="${row.id}">✏️ Editar</button>`;
+                    }
+                    if (canDeleteServices) {
                         buttons += ` <button class="btn btn-sm btn-danger" data-delete-service="${row.id}">🗑️ Eliminar</button>`;
                     }
-                    return buttons;
+                    return buttons || '-';
                 }
             }
         ];
@@ -379,17 +388,19 @@ export class InventoryView {
         const user = authService.getCurrentUser();
         const features = authService.getFeatures();
         
-        // Si no es admin y no tiene la característica, bloquear
-        if (user && user.role !== 'admin' && !features.includes('create_products')) {
+        const productId = formData.get('product_id') ? parseInt(formData.get('product_id')) : null;
+        const requiredFeature = productId ? 'edit_products' : 'create_products';
+
+        // Si no es admin y no tiene la característica requerida, bloquear
+        if (user && user.role !== 'admin' && !features.includes(requiredFeature)) {
             modal.alert({
                 type: 'warning',
                 title: 'Aumenta tu plan',
-                message: 'No puedes añadir productos con tu plan actual. Aumenta tu plan para acceder a esta función.'
+                message: 'No tienes permisos para esta acción en productos con tu plan actual.'
             });
             return;
         }
 
-        const productId = formData.get('product_id') ? parseInt(formData.get('product_id')) : null;
         const productData = {
             sku: formData.get('sku') || null,
             name: formData.get('name'),
@@ -443,6 +454,17 @@ export class InventoryView {
     }
     
     async deleteItem(itemId) {
+        const user = authService.getCurrentUser();
+        const features = authService.getFeatures();
+        if (user && user.role !== 'admin' && !features.includes('delete_products')) {
+            await modal.alert({
+                type: 'warning',
+                title: 'Sin permisos',
+                message: 'No tienes permisos para eliminar productos.'
+            });
+            return;
+        }
+
         const confirmed = await modal.confirm({
             title: 'Confirmar eliminación',
             message: '¿Estás seguro de que quieres eliminar este producto?',
@@ -564,6 +586,18 @@ export class InventoryView {
     async saveService(e, modalElement, existingService = null) {
         const form = e.target;
         const formData = new FormData(form);
+        const user = authService.getCurrentUser();
+        const features = authService.getFeatures();
+        const requiredFeature = existingService ? 'edit_products' : 'create_products';
+
+        if (user && user.role !== 'admin' && !features.includes(requiredFeature)) {
+            await modal.alert({
+                type: 'warning',
+                title: 'Sin permisos',
+                message: 'No tienes permisos para guardar servicios.'
+            });
+            return;
+        }
 
         // Generate SKU from name if not provided
         let naming = formData.get('name');
@@ -622,6 +656,17 @@ export class InventoryView {
     }
     
     async deleteService(serviceId) {
+        const user = authService.getCurrentUser();
+        const features = authService.getFeatures();
+        if (user && user.role !== 'admin' && !features.includes('delete_products')) {
+            await modal.alert({
+                type: 'warning',
+                title: 'Sin permisos',
+                message: 'No tienes permisos para eliminar servicios.'
+            });
+            return;
+        }
+
         const confirmed = await modal.confirm({
             title: 'Confirmar eliminación',
             message: '¿Estás seguro de que quieres eliminar este servicio?',

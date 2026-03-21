@@ -25,11 +25,16 @@ export class AppointmentsView {
     }
 
     render() {
+        const user = authService.getCurrentUser();
+        const isAdmin = user && user.role === 'admin';
+        const features = authService.getFeatures();
+        const canCreateAppointments = isAdmin || features.includes('create_appointments');
+
         return `
             <div class="card">
                 <div class="card-header">
                     <h2 class="card-title">Citas</h2>
-                    <button class="btn btn-success" id="btnNewAppointment">+ 📅 Nueva Cita</button>
+                    ${canCreateAppointments ? '<button class="btn btn-success" id="btnNewAppointment">+ 📅 Nueva Cita</button>' : ''}
                 </div>
                 <div class="card-body" id="appointmentsContainer">
                     ${this.renderTable()}
@@ -41,6 +46,9 @@ export class AppointmentsView {
     renderTable() {
         const user = authService.getCurrentUser();
         const isAdmin = user && user.role === 'admin';
+        const features = authService.getFeatures();
+        const canEditAppointments = isAdmin || features.includes('edit_appointments');
+        const canDeleteAppointments = isAdmin || features.includes('delete_appointments');
         
         const columns = [
             { key: 'scheduled_at', label: 'Fecha', type: 'datetime' },
@@ -49,14 +57,20 @@ export class AppointmentsView {
             { key: 'status', label: 'Estado', type: 'badge' }
         ];
         
-        if (isAdmin) {
+        if (canEditAppointments || canDeleteAppointments) {
             columns.push({
                 key: 'actions',
                 label: 'Acciones',
-                formatter: (_, row) => `
-                    <button class="btn btn-sm btn-primary" data-edit-appointment="${row.id}">✏️ Editar</button>
-                    <button class="btn btn-sm btn-danger" data-delete-appointment="${row.id}">🗑️ Eliminar</button>
-                `
+                formatter: (_, row) => {
+                    let html = '';
+                    if (canEditAppointments) {
+                        html += `<button class="btn btn-sm btn-primary" data-edit-appointment="${row.id}">✏️ Editar</button>`;
+                    }
+                    if (canDeleteAppointments) {
+                        html += ` <button class="btn btn-sm btn-danger" data-delete-appointment="${row.id}">🗑️ Eliminar</button>`;
+                    }
+                    return html || '-';
+                }
             });
         }
 
@@ -375,13 +389,18 @@ export class PaymentsView {
     }
 
     render() {
+        const user = authService.getCurrentUser();
+        const isAdmin = user && user.role === 'admin';
+        const features = authService.getFeatures();
+        const canCreatePayments = isAdmin || features.includes('create_payments');
+
         return `
             <div class="card">
                 <div class="card-header">
                     <h2 class="card-title">Pagos</h2>
                     <div style="display:flex;gap:8px;align-items:center;">
                         <button class="btn" id="btnVerPlanes" style="background:#f0f0ff;color:#667eea;border:1px solid #c5c8f0;">📋 Ver Planes</button>
-                        <button class="btn btn-success" id="btnNewPayment">+ 💳 Nuevo Pago</button>
+                        ${canCreatePayments ? '<button class="btn btn-success" id="btnNewPayment">+ 💳 Nuevo Pago</button>' : ''}
                     </div>
                 </div>
                 <div class="card-body" id="paymentsContainer">
@@ -394,6 +413,8 @@ export class PaymentsView {
     renderTable() {
         const user = authService.getCurrentUser();
         const isAdmin = user && user.role === 'admin';
+        const features = authService.getFeatures();
+        const canManagePayments = isAdmin || features.includes('create_payments');
         
         const statusFormatter = (status) => {
             const statusMap = {
@@ -413,7 +434,7 @@ export class PaymentsView {
             { key: 'status', label: 'Estado', formatter: statusFormatter }
         ];
         
-        if (isAdmin) {
+        if (canManagePayments) {
             columns.push({
                 key: 'actions',
                 label: 'Acciones',
