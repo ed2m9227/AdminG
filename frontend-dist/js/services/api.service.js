@@ -110,6 +110,10 @@ export class ApiService {
         return this.post('/inventory/items', item);
     }
 
+    async updateInventoryItem(id, item) {
+        return this.put(`/inventory/items/${id}`, item);
+    }
+
     async getInventoryCategories() {
         return this.get('/inventory/categories');
     }

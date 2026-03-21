@@ -311,6 +311,7 @@ export class InventoryView {
 
         const content = `
             <form id="productForm" class="modal-form">
+                ${product?.id ? `<input type="hidden" name="product_id" value="${product.id}">` : ''}
                 <div class="form-row">
                     <div class="form-group">
                         <label>
@@ -388,6 +389,7 @@ export class InventoryView {
             return;
         }
 
+        const productId = formData.get('product_id') ? parseInt(formData.get('product_id')) : null;
         const productData = {
             sku: formData.get('sku') || null,
             name: formData.get('name'),
@@ -399,7 +401,11 @@ export class InventoryView {
         };
 
         try {
-            await apiService.createInventoryItem(productData);
+            if (productId) {
+                await apiService.updateInventoryItem(productId, productData);
+            } else {
+                await apiService.createInventoryItem(productData);
+            }
             modal.close(modalElement);
             await this.loadInventory();
             
