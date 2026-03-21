@@ -53,6 +53,16 @@ def get_cash_owner_id(user: User) -> int:
     """Sub-users operate over the parent cash register session."""
     return user.parent_user_id if user.parent_user_id else user.id
 
+
+def get_shared_user_ids(user: User, db: Session) -> list[int]:
+    """Return owner scope ids so parent and children share cash history and stock visibility."""
+    if user.parent_user_id:
+        sibling_ids = [uid for (uid,) in db.query(User.id).filter(User.parent_user_id == user.parent_user_id).all()]
+        return list(dict.fromkeys([user.parent_user_id, user.id, *sibling_ids]))
+
+    child_ids = [uid for (uid,) in db.query(User.id).filter(User.parent_user_id == user.id).all()]
+    return [user.id, *child_ids]
+
 @router.get("/")
 async def get_cash_register_status(
     current_user: User = Depends(get_current_user_with_plan_check),
@@ -61,6 +71,7 @@ async def get_cash_register_status(
     """Obtener estado actual de la caja registradora"""
     user = db.query(User).filter(User.id == int(current_user["id"])).first()
     owner_user_id = get_cash_owner_id(user)
+    user_ids = get_shared_user_ids(user, db)
 
     # Check active session for owner (parent for sub-users)
     session = db.query(CashRegisterSession).filter(
@@ -73,7 +84,7 @@ async def get_cash_register_status(
     
     # Calcular totales desde apertura
     transactions = db.query(CashTransaction).filter(
-        CashTransaction.user_id == owner_user_id,
+        CashTransaction.user_id.in_(user_ids),
         CashTransaction.created_at >= session.opened_at
     ).all()
     
@@ -104,6 +115,7 @@ async def create_transaction(
     """
     user = db.query(User).filter(User.id == int(current_user["id"])).first()
     owner_user_id = get_cash_owner_id(user)
+    user_ids = get_shared_user_ids(user, db)
 
     # Check if session is open
     session = db.query(CashRegisterSession).filter(
@@ -122,7 +134,7 @@ async def create_transaction(
         for item_sale in transaction.items:
             item = db.query(InventoryItem).filter(
                 InventoryItem.id == item_sale.item_id,
-                InventoryItem.user_id == owner_user_id
+                InventoryItem.user_id.in_(user_ids)
             ).first()
             
             if not item:
@@ -162,10 +174,10 @@ async def get_transactions(
 ):
     """Listar transacciones de caja del usuario actual"""
     user = db.query(User).filter(User.id == int(current_user["id"])).first()
-    owner_user_id = get_cash_owner_id(user)
+    user_ids = get_shared_user_ids(user, db)
     
     transactions = db.query(CashTransaction).filter(
-        CashTransaction.user_id == owner_user_id
+        CashTransaction.user_id.in_(user_ids)
     ).order_by(CashTransaction.created_at.desc()).limit(limit).all()
     
     return transactions
@@ -225,6 +237,7 @@ async def close_cash_register(
 ):
     """Cerrar caja registradora y generar reporte"""
     user = db.query(User).filter(User.id == int(current_user["id"])).first()
+    user_ids = get_shared_user_ids(user, db)
 
     # Sub-users operate with parent's cash and cannot close independently
     if user.parent_user_id:
@@ -240,7 +253,7 @@ async def close_cash_register(
     
     # Calcular totales desde apertura
     transactions = db.query(CashTransaction).filter(
-        CashTransaction.user_id == user.id,
+        CashTransaction.user_id.in_(user_ids),
         CashTransaction.created_at >= session.opened_at
     ).all()
     

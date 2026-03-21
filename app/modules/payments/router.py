@@ -34,12 +34,15 @@ WALK_IN_CUSTOMER_NAME = "Cliente Mostrador"
 def get_user_ids_for_data_sharing(user_id: int, db: Session):
     """Retorna list de user_ids a incluir en queries (para compartir datos padre-hijo)"""
     user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        return [user_id]
     if user and user.parent_user_id:
         # Sub-usuario: incluir datos del padre y propio
         return [user.id, user.parent_user_id]
     else:
-        # Usuario padre/admin: incluir datos propios
-        return [user.id]
+        # Usuario padre/admin: incluir datos propios y de sub-usuarios
+        child_ids = [uid for (uid,) in db.query(User.id).filter(User.parent_user_id == user.id).all()]
+        return [user.id, *child_ids]
 
 
 def resolve_user(
@@ -354,9 +357,10 @@ def delete_payment(
 ):
     """Delete payment (admin only)"""
     require_payment_manage_access(current_user)
+    user_ids = get_user_ids_for_data_sharing(current_user.id, db)
     payment = db.query(Payment).filter(
         Payment.id == payment_id,
-        Payment.user_id == current_user.id
+        Payment.user_id.in_(user_ids)
     ).first()
     
     if not payment:

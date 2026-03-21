@@ -28,8 +28,9 @@ def get_user_ids_for_data_sharing(user: User):
         # Sub-usuario: incluir datos del padre y propio
         return [user.id, user.parent_user_id]
     else:
-        # Usuario padre/admin: incluir datos propios
-        return [user.id]
+        # Usuario padre/admin: incluir datos propios y de sub-usuarios
+        child_ids = [child.id for child in (user.sub_users or [])]
+        return [user.id, *child_ids]
 
 
 def get_accessible_service(service_id: int, user_ids: list[int], db: Session) -> InventoryItem | None:

@@ -41,8 +41,9 @@ def get_user_ids_for_data_sharing(user: User):
         # Sub-usuario: incluir datos del padre y propio
         return [user.id, user.parent_user_id]
     else:
-        # Usuario padre/admin: incluir datos propios
-        return [user.id]
+        # Usuario padre/admin: incluir datos propios y de sub-usuarios
+        child_ids = [child.id for child in (user.sub_users or [])]
+        return [user.id, *child_ids]
 
 def check_inventory_access(user: User, required_feature: Feature = Feature.VIEW_INVENTORY):
     """Check if the user can use inventory endpoints.
@@ -515,10 +516,11 @@ def create_movement(
     Solo productos afectan el stock. Servicios y paquetes no tienen movimientos.
     """
     check_inventory_access(current_user, Feature.CREATE_PRODUCTS)
+    user_ids = get_user_ids_for_data_sharing(current_user)
     
     item = db.query(InventoryItem).filter(
         InventoryItem.id == payload.item_id,
-        InventoryItem.user_id == current_user.id
+        InventoryItem.user_id.in_(user_ids)
     ).first()
     
     if not item:
@@ -565,10 +567,11 @@ def list_movements(
 ):
     """List movements for an item"""
     check_inventory_access(current_user, Feature.VIEW_INVENTORY)
+    user_ids = get_user_ids_for_data_sharing(current_user)
     
     item = db.query(InventoryItem).filter(
         InventoryItem.id == item_id,
-        InventoryItem.user_id == current_user.id
+        InventoryItem.user_id.in_(user_ids)
     ).first()
     
     if not item:

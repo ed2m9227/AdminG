@@ -25,8 +25,9 @@ def get_user_ids_for_data_sharing(user: User):
         # Sub-usuario: incluir datos del padre y propio
         return [user.id, user.parent_user_id]
     else:
-        # Usuario padre/admin: incluir datos propios
-        return [user.id]
+        # Usuario padre/admin: incluir datos propios y de sub-usuarios
+        child_ids = [child.id for child in (user.sub_users or [])]
+        return [user.id, *child_ids]
 
 def require_customer_feature(user: User, feature: Feature):
     if has_feature(user.plan, feature, user.role, is_parent_account=not bool(user.parent_user_id)):
