@@ -192,19 +192,19 @@ export class ApiService {
 
     // ========== SERVICES ==========
     async getServices() {
-        return this.get('/inventory/services');
+        return this.get('/services');
     }
 
     async createService(service) {
-        return this.post('/inventory/services', service);
+        return this.post('/services', service);
     }
 
     async updateService(serviceId, service) {
-        return this.put(`/inventory/services/${serviceId}`, service);
+        return this.put(`/services/${serviceId}`, service);
     }
 
     async deleteService(serviceId) {
-        return this.delete(`/inventory/services/${serviceId}`);
+        return this.delete(`/services/${serviceId}`);
     }
 
     async getServicePackages() {

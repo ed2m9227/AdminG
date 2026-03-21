@@ -92,6 +92,7 @@ export class InventoryView {
         const user = authService.getCurrentUser();
         const isAdmin = user && user.role === 'admin';
         const features = authService.getFeatures();
+        const canViewProducts = isAdmin || features.includes('view_inventory');
         const canEditProducts = isAdmin || features.includes('edit_products');
         const canDeleteProducts = isAdmin || features.includes('delete_products');
         
@@ -106,8 +107,11 @@ export class InventoryView {
                 label: 'Acciones',
                 formatter: (_, row) => {
                     let buttons = '';
+                    if (canViewProducts) {
+                        buttons += `<button class="btn btn-sm" data-view-item="${row.id}">👁️ Ver</button>`;
+                    }
                     if (canEditProducts) {
-                        buttons += `<button class="btn btn-sm btn-primary" data-edit="${row.id}">✏️ Editar</button>`;
+                        buttons += ` <button class="btn btn-sm btn-primary" data-edit="${row.id}">✏️ Editar</button>`;
                     }
                     if (canDeleteProducts) {
                         buttons += ` <button class="btn btn-sm btn-danger" data-delete-item="${row.id}">🗑️ Eliminar</button>`;
@@ -129,6 +133,7 @@ export class InventoryView {
         const user = authService.getCurrentUser();
         const isAdmin = user && user.role === 'admin';
         const features = authService.getFeatures();
+        const canViewServices = isAdmin || features.includes('view_inventory');
         const canEditServices = isAdmin || features.includes('edit_products');
         const canDeleteServices = isAdmin || features.includes('delete_products');
         
@@ -136,14 +141,17 @@ export class InventoryView {
             { key: 'name', label: 'Nombre' },
             { key: 'description', label: 'Descripción' },
             { key: 'unit_price', label: 'Precio', formatter: (v) => this.formatCurrency(v || 0) },
-            { key: 'duration_minutes', label: 'Duración (min)', formatter: (v) => v ? `${v} min` : 'N/A' },
+            { key: 'duration_minutes', label: 'Duración (min)', formatter: (v) => (v || v === 0) ? `${v} min` : 'N/A' },
             {
                 key: 'actions',
                 label: 'Acciones',
                 formatter: (_, row) => {
                     let buttons = '';
+                    if (canViewServices) {
+                        buttons += `<button class="btn btn-sm" data-view-service="${row.id}">👁️ Ver</button>`;
+                    }
                     if (canEditServices) {
-                        buttons += `<button class="btn btn-sm btn-primary" data-edit-service="${row.id}">✏️ Editar</button>`;
+                        buttons += ` <button class="btn btn-sm btn-primary" data-edit-service="${row.id}">✏️ Editar</button>`;
                     }
                     if (canDeleteServices) {
                         buttons += ` <button class="btn btn-sm btn-danger" data-delete-service="${row.id}">🗑️ Eliminar</button>`;
@@ -204,7 +212,13 @@ export class InventoryView {
     async loadServices() {
         try {
             const services = await apiService.getServices();
-            this.services = Array.isArray(services) ? services : [];
+            this.services = Array.isArray(services)
+                ? services.map((s) => ({
+                    ...s,
+                    unit_price: s.unit_price ?? s.price ?? 0,
+                    duration_minutes: s.duration_minutes ?? null,
+                }))
+                : [];
             this.updateTable();
         } catch (error) {
             console.error('Error loading services:', error);
@@ -264,6 +278,12 @@ export class InventoryView {
                 const productId = editBtn.dataset.edit;
                 this.editProduct(productId);
             }
+
+            const viewItemBtn = e.target.closest('[data-view-item]');
+            if (viewItemBtn) {
+                const productId = viewItemBtn.dataset.viewItem;
+                this.showProductViewModal(productId);
+            }
             
             const deleteBtn = e.target.closest('[data-delete-item]');
             if (deleteBtn) {
@@ -276,6 +296,12 @@ export class InventoryView {
             if (editServiceBtn) {
                 const serviceId = editServiceBtn.dataset.editService;
                 this.editService(serviceId);
+            }
+
+            const viewServiceBtn = e.target.closest('[data-view-service]');
+            if (viewServiceBtn) {
+                const serviceId = viewServiceBtn.dataset.viewService;
+                this.showServiceViewModal(serviceId);
             }
             
             const deleteServiceBtn = e.target.closest('[data-delete-service]');
@@ -564,7 +590,7 @@ export class InventoryView {
                     </div>
                     <div class="form-group">
                         <label>Duración (minutos)</label>
-                        <input type="number" name="duration_minutes" value="${service?.duration_minutes || 60}" placeholder="60">
+                        <input type="number" name="duration_minutes" value="${service?.duration_minutes ?? 60}" placeholder="60">
                     </div>
                 </div>
                 <div class="modal-actions">
@@ -599,25 +625,19 @@ export class InventoryView {
             return;
         }
 
-        // Generate SKU from name if not provided
-        let naming = formData.get('name');
-        let sku = naming ? naming.toUpperCase().slice(0, 3) : 'SVC';
-        
         const serviceData = {
-            sku: sku + '-' + Date.now(),
             name: formData.get('name'),
             description: formData.get('description') || null,
-            unit_price: parseFloat(formData.get('unit_price')),
-            category_id: null,
-            cost: null,
-            item_type: 'service'
+            price: parseFloat(formData.get('unit_price')),
+            duration_minutes: formData.get('duration_minutes') ? parseInt(formData.get('duration_minutes'), 10) : null,
+            is_active: true,
         };
 
         try {
             if (existingService) {
-                await apiService.put(`/inventory/services/${existingService.id}`, serviceData);
+                await apiService.updateService(existingService.id, serviceData);
             } else {
-                await apiService.post('/inventory/services', serviceData);
+                await apiService.createService(serviceData);
             }
             
             modal.close(modalElement);
@@ -654,6 +674,44 @@ export class InventoryView {
             this.showServiceModal(service);
         }
     }
+
+    showProductViewModal(itemId) {
+        const item = this.items.find(i => i.id == itemId);
+        if (!item) return;
+
+        const content = `
+            <div class="modal-form">
+                <div class="form-group"><label>SKU</label><input type="text" value="${item.sku || '-'}" disabled></div>
+                <div class="form-group"><label>Nombre</label><input type="text" value="${item.name || '-'}" disabled></div>
+                <div class="form-group"><label>Categoría</label><input type="text" value="${item.category || '-'}" disabled></div>
+                <div class="form-row">
+                    <div class="form-group"><label>Stock</label><input type="text" value="${item.quantity ?? 0}" disabled></div>
+                    <div class="form-group"><label>Precio</label><input type="text" value="${this.formatCurrency(item.unit_price || 0)}" disabled></div>
+                </div>
+                <div class="form-group"><label>Descripción</label><textarea rows="3" disabled>${item.description || '-'}</textarea></div>
+            </div>
+        `;
+
+        modal.show({ title: 'Ver Producto', content, size: 'medium' });
+    }
+
+    showServiceViewModal(serviceId) {
+        const service = this.services.find(s => s.id == serviceId);
+        if (!service) return;
+
+        const content = `
+            <div class="modal-form">
+                <div class="form-group"><label>Nombre</label><input type="text" value="${service.name || '-'}" disabled></div>
+                <div class="form-row">
+                    <div class="form-group"><label>Precio</label><input type="text" value="${this.formatCurrency(service.unit_price || service.price || 0)}" disabled></div>
+                    <div class="form-group"><label>Duración</label><input type="text" value="${(service.duration_minutes || service.duration_minutes === 0) ? `${service.duration_minutes} min` : 'N/A'}" disabled></div>
+                </div>
+                <div class="form-group"><label>Descripción</label><textarea rows="3" disabled>${service.description || '-'}</textarea></div>
+            </div>
+        `;
+
+        modal.show({ title: 'Ver Servicio', content, size: 'medium' });
+    }
     
     async deleteService(serviceId) {
         const user = authService.getCurrentUser();
@@ -676,7 +734,7 @@ export class InventoryView {
         
         if (confirmed) {
             try {
-                await apiService.delete(`/inventory/services/${serviceId}`);
+                await apiService.deleteService(serviceId);
                 await this.loadServices();
                 await modal.alert({ 
                     title: 'Éxito', 

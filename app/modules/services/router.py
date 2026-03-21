@@ -30,13 +30,12 @@ def resolve_user(
     return user
 
 
-def get_user_ids_for_data_sharing(user: User):
+def get_user_ids_for_data_sharing(user: User, db: Session):
     if user.parent_user_id:
-        parent = user.sub_users
-        sibling_ids = [child.id for child in (parent.parent_user or [])] if parent else []
+        sibling_ids = [uid for (uid,) in db.query(User.id).filter(User.parent_user_id == user.parent_user_id).all()]
         return list(dict.fromkeys([user.parent_user_id, user.id, *sibling_ids]))
 
-    child_ids = [child.id for child in (user.parent_user or [])]
+    child_ids = [uid for (uid,) in db.query(User.id).filter(User.parent_user_id == user.id).all()]
     return [user.id, *child_ids]
 
 
@@ -150,7 +149,7 @@ def list_services(
 ):
     check_services_access(current_user)
 
-    user_ids = get_user_ids_for_data_sharing(current_user)
+    user_ids = get_user_ids_for_data_sharing(current_user, db)
     query = db.query(Service).filter(Service.user_id.in_(user_ids))
     if not include_inactive:
         query = query.filter(Service.is_active)
@@ -166,7 +165,7 @@ def get_service(
 ):
     check_services_access(current_user)
 
-    user_ids = get_user_ids_for_data_sharing(current_user)
+    user_ids = get_user_ids_for_data_sharing(current_user, db)
 
     service = db.query(Service).filter(
         Service.id == service_id,

@@ -237,7 +237,7 @@ PLAN_FEATURES["AdminPro_Max"] = PLAN_FEATURES["max"]
 # Role-based permissions
 ROLE_PERMISSIONS: Dict[str, Set[str]] = {
     "team": {"view"},
-    "viewer": {"view"},
+    "viewer": {"view", "create"},
     "manager": {"view", "edit", "create"},
     "admin": {"view", "edit", "create", "delete", "manage"},
 }
@@ -254,17 +254,19 @@ STARTER_PARENT_ONLY_FEATURES = {
     Feature.DELETE_PRODUCTS,
 }
 
-# viewer role: strictly read-only — all write operations are blocked
-VIEWER_BLOCKED_FEATURES = {
-    Feature.CREATE_CUSTOMERS, Feature.EDIT_CUSTOMERS, Feature.DELETE_CUSTOMERS,
-    Feature.CREATE_APPOINTMENTS, Feature.EDIT_APPOINTMENTS, Feature.DELETE_APPOINTMENTS,
-    Feature.CREATE_PRODUCTS, Feature.EDIT_PRODUCTS, Feature.DELETE_PRODUCTS,
-    Feature.CREATE_PAYMENTS,
-    Feature.OPEN_REGISTER, Feature.CLOSE_REGISTER,
-    Feature.CREATE_DOCUMENTS, Feature.EDIT_DOCUMENTS, Feature.DELETE_DOCUMENTS,
-    Feature.CREATE_AUTHORIZATIONS, Feature.MANAGE_AUTHORIZATIONS,
+VIEWER_RESTRICTED_FEATURES = {
+    Feature.EDIT_CUSTOMERS,
+    Feature.DELETE_CUSTOMERS,
+    Feature.EDIT_APPOINTMENTS,
+    Feature.DELETE_APPOINTMENTS,
+    Feature.EDIT_PRODUCTS,
+    Feature.DELETE_PRODUCTS,
+    Feature.EDIT_DOCUMENTS,
+    Feature.DELETE_DOCUMENTS,
+    Feature.MANAGE_AUTHORIZATIONS,
+    Feature.OPEN_REGISTER,
+    Feature.CLOSE_REGISTER,
 }
-
 
 def get_available_features(plan: str, role: str = "viewer", is_parent_account: bool = True) -> List[str]:
     """
@@ -300,14 +302,17 @@ def has_feature(plan: str, feature: Feature, role: str = "viewer", is_parent_acc
     if feature not in features:
         return False
 
+    if role == "viewer" and feature in VIEWER_RESTRICTED_FEATURES:
+        return False
+
     if not is_parent_account:
-        # viewer: read-only — block all write features
-        if role == "viewer":
-            return feature not in VIEWER_BLOCKED_FEATURES
         # manager: full access regardless of parent/child status
         if role == "manager":
             return True
-        # editor (default sub-user): can create, cannot edit/delete
+        # viewer/editor sub-users: can create, cannot edit/delete
+        if role in {"viewer", "editor"} and plan in STARTER_PARENT_ONLY_PLANS:
+            return feature not in STARTER_PARENT_ONLY_FEATURES
+        # fallback for any non-manager role on starter-like plans
         if plan in STARTER_PARENT_ONLY_PLANS:
             return feature not in STARTER_PARENT_ONLY_FEATURES
 

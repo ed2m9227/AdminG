@@ -175,7 +175,7 @@ export class MasterAdminView {
                 const userId = e.target.dataset.userId;
                 const user = this.users.find(u => u.id == userId);
                 const currentRole = user.role;
-                const role = prompt(`Rol actual: ${currentRole}\nNuevo rol (viewer, manager, admin):`, currentRole);
+                const role = prompt(`Rol actual: ${currentRole}\nNuevo rol (viewer, editor, manager, admin):`, currentRole);
 
                 if (role && role !== currentRole) {
                     try {
@@ -404,7 +404,7 @@ export class TeamManagementView {
                                                   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
                         <option value="editor" selected>Editor (lectura y creación)</option>
                         <option value="manager">Gerente (acceso completo)</option>
-                        <option value="viewer">Espectador (solo lectura)</option>
+                        <option value="viewer">Lector (ver y crear)</option>
                     </select>
                 </div>
 
@@ -523,7 +523,7 @@ export class TeamManagementView {
                                                   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
                         <option value="editor" selected>Editor (lectura y creación)</option>
                         <option value="manager">Gerente (acceso completo)</option>
-                        <option value="viewer">Espectador (solo lectura)</option>
+                        <option value="viewer">Lector (ver y crear)</option>
                     </select>
                 </div>
 

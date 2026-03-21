@@ -47,6 +47,7 @@ export class AppointmentsView {
         const user = authService.getCurrentUser();
         const isAdmin = user && user.role === 'admin';
         const features = authService.getFeatures();
+        const canViewAppointments = isAdmin || features.includes('view_appointments');
         const canEditAppointments = isAdmin || features.includes('edit_appointments');
         const canDeleteAppointments = isAdmin || features.includes('delete_appointments');
         
@@ -57,14 +58,17 @@ export class AppointmentsView {
             { key: 'status', label: 'Estado', type: 'badge' }
         ];
         
-        if (canEditAppointments || canDeleteAppointments) {
+        if (canViewAppointments || canEditAppointments || canDeleteAppointments) {
             columns.push({
                 key: 'actions',
                 label: 'Acciones',
                 formatter: (_, row) => {
                     let html = '';
+                    if (canViewAppointments) {
+                        html += `<button class="btn btn-sm" data-view-appointment="${row.id}">👁️ Ver</button>`;
+                    }
                     if (canEditAppointments) {
-                        html += `<button class="btn btn-sm btn-primary" data-edit-appointment="${row.id}">✏️ Editar</button>`;
+                        html += ` <button class="btn btn-sm btn-primary" data-edit-appointment="${row.id}">✏️ Editar</button>`;
                     }
                     if (canDeleteAppointments) {
                         html += ` <button class="btn btn-sm btn-danger" data-delete-appointment="${row.id}">🗑️ Eliminar</button>`;
@@ -124,6 +128,15 @@ export class AppointmentsView {
 
         // Edit appointment listener
         document.addEventListener('click', async (e) => {
+            const viewBtn = e.target.closest('[data-view-appointment]');
+            if (viewBtn) {
+                const appointmentId = viewBtn.dataset.viewAppointment;
+                const appointment = this.appointments.find(a => a.id === parseInt(appointmentId));
+                if (appointment) {
+                    this.showViewAppointmentModal(appointment);
+                }
+            }
+
             const editBtn = e.target.closest('[data-edit-appointment]');
             if (editBtn) {
                 const appointmentId = editBtn.dataset.editAppointment;
@@ -370,6 +383,18 @@ export class AppointmentsView {
             }
         });
     }
+
+    showViewAppointmentModal(appointment) {
+        const content = `
+            <div class="modal-form">
+                <div class="form-group"><label>Fecha y Hora</label><input type="text" value="${new Date(appointment.scheduled_at).toLocaleString('es-CO')}" disabled></div>
+                <div class="form-group"><label>Cliente</label><input type="text" value="${appointment.customer?.full_name || 'N/A'}" disabled></div>
+                <div class="form-group"><label>Estado</label><input type="text" value="${appointment.status || '-'}" disabled></div>
+                <div class="form-group"><label>Notas</label><textarea rows="3" disabled>${appointment.notes || '-'}</textarea></div>
+            </div>
+        `;
+        modal.show({ title: 'Ver Cita', content, size: 'medium' });
+    }
 }
 
 // Payments View
@@ -415,6 +440,7 @@ export class PaymentsView {
         const isAdmin = user && user.role === 'admin';
         const isSubUser = !!user?.parent_user_id;
         const features = authService.getFeatures();
+        const canViewPayments = isAdmin || features.includes('view_payments');
         const canManagePayments = (isAdmin || features.includes('create_payments')) && !isSubUser;
         
         const statusFormatter = (status) => {
@@ -435,14 +461,21 @@ export class PaymentsView {
             { key: 'status', label: 'Estado', formatter: statusFormatter }
         ];
         
-        if (canManagePayments) {
+        if (canViewPayments || canManagePayments) {
             columns.push({
                 key: 'actions',
                 label: 'Acciones',
-                formatter: (_, row) => `
-                    <button class="btn btn-sm btn-primary" data-edit-payment="${row.id}">✏️ Editar</button>
-                    <button class="btn btn-sm btn-danger" data-delete-payment="${row.id}">🗑️ Eliminar</button>
-                `
+                formatter: (_, row) => {
+                    let html = '';
+                    if (canViewPayments) {
+                        html += `<button class="btn btn-sm" data-view-payment="${row.id}">👁️ Ver</button>`;
+                    }
+                    if (canManagePayments) {
+                        html += ` <button class="btn btn-sm btn-primary" data-edit-payment="${row.id}">✏️ Editar</button>`;
+                        html += ` <button class="btn btn-sm btn-danger" data-delete-payment="${row.id}">🗑️ Eliminar</button>`;
+                    }
+                    return html || '-';
+                }
             });
         }
 
@@ -540,6 +573,19 @@ export class PaymentsView {
                     if (payment) {
                         this.showEditPaymentModal(payment);
                     }
+                    return;
+                }
+
+                // Handle view
+                const viewBtn = e.target.closest('[data-view-payment]');
+                if (viewBtn) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const paymentId = viewBtn.dataset.viewPayment;
+                    const payment = this.payments.find(p => p.id === parseInt(paymentId));
+                    if (payment) {
+                        this.showViewPaymentModal(payment);
+                    }
                 }
             };
             
@@ -575,6 +621,24 @@ export class PaymentsView {
             <p style="text-align:center;font-size:11px;color:#aaa;margin-top:14px">Precios en pesos colombianos (COP) • Facturado mensualmente</p>
         `;
         modal.show({ title: '📋 Planes y Precios', content: html, size: 'large' });
+    }
+
+    showViewPaymentModal(payment) {
+        const content = `
+            <div class="modal-form">
+                <div class="form-row">
+                    <div class="form-group"><label>Fecha</label><input type="text" value="${new Date(payment.created_at).toLocaleString('es-CO')}" disabled></div>
+                    <div class="form-group"><label>Estado</label><input type="text" value="${payment.status || '-'}" disabled></div>
+                </div>
+                <div class="form-group"><label>Cliente</label><input type="text" value="${payment.customer?.full_name || 'N/A'}" disabled></div>
+                <div class="form-row">
+                    <div class="form-group"><label>Método</label><input type="text" value="${payment.method || '-'}" disabled></div>
+                    <div class="form-group"><label>Monto</label><input type="text" value="${this.formatCurrency(payment.final_amount || payment.amount || 0)}" disabled></div>
+                </div>
+                <div class="form-group"><label>Notas</label><textarea rows="3" disabled>${payment.notes || '-'}</textarea></div>
+            </div>
+        `;
+        modal.show({ title: 'Ver Pago', content, size: 'medium' });
     }
 
     async showNewPaymentModal() {
@@ -791,7 +855,26 @@ export class PaymentsView {
             }
 
             if (item) {
-                paymentItems.push(item);
+                const mergeKey = item.source_type === 'product'
+                    ? `product:${item.inventory_item_id}`
+                    : item.source_type === 'service'
+                        ? `service:${item.service_id}`
+                        : `custom:${(item.description || '').trim().toLowerCase()}:${item.unit_price}`;
+
+                const existing = paymentItems.find((it) => {
+                    const key = it.source_type === 'product'
+                        ? `product:${it.inventory_item_id}`
+                        : it.source_type === 'service'
+                            ? `service:${it.service_id}`
+                            : `custom:${(it.description || '').trim().toLowerCase()}:${it.unit_price}`;
+                    return key === mergeKey;
+                });
+
+                if (existing) {
+                    existing.quantity += item.quantity;
+                } else {
+                    paymentItems.push(item);
+                }
                 renderItems();
                 updateTotal();
                 itemQty.value = 1;

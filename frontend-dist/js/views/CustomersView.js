@@ -56,6 +56,7 @@ export class CustomersView {
         const user = authService.getCurrentUser();
         const isAdmin = user && user.role === 'admin';
         const features = authService.getFeatures();
+        const canViewCustomers = isAdmin || features.includes('view_customers');
         const canEditCustomers = isAdmin || features.includes('edit_customers');
         const canDeleteCustomers = isAdmin || features.includes('delete_customers');
         
@@ -72,14 +73,17 @@ export class CustomersView {
             }
         ];
         
-        if (canEditCustomers || canDeleteCustomers) {
+        if (canViewCustomers || canEditCustomers || canDeleteCustomers) {
             columns.push({
                 key: 'actions',
                 label: 'Acciones',
                 formatter: (_, row) => {
                     let html = '';
+                    if (canViewCustomers) {
+                        html += `<button class="btn btn-sm" data-view-customer="${row.id}">👁️ Ver</button>`;
+                    }
                     if (canEditCustomers) {
-                        html += `<button class="btn btn-sm" data-edit="${row.id}">✏️ Editar</button>`;
+                        html += ` <button class="btn btn-sm" data-edit="${row.id}">✏️ Editar</button>`;
                     }
                     if (canDeleteCustomers) {
                         html += ` <button class="btn btn-sm btn-danger" data-delete="${row.id}">🗑️ Eliminar</button>`;
@@ -141,6 +145,12 @@ export class CustomersView {
 
         // Botones de editar
         document.addEventListener('click', async (e) => {
+            const viewBtn = e.target.closest('[data-view-customer]');
+            if (viewBtn) {
+                const customerId = viewBtn.dataset.viewCustomer;
+                await this.viewCustomer(customerId);
+            }
+
             const editBtn = e.target.closest('[data-edit]');
             if (editBtn) {
                 const customerId = editBtn.dataset.edit;
@@ -261,6 +271,43 @@ export class CustomersView {
         }
 
         this.showCustomerModal(customer, pet);
+    }
+
+    async viewCustomer(customerId) {
+        const customer = this.customers.find(c => c.id == customerId);
+        if (!customer) return;
+
+        let pet = null;
+        if (this.businessConfig?.has_pet_relationship) {
+            try {
+                const pets = await apiService.getPets(customerId);
+                pet = Array.isArray(pets) && pets.length ? pets[0] : null;
+            } catch (_error) {
+                pet = null;
+            }
+        }
+
+        const petBlock = pet
+            ? `
+                <div class="form-group"><label>Mascota</label><input type="text" value="${pet.name || '-'}" disabled></div>
+                <div class="form-group"><label>Tipo</label><input type="text" value="${pet.animal_type || '-'}" disabled></div>
+                <div class="form-group"><label>Notas mascota</label><textarea rows="2" disabled>${pet.notes || '-'}</textarea></div>
+              `
+            : '<div class="form-group"><label>Mascota</label><input type="text" value="Sin datos" disabled></div>';
+
+        const content = `
+            <div class="modal-form">
+                <div class="form-group"><label>Nombre</label><input type="text" value="${customer.full_name || '-'}" disabled></div>
+                <div class="form-row">
+                    <div class="form-group"><label>Email</label><input type="text" value="${customer.email || '-'}" disabled></div>
+                    <div class="form-group"><label>Teléfono</label><input type="text" value="${customer.phone || '-'}" disabled></div>
+                </div>
+                <div class="form-group"><label>Notas</label><textarea rows="3" disabled>${customer.notes || '-'}</textarea></div>
+                ${petBlock}
+            </div>
+        `;
+
+        modal.show({ title: 'Ver Cliente', content, size: 'medium' });
     }
     
     async deleteCustomer(customerId) {
@@ -392,10 +439,16 @@ export class CustomersView {
             neutered_spayed: formData.get('pet_neutered_spayed') === 'on',
             allergies: formData.get('pet_allergies') || null,
             current_medications: formData.get('pet_current_medications') || null,
-            last_checkup_date: formData.get('pet_last_checkup_date') || null,
+            last_checkup_date: this.normalizeDateTime(formData.get('pet_last_checkup_date')),
             vaccination_status: formData.get('pet_vaccination_status') || null,
             notes: formData.get('pet_notes') || null
         };
+    }
+
+    normalizeDateTime(value) {
+        if (!value) return null;
+        // date input returns YYYY-MM-DD; backend expects datetime for last_checkup_date
+        return value.length === 10 ? `${value}T00:00:00` : value;
     }
 
     toInt(value) {

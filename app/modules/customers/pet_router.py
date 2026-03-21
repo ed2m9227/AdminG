@@ -20,20 +20,21 @@ def resolve_user(
     return user
 
 
-def get_user_ids_for_scope(user: User):
+def get_user_ids_for_scope(user: User, db: Session):
     """Shared scope: parent + self + siblings (sub-user) or self + children (parent)."""
     if user.parent_user_id:
-        parent = user.sub_users
-        sibling_ids = [child.id for child in (parent.parent_user or [])] if parent else []
+        sibling_ids = [
+            uid for (uid,) in db.query(User.id).filter(User.parent_user_id == user.parent_user_id).all()
+        ]
         return list(dict.fromkeys([user.parent_user_id, user.id, *sibling_ids]))
 
-    child_ids = [child.id for child in (user.parent_user or [])]
+    child_ids = [uid for (uid,) in db.query(User.id).filter(User.parent_user_id == user.id).all()]
     return [user.id, *child_ids]
 
 
 def get_customer_or_404(customer_id: int, current_user: User, db: Session):
     """Verify customer exists within the shared parent-child scope."""
-    user_ids = get_user_ids_for_scope(current_user)
+    user_ids = get_user_ids_for_scope(current_user, db)
     customer = db.query(Customer).filter(
         Customer.id == customer_id,
         Customer.user_id.in_(user_ids)

@@ -211,10 +211,12 @@ def create_payment(
                 ).first()
                 if inv_item and inv_item.item_type == 'product':
                     qty_int = int(qty)
-                    if inv_item.quantity >= qty_int:
-                        inv_item.quantity -= qty_int
-                    else:
-                        inv_item.quantity = 0  # no quedarse en negativo
+                    if inv_item.quantity < qty_int:
+                        raise HTTPException(
+                            status_code=400,
+                            detail=f"Stock insuficiente de {inv_item.name}. Disponible: {inv_item.quantity}, Solicitado: {qty_int}"
+                        )
+                    inv_item.quantity -= qty_int
                     db.add(inv_item)
 
     db.commit()
