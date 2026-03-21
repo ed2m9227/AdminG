@@ -117,7 +117,11 @@ def get_user_features(
 
     plan_expired, plan_expires_at = enforce_plan_expiration(user, db)
     
-    features = get_available_features(user.plan, user.role)
+    features = get_available_features(
+        user.plan,
+        user.role,
+        is_parent_account=not bool(user.parent_user_id),
+    )
     limits = get_plan_limits(user.plan)
     
     return {

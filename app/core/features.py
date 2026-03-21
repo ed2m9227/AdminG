@@ -242,8 +242,22 @@ ROLE_PERMISSIONS: Dict[str, Set[str]] = {
     "admin": {"view", "edit", "create", "delete", "manage"},
 }
 
+STARTER_PARENT_ONLY_PLANS = {"starter", "basic", "AdminG_Basic"}
+STARTER_PARENT_ONLY_FEATURES = {
+    Feature.CREATE_CUSTOMERS,
+    Feature.EDIT_CUSTOMERS,
+    Feature.DELETE_CUSTOMERS,
+    Feature.CREATE_APPOINTMENTS,
+    Feature.EDIT_APPOINTMENTS,
+    Feature.DELETE_APPOINTMENTS,
+    Feature.CREATE_PRODUCTS,
+    Feature.EDIT_PRODUCTS,
+    Feature.DELETE_PRODUCTS,
+    Feature.CREATE_PAYMENTS,
+}
 
-def get_available_features(plan: str, role: str = "viewer") -> List[str]:
+
+def get_available_features(plan: str, role: str = "viewer", is_parent_account: bool = True) -> List[str]:
     """
     Obtiene la lista de features disponibles para un plan y rol específicos
     
@@ -255,10 +269,10 @@ def get_available_features(plan: str, role: str = "viewer") -> List[str]:
         Lista de features disponibles
     """
     features = PLAN_FEATURES.get(plan, set())
-    return [f.value for f in features]
+    return [f.value for f in features if has_feature(plan, f, role, is_parent_account)]
 
 
-def has_feature(plan: str, feature: Feature, role: str = "viewer") -> bool:
+def has_feature(plan: str, feature: Feature, role: str = "viewer", is_parent_account: bool = True) -> bool:
     """
     Verifica si un usuario con cierto plan y rol tiene acceso a una feature
     
@@ -274,7 +288,13 @@ def has_feature(plan: str, feature: Feature, role: str = "viewer") -> bool:
         return True
     
     features = PLAN_FEATURES.get(plan, set())
-    return feature in features
+    if feature not in features:
+        return False
+
+    if plan in STARTER_PARENT_ONLY_PLANS and not is_parent_account:
+        return feature not in STARTER_PARENT_ONLY_FEATURES
+
+    return True
 
 
 def get_plan_limits(plan: str) -> Dict[str, int]:

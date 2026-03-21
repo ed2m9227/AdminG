@@ -590,7 +590,11 @@ def get_user_features(
     return {
         "plan": plan_for_display,
         "role": user.role,
-        "features": get_available_features(plan_for_features, user.role),
+        "features": get_available_features(
+            plan_for_features,
+            user.role,
+            is_parent_account=not bool(user.parent_user_id),
+        ),
         "limits": get_plan_limits(plan_for_limits)
     }
 

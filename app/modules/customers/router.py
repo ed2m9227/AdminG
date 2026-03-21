@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.models.customer import Customer
 from app.core.security import get_current_user
+from app.core.features import Feature, has_feature
 from app.models.user import User
 from app.modules.customers.schemas import CustomerCreate, CustomerOut, CustomerUpdate
 
@@ -27,12 +28,18 @@ def get_user_ids_for_data_sharing(user: User):
         # Usuario padre/admin: incluir datos propios
         return [user.id]
 
+def require_customer_feature(user: User, feature: Feature):
+    if has_feature(user.plan, feature, user.role, is_parent_account=not bool(user.parent_user_id)):
+        return True
+    raise HTTPException(status_code=403, detail="Feature not available in your plan")
+
 @router.post("/", response_model=CustomerOut, status_code=status.HTTP_201_CREATED)
 def create_customer(
     payload: CustomerCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(resolve_user)
 ):
+    require_customer_feature(current_user, Feature.CREATE_CUSTOMERS)
     customer = Customer(
         user_id=current_user.id,
         full_name=payload.full_name,
@@ -52,6 +59,7 @@ def list_customers(
     db: Session = Depends(get_db),
     current_user: User = Depends(resolve_user)
 ):
+    require_customer_feature(current_user, Feature.VIEW_CUSTOMERS)
     user_ids = get_user_ids_for_data_sharing(current_user)
     return db.query(Customer).filter(
         Customer.user_id.in_(user_ids)
@@ -63,6 +71,7 @@ def get_customer(
     db: Session = Depends(get_db),
     current_user: User = Depends(resolve_user)
 ):
+    require_customer_feature(current_user, Feature.VIEW_CUSTOMERS)
     user_ids = get_user_ids_for_data_sharing(current_user)
     customer = db.query(Customer).filter(
         Customer.id == customer_id,
@@ -79,6 +88,7 @@ def update_customer(
     db: Session = Depends(get_db),
     current_user: User = Depends(resolve_user)
 ):
+    require_customer_feature(current_user, Feature.EDIT_CUSTOMERS)
     user_ids = get_user_ids_for_data_sharing(current_user)
     customer = db.query(Customer).filter(
         Customer.id == customer_id,
@@ -102,6 +112,7 @@ def delete_customer(
     db: Session = Depends(get_db),
     current_user: User = Depends(resolve_user)
 ):
+    require_customer_feature(current_user, Feature.DELETE_CUSTOMERS)
     user_ids = get_user_ids_for_data_sharing(current_user)
     customer = db.query(Customer).filter(
         Customer.id == customer_id,

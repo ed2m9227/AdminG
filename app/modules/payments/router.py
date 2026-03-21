@@ -18,6 +18,7 @@ from app.modules.payments.schemas import (
     PlanUpgradeResponse,
 )
 from app.core.security import get_current_user
+from app.core.features import Feature, has_feature
 
 router = APIRouter(
     prefix="/payments",
@@ -39,6 +40,22 @@ def get_user_ids_for_data_sharing(user_id: int, db: Session):
     else:
         # Usuario padre/admin: incluir datos propios
         return [user.id]
+
+
+def resolve_user(
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    user = db.query(User).filter(User.id == int(current_user["id"])).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
+
+def require_payment_feature(user: User, feature: Feature):
+    if has_feature(user.plan, feature, user.role, is_parent_account=not bool(user.parent_user_id)):
+        return True
+    raise HTTPException(status_code=403, detail="Feature not available in your plan")
 
 
 def get_or_create_walk_in_customer(user_id: int, db: Session) -> Customer:
@@ -64,7 +81,7 @@ def get_or_create_walk_in_customer(user_id: int, db: Session) -> Customer:
 def create_payment(
     payload: PaymentCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(resolve_user),
 ):
     """Create payment record with optional items breakdown
     
@@ -76,9 +93,10 @@ def create_payment(
     - Automatic calculation of subtotal from items if provided
     """
     # Resolve customer: allow retail sales without explicit customer
-    user_ids = get_user_ids_for_data_sharing(current_user["id"], db)
+    require_payment_feature(current_user, Feature.CREATE_PAYMENTS)
+    user_ids = get_user_ids_for_data_sharing(current_user.id, db)
     if payload.customer_id is None:
-        customer = get_or_create_walk_in_customer(current_user["id"], db)
+        customer = get_or_create_walk_in_customer(current_user.id, db)
     else:
         customer = db.query(Customer).filter(
             Customer.id == payload.customer_id,
@@ -106,7 +124,7 @@ def create_payment(
     # Calculate discount if MontelibanoGen method
     discount_amount = Decimal(0)
     if payload.method.lower() == "montelibano_gen":
-        if current_user["plan"] in APPLICABLE_PLANS_FOR_DISCOUNT:
+        if current_user.plan in APPLICABLE_PLANS_FOR_DISCOUNT:
             discount_amount = final_amount_before_discount * Decimal(str(MONTELIBANO_GEN_DISCOUNT))
     
     final_amount = final_amount_before_discount - discount_amount
@@ -117,7 +135,7 @@ def create_payment(
     )
     
     payment = Payment(
-        user_id=current_user["id"],
+        user_id=current_user.id,
         customer_id=customer.id,
         invoice_id=payload.invoice_id,  # NUEVO
         appointment_id=payload.appointment_id,
@@ -183,14 +201,15 @@ def list_payments(
     limit: int = 100,
     status_filter: str | None = None,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(resolve_user),
 ):
     """List payments for current user
     
     Optional filters:
     - status_filter: "pending", "completed", "failed", etc
     """
-    user_ids = get_user_ids_for_data_sharing(current_user["id"], db)
+    require_payment_feature(current_user, Feature.VIEW_PAYMENTS)
+    user_ids = get_user_ids_for_data_sharing(current_user.id, db)
     query = db.query(Payment).options(joinedload(Payment.customer)).filter(Payment.user_id.in_(user_ids))
     
     if status_filter:
@@ -202,10 +221,11 @@ def list_payments(
 def get_payment(
     payment_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(resolve_user),
 ):
     """Get payment details"""
-    user_ids = get_user_ids_for_data_sharing(current_user["id"], db)
+    require_payment_feature(current_user, Feature.VIEW_PAYMENTS)
+    user_ids = get_user_ids_for_data_sharing(current_user.id, db)
     payment = db.query(Payment).filter(
         Payment.id == payment_id,
         Payment.user_id.in_(user_ids)
@@ -221,10 +241,11 @@ def update_payment(
     payment_id: int,
     payload: PaymentUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(resolve_user),
 ):
     """Update payment status, concept, or service"""
-    user_ids = get_user_ids_for_data_sharing(current_user["id"], db)
+    require_payment_feature(current_user, Feature.CREATE_PAYMENTS)
+    user_ids = get_user_ids_for_data_sharing(current_user.id, db)
     payment = db.query(Payment).filter(
         Payment.id == payment_id,
         Payment.user_id.in_(user_ids)
@@ -322,12 +343,13 @@ def upgrade_plan(
 def delete_payment(
     payment_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(resolve_user),
 ):
     """Delete payment (admin only)"""
+    require_payment_feature(current_user, Feature.CREATE_PAYMENTS)
     payment = db.query(Payment).filter(
         Payment.id == payment_id,
-        Payment.user_id == current_user["id"]
+        Payment.user_id == current_user.id
     ).first()
     
     if not payment:

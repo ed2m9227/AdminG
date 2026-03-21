@@ -7,6 +7,7 @@ from app.models.inventory import InventoryItem
 from app.models.service_package import ServicePackage
 from app.modules.appointments.schemas import AppointmentCreate, AppointmentOut, AppointmentUpdate
 from app.core.security import get_current_user
+from app.core.features import Feature, has_feature
 from app.models.user import User
 
 router = APIRouter(prefix="/appointments", tags=["Appointments"])
@@ -44,6 +45,11 @@ def get_accessible_service(service_id: int, user_ids: list[int], db: Session) ->
         InventoryItem.is_active == True,
     ).first()
 
+def require_appointment_feature(user: User, feature: Feature):
+    if has_feature(user.plan, feature, user.role, is_parent_account=not bool(user.parent_user_id)):
+        return True
+    raise HTTPException(status_code=403, detail="Feature not available in your plan")
+
 @router.post("/", response_model=AppointmentOut, status_code=status.HTTP_201_CREATED)
 def create_appointment(
     payload: AppointmentCreate, 
@@ -51,6 +57,7 @@ def create_appointment(
     current_user: User = Depends(resolve_user)
 ):
     """Crear cita - los sub-usuarios pueden crear citas para clientes del padre"""
+    require_appointment_feature(current_user, Feature.CREATE_APPOINTMENTS)
     user_ids = get_user_ids_for_data_sharing(current_user)
     customer = db.query(Customer).filter(
         Customer.id == payload.customer_id,
@@ -91,6 +98,7 @@ def list_appointments(
     current_user: User = Depends(resolve_user)
 ):
     """Listar citas de clientes del usuario actual y del padre si es sub-usuario"""
+    require_appointment_feature(current_user, Feature.VIEW_APPOINTMENTS)
     user_ids = get_user_ids_for_data_sharing(current_user)
     return (
         db.query(Appointment)
@@ -109,6 +117,7 @@ def get_appointment(
     current_user: User = Depends(resolve_user)
 ):
     """Obtener detalles de una cita"""
+    require_appointment_feature(current_user, Feature.VIEW_APPOINTMENTS)
     user_ids = get_user_ids_for_data_sharing(current_user)
     appointment = db.query(Appointment).join(Customer).filter(
         Appointment.id == appointment_id,
@@ -128,6 +137,7 @@ def update_appointment(
     current_user: User = Depends(resolve_user)
 ):
     """Actualizar cita - los sub-usuarios pueden actualizar citas del padre"""
+    require_appointment_feature(current_user, Feature.EDIT_APPOINTMENTS)
     user_ids = get_user_ids_for_data_sharing(current_user)
     appointment = db.query(Appointment).join(Customer).filter(
         Appointment.id == appointment_id,
@@ -158,6 +168,7 @@ def delete_appointment(
     current_user: User = Depends(resolve_user)
 ):
     """Eliminar cita - los sub-usuarios pueden eliminar citas del padre"""
+    require_appointment_feature(current_user, Feature.DELETE_APPOINTMENTS)
     user_ids = get_user_ids_for_data_sharing(current_user)
     appointment = db.query(Appointment).join(Customer).filter(
         Appointment.id == appointment_id,

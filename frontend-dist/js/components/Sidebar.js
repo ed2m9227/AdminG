@@ -79,6 +79,8 @@ export class Sidebar {
      * Obtener features por defecto según el plan
      */
     getDefaultFeaturesByPlan(plan) {
+        const user = authService.getCurrentUser();
+        const isParentAccount = !user?.parent_user_id;
         const featuresByPlan = {
             'free': ['view_customers', 'view_appointments'],
             'starter': [
@@ -113,7 +115,18 @@ export class Sidebar {
                 'admin_panel'
             ]
         };
-        return featuresByPlan[plan] || featuresByPlan['free'];
+        const features = [...(featuresByPlan[plan] || featuresByPlan['free'])];
+
+        if (plan === 'starter' && !isParentAccount) {
+            return features.filter(feature => ![
+                'create_customers', 'edit_customers', 'delete_customers',
+                'create_appointments', 'edit_appointments', 'delete_appointments',
+                'create_products', 'edit_products', 'delete_products',
+                'create_payments'
+            ].includes(feature));
+        }
+
+        return features;
     }
 
     showPlanBlockedModal(item) {

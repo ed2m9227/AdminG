@@ -16,7 +16,7 @@ from app.modules.inventory.schemas import (
     InventoryPackageOut,
     InventoryPackageItem,
 )
-from app.core.plan_permissions import check_feature_access
+from app.core.features import Feature, has_feature
 from app.core.security import get_current_user
 from app.models.user import User
 
@@ -44,7 +44,7 @@ def get_user_ids_for_data_sharing(user: User):
         # Usuario padre/admin: incluir datos propios
         return [user.id]
 
-def check_inventory_access(user: User):
+def check_inventory_access(user: User, required_feature: Feature = Feature.VIEW_INVENTORY):
     """Check if the user can use inventory endpoints.
 
     Starter plan users should be allowed (legacy name was `start` so we accept
@@ -54,7 +54,11 @@ def check_inventory_access(user: User):
     frontend warning modal.
     """
     allowed = ["starter", "start", "pro", "max", "admin"]
-    if user.role == 'admin' or user.plan in allowed:
+    if user.role == 'admin':
+        return True
+    if user.plan not in allowed:
+        raise HTTPException(status_code=403, detail="Feature not available in your plan")
+    if has_feature(user.plan, required_feature, user.role, is_parent_account=not bool(user.parent_user_id)):
         return True
     raise HTTPException(status_code=403, detail="Feature not available in your plan")
 
@@ -92,7 +96,7 @@ def create_category(
     current_user: User = Depends(resolve_user),
 ):
     """Create inventory category - Only AdminPro Start/Max"""
-    check_inventory_access(current_user)
+    check_inventory_access(current_user, Feature.CREATE_PRODUCTS)
     
     category = InventoryCategory(
         user_id=current_user.id,
@@ -112,7 +116,7 @@ def list_categories(
     current_user: User = Depends(resolve_user),
 ):
     """List all inventory categories - Only AdminPro Start/Max"""
-    check_inventory_access(current_user)
+    check_inventory_access(current_user, Feature.VIEW_INVENTORY)
     
     user_ids = get_user_ids_for_data_sharing(current_user)
     return db.query(InventoryCategory).filter(
@@ -133,7 +137,7 @@ def create_item(
     - service: no tiene stock
     - package: no tiene stock propio, combina items
     """
-    check_inventory_access(current_user)
+    check_inventory_access(current_user, Feature.CREATE_PRODUCTS)
     
     user_ids = get_user_ids_for_data_sharing(current_user)
     normalized_sku = (payload.sku or "").strip() or None  # blank → None, skip uniqueness
@@ -211,7 +215,7 @@ def list_items(
         low_stock: If True, only return items with quantity <= min_quantity
         item_type: Filter by type (product, service, package)
     """
-    check_inventory_access(current_user)
+    check_inventory_access(current_user, Feature.VIEW_INVENTORY)
     
     user_ids = get_user_ids_for_data_sharing(current_user)
     query = db.query(InventoryItem).filter(InventoryItem.user_id.in_(user_ids))
@@ -234,7 +238,7 @@ def list_low_stock_alerts(
     current_user: User = Depends(resolve_user),
 ):
     """List low stock alerts using a fixed threshold (default: 5)."""
-    check_inventory_access(current_user)
+    check_inventory_access(current_user, Feature.VIEW_INVENTORY)
 
     if threshold < 0:
         raise HTTPException(status_code=400, detail="Threshold must be >= 0")
@@ -253,7 +257,7 @@ def get_item(
     current_user: User = Depends(resolve_user),
 ):
     """Get inventory item by ID - Only AdminPro Start/Max"""
-    check_inventory_access(current_user)
+    check_inventory_access(current_user, Feature.VIEW_INVENTORY)
     
     user_ids = get_user_ids_for_data_sharing(current_user)
     item = db.query(InventoryItem).filter(
@@ -274,7 +278,7 @@ def update_item(
     current_user: User = Depends(resolve_user),
 ):
     """Update inventory item - Only AdminPro Start/Max"""
-    check_inventory_access(current_user)
+    check_inventory_access(current_user, Feature.EDIT_PRODUCTS)
     
     user_ids = get_user_ids_for_data_sharing(current_user)
     item = db.query(InventoryItem).filter(
@@ -338,7 +342,7 @@ def delete_item(
     current_user: User = Depends(resolve_user),
 ):
     """Delete inventory item - Only AdminPro Start/Max"""
-    check_inventory_access(current_user)
+    check_inventory_access(current_user, Feature.DELETE_PRODUCTS)
     
     user_ids = get_user_ids_for_data_sharing(current_user)
     item = db.query(InventoryItem).filter(
@@ -387,7 +391,7 @@ def create_inventory_package(
     current_user: User = Depends(resolve_user),
 ):
     """Create inventory package (combina productos) - AdminPro Start/Max"""
-    check_inventory_access(current_user)
+    check_inventory_access(current_user, Feature.CREATE_PRODUCTS)
     base, final, pkg_items = compute_inventory_package_totals(
         db, current_user.id, payload.items, payload.discount_percentage
     )
@@ -417,7 +421,7 @@ def list_inventory_packages(
     db: Session = Depends(get_db),
     current_user: User = Depends(resolve_user),
 ):
-    check_inventory_access(current_user)
+    check_inventory_access(current_user, Feature.VIEW_INVENTORY)
     query = db.query(InventoryPackage).filter(InventoryPackage.user_id == current_user.id)
     if not include_inactive:
         query = query.filter(InventoryPackage.is_active.is_(True))
@@ -430,7 +434,7 @@ def get_inventory_package(
     db: Session = Depends(get_db),
     current_user: User = Depends(resolve_user),
 ):
-    check_inventory_access(current_user)
+    check_inventory_access(current_user, Feature.VIEW_INVENTORY)
     package = db.query(InventoryPackage).filter(
         InventoryPackage.id == package_id,
         InventoryPackage.user_id == current_user.id,
@@ -447,7 +451,7 @@ def update_inventory_package(
     db: Session = Depends(get_db),
     current_user: User = Depends(resolve_user),
 ):
-    check_inventory_access(current_user)
+    check_inventory_access(current_user, Feature.EDIT_PRODUCTS)
     package = db.query(InventoryPackage).filter(
         InventoryPackage.id == package_id,
         InventoryPackage.user_id == current_user.id,
@@ -479,7 +483,7 @@ def delete_inventory_package(
     db: Session = Depends(get_db),
     current_user: User = Depends(resolve_user),
 ):
-    check_inventory_access(current_user)
+    check_inventory_access(current_user, Feature.DELETE_PRODUCTS)
     package = db.query(InventoryPackage).filter(
         InventoryPackage.id == package_id,
         InventoryPackage.user_id == current_user.id,
@@ -504,7 +508,7 @@ def create_movement(
     
     Solo productos afectan el stock. Servicios y paquetes no tienen movimientos.
     """
-    check_inventory_access(current_user)
+    check_inventory_access(current_user, Feature.CREATE_PRODUCTS)
     
     item = db.query(InventoryItem).filter(
         InventoryItem.id == payload.item_id,
@@ -554,7 +558,7 @@ def list_movements(
     current_user: User = Depends(resolve_user),
 ):
     """List movements for an item"""
-    check_inventory_access(current_user)
+    check_inventory_access(current_user, Feature.VIEW_INVENTORY)
     
     item = db.query(InventoryItem).filter(
         InventoryItem.id == item_id,
@@ -578,7 +582,7 @@ def list_services(
     current_user: User = Depends(resolve_user),
 ):
     """List all services (InventoryItems with type='service')"""
-    check_inventory_access(current_user)
+    check_inventory_access(current_user, Feature.VIEW_INVENTORY)
     
     user_ids = get_user_ids_for_data_sharing(current_user)
     return db.query(InventoryItem).filter(
@@ -594,7 +598,7 @@ def create_service(
     current_user: User = Depends(resolve_user),
 ):
     """Create a new service (only parent users)"""
-    check_inventory_access(current_user)
+    check_inventory_access(current_user, Feature.CREATE_PRODUCTS)
     
     # Only parent users can create services
     if current_user.parent_user_id:
@@ -637,7 +641,7 @@ def update_service(
     current_user: User = Depends(resolve_user),
 ):
     """Update a service (only parent users)"""
-    check_inventory_access(current_user)
+    check_inventory_access(current_user, Feature.EDIT_PRODUCTS)
     
     # Only parent users can edit services
     if current_user.parent_user_id:
@@ -672,7 +676,7 @@ def get_service(
     current_user: User = Depends(resolve_user),
 ):
     """Get service details"""
-    check_inventory_access(current_user)
+    check_inventory_access(current_user, Feature.VIEW_INVENTORY)
     
     user_ids = get_user_ids_for_data_sharing(current_user)
     service = db.query(InventoryItem).filter(
@@ -693,7 +697,7 @@ def delete_service(
     current_user: User = Depends(resolve_user),
 ):
     """Soft delete a service (only parent users)"""
-    check_inventory_access(current_user)
+    check_inventory_access(current_user, Feature.DELETE_PRODUCTS)
     
     # Only parent users can delete services
     if current_user.parent_user_id:
