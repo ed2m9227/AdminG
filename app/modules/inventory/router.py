@@ -161,7 +161,7 @@ def create_item(
     # Validate category if provided
     if payload.category_id:
         category = db.get(InventoryCategory, payload.category_id)
-        if not category or category.user_id != current_user.id:
+        if not category or category.user_id not in user_ids:
             raise HTTPException(status_code=404, detail="Category not found")
     
     # Validar según tipo de item
@@ -293,6 +293,12 @@ def update_item(
     
     # Validate SKU uniqueness if changed (within owner scope)
     user_ids = get_user_ids_for_data_sharing(current_user)
+
+    if "category_id" in update_data and update_data["category_id"]:
+        category = db.get(InventoryCategory, update_data["category_id"])
+        if not category or category.user_id not in user_ids:
+            raise HTTPException(status_code=404, detail="Category not found")
+
     if "sku" in update_data and update_data["sku"] != item.sku:
         new_sku = (update_data["sku"] or "").strip() or None  # blank → None
         update_data["sku"] = new_sku
