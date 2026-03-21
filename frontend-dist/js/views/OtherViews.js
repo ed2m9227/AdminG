@@ -413,8 +413,9 @@ export class PaymentsView {
     renderTable() {
         const user = authService.getCurrentUser();
         const isAdmin = user && user.role === 'admin';
+        const isSubUser = !!user?.parent_user_id;
         const features = authService.getFeatures();
-        const canManagePayments = isAdmin || features.includes('create_payments');
+        const canManagePayments = (isAdmin || features.includes('create_payments')) && !isSubUser;
         
         const statusFormatter = (status) => {
             const statusMap = {

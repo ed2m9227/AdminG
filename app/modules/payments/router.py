@@ -59,8 +59,8 @@ def require_payment_feature(user: User, feature: Feature):
 
 
 def require_payment_manage_access(user: User):
-    """Starter sub-users can create payments, but parent keeps full payment management."""
-    if user.parent_user_id and user.plan in ["starter", "basic", "AdminG_Basic"]:
+    """Only parent/admin accounts can edit or delete payments."""
+    if user.parent_user_id:
         raise HTTPException(status_code=403, detail="Solo el usuario padre puede editar o eliminar pagos")
     return True
 
