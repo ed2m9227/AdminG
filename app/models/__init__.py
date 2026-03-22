@@ -14,6 +14,7 @@ from app.models.cash_transaction import CashTransaction
 from app.models.invoice import Invoice, InvoiceItem
 from app.models.tax_config import TaxConfig
 from app.models.service_package import ServicePackage, ServicePackageItem
+from app.models.notification import Notification
 
 __all__ = [
     "User", 

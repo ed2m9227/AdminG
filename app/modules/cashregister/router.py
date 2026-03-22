@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime
+import logging
 from app.db.session import get_db
 from app.core.security import get_current_user_with_plan_check, get_current_user
 from app.models.user import User
@@ -20,6 +21,8 @@ router = APIRouter(
     prefix="/cashregister",
     tags=["Cash Register"]
 )
+
+logger = logging.getLogger(__name__)
 
 class ItemSale(BaseModel):
     """Item vendido en caja con cantidad"""
@@ -248,6 +251,14 @@ async def close_cash_register(
         CashRegisterSession.user_id == user.id,
         CashRegisterSession.is_active == True
     ).first()
+
+    logger.info(
+        "close_cash_register attempt user_id=%s parent_user_id=%s has_active_session=%s",
+        user.id,
+        user.parent_user_id,
+        bool(session),
+    )
+
     if not session:
         raise HTTPException(status_code=400, detail="No hay caja abierta")
     
@@ -298,6 +309,10 @@ async def reset_cash_register(
 ):
     """Reset cash register state - cierra todas las sesiones pendientes (admin only)"""
     user = db.query(User).filter(User.id == int(current_user["id"])).first()
+
+    # Keep ownership consistent: only parent account can reset shared cash state.
+    if user.parent_user_id:
+        raise HTTPException(status_code=403, detail="Solo el usuario padre puede resetear caja")
     
     # Cierra todas las sesiones activas del usuario
     sessions = db.query(CashRegisterSession).filter(
@@ -333,6 +348,10 @@ async def close_previous_day_cash(
     Used when user logs in and finds an open session from another day.
     """
     user = db.query(User).filter(User.id == int(current_user["id"])).first()
+
+    # Keep ownership consistent: only parent account can close previous day session.
+    if user.parent_user_id:
+        raise HTTPException(status_code=403, detail="Solo el usuario padre puede cerrar caja del día anterior")
     
     # Get active session
     session = db.query(CashRegisterSession).filter(

@@ -1132,6 +1132,12 @@ export class CashRegisterView {
     }
 
     async init() {
+        // Reset stale cart/state so switching users never leaks previous session data.
+        this.cart = [];
+        this.total = 0;
+        this.movements = [];
+        this.cashRegisterOpen = false;
+
         try {
             // Cargar inventario, servicios y clientes en paralelo sin abortar todo si uno falla.
             const [itemsResult, servicesResult, customersResult] = await Promise.allSettled([
@@ -1320,9 +1326,27 @@ export class CashRegisterView {
         this.renderProducts(query);
     }
 
+    _getAvailableStock(productId, productType) {
+        if (productType === 'service') return Infinity;
+        const inv = this.inventory.find(i => i.id === productId);
+        return inv ? (inv.quantity ?? Infinity) : Infinity;
+    }
+
     addToCart(productId, productName, price, productType = 'product') {
         const priceNum = parseFloat(price) || 0;
         const existing = this.cart.find(item => item.id === productId && item.type === productType);
+        const inCart = existing ? existing.quantity : 0;
+        const available = this._getAvailableStock(productId, productType);
+
+        if (inCart >= available) {
+            modal.alert({
+                title: '⚠️ Stock insuficiente',
+                message: `No hay más unidades disponibles de "${productName}" (stock: ${available}).`,
+                type: 'warning'
+            });
+            return;
+        }
+
         if (existing) {
             existing.quantity++;
         } else {
@@ -1342,10 +1366,19 @@ export class CashRegisterView {
     }
 
     increaseQuantity(index) {
-        if (this.cart[index]) {
-            this.cart[index].quantity++;
-            this.updateCart();
+        const item = this.cart[index];
+        if (!item) return;
+        const available = this._getAvailableStock(item.id, item.type);
+        if (item.quantity >= available) {
+            modal.alert({
+                title: '⚠️ Stock insuficiente',
+                message: `No hay más unidades disponibles de "${item.name}" (stock: ${available}).`,
+                type: 'warning'
+            });
+            return;
         }
+        item.quantity++;
+        this.updateCart();
     }
 
     removeFromCart(index) {
@@ -1363,47 +1396,46 @@ export class CashRegisterView {
 
     async refreshMovements() {
         try {
-            // Refresh servicios en paralelo
-            const services = await apiService.getServices();
-            if (Array.isArray(services)) {
-                this.services = services;
+            // Keep service refresh isolated so it doesn't affect cash state.
+            try {
+                const services = await apiService.getServices();
+                if (Array.isArray(services)) {
+                    this.services = services;
+                }
+            } catch (servicesError) {
+                console.warn('Could not refresh services during cash update:', servicesError);
             }
-            
-            const transactions = await apiService.get('/cashregister/transactions?limit=50');
-            
-            if (Array.isArray(transactions)) {
-                this.movements = transactions.map(t => {
-                    let customer = null;
-                    if (t.customer_id && Array.isArray(this.customersCache)) {
-                        customer = this.customersCache.find(c => c.id === t.customer_id);
-                    }
-                    return {
-                        type: t.transaction_type,
-                        amount: t.amount,
-                        timestamp: new Date(t.created_at).toLocaleTimeString('es-CO'),
-                        created_at: t.created_at,
-                        customer: customer ? customer.full_name : null,
-                        description: t.description
-                    };
-                });
-            } else {
+
+            try {
+                const transactions = await apiService.get('/cashregister/transactions?limit=50');
+                if (Array.isArray(transactions)) {
+                    this.movements = transactions.map(t => {
+                        let customer = null;
+                        if (t.customer_id && Array.isArray(this.customersCache)) {
+                            customer = this.customersCache.find(c => c.id === t.customer_id);
+                        }
+                        return {
+                            type: t.transaction_type,
+                            amount: t.amount,
+                            timestamp: new Date(t.created_at).toLocaleTimeString('es-CO'),
+                            created_at: t.created_at,
+                            customer: customer ? customer.full_name : null,
+                            description: t.description
+                        };
+                    });
+                } else {
+                    this.movements = [];
+                }
+            } catch (txError) {
+                console.warn('Error refreshing cash transactions:', txError);
                 this.movements = [];
             }
 
-            // Sync with server status endpoint
+            // Sync with server status endpoint (source of truth)
             await this.syncCashRegisterStatus();
-            this.checkCashRegisterStatus();
             this.updateMovements();
         } catch (error) {
-            console.warn('Error refreshing cash movements:', error);
-            this.movements = [];
-            // Try to sync status even if movements fail
-            try {
-                await this.syncCashRegisterStatus();
-            } catch (e) {
-                console.warn('Could not sync cash status: ', e);
-                this.checkCashRegisterStatus();
-            }
+            console.warn('Unexpected error refreshing cash movements:', error);
             this.updateMovements();
         }
     }
@@ -1411,7 +1443,7 @@ export class CashRegisterView {
     async syncCashRegisterStatus() {
         try {
             // Get server status to override local state
-            const status = await apiService.get('/cashregister');
+            const status = await apiService.get('/cashregister/');
             this.cashRegisterOpen = (status?.status === 'open');
             
             // Check for stale/old session (opened in previous day)
@@ -1427,9 +1459,11 @@ export class CashRegisterView {
             }
             
             console.log('✓ Cash status synced from server:', this.cashRegisterOpen);
+            this.updateCashRegisterUI();
         } catch (error) {
-            console.warn('Could not sync with server, using local state');
-            this.checkCashRegisterStatus();
+            // Preserve last known state to avoid false auto-close due to transient failures.
+            console.warn('Could not sync with server, preserving last known cash state');
+            this.updateCashRegisterUI();
         }
     }
 
@@ -1635,7 +1669,7 @@ export class CashRegisterView {
                 
                 // Extra validation with server status
                 try {
-                    const status = await apiService.get('/cashregister');
+                    const status = await apiService.get('/cashregister/');
                     if (status.status === 'open') {
                         console.log('✓ Caja abierta confirmada en servidor');
                     }
@@ -1686,10 +1720,24 @@ export class CashRegisterView {
     }
 
     async closeCashRegister() {
+        // Always validate against backend right before close to avoid stale local state.
+        try {
+            const status = await apiService.get('/cashregister/');
+            this.cashRegisterOpen = (status?.status === 'open');
+            this.updateCashRegisterUI();
+        } catch (error) {
+            await modal.alert({
+                title: '⚠️ No se pudo verificar estado',
+                message: 'No se pudo validar el estado de caja con el servidor. Intente recargar e intentar nuevamente.',
+                type: 'warning'
+            });
+            return;
+        }
+
         if (!this.cashRegisterOpen) {
             await modal.alert({ 
                 title: '⚠️ Caja No Abierta', 
-                message: 'La caja no está abierta. Debe abrirla primero.', 
+                message: 'La caja no está abierta en servidor. Actualice la vista y vuelva a intentar.', 
                 type: 'warning' 
             });
             return;
@@ -1728,7 +1776,7 @@ export class CashRegisterView {
                 
                 // Extra validation with server status
                 try {
-                    const status = await apiService.get('/cashregister');
+                    const status = await apiService.get('/cashregister/');
                     if (status.status === 'closed') {
                         console.log('✓ Caja cerrada confirmada en servidor');
                     }

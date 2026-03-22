@@ -19,6 +19,7 @@ from app.modules.payments.router import router as payments_router
 from app.modules.reports.router import router as reports_router
 from app.modules.cashregister.router import router as cashregister_router
 from app.modules.invoices.router import router as invoices_router
+from app.modules.notifications.router import router as notifications_router
 from app.modules.admin.router import router as admin_router
 from app.modules.admin.routers.business_types import router as business_types_router
 from app.modules.plans.service import seed_plans
@@ -175,6 +176,7 @@ app.include_router(payments_router)
 app.include_router(reports_router)
 app.include_router(cashregister_router)
 app.include_router(invoices_router)
+app.include_router(notifications_router)
 app.include_router(admin_router)
 app.include_router(business_types_router)
 
@@ -280,6 +282,7 @@ if frontend_dist.exists():
             "invoices",
             "business",
             "admin",
+            "notifications",
             "docs",
             "openapi.json",
             "health",
