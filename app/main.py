@@ -265,10 +265,27 @@ if frontend_dist.exists():
     async def serve_spa(full_path: str):
         """Serve index.html for client-side routes"""
         # Skip if it's an API endpoint
-        api_prefixes = ("auth/", "api/", "users/", "customers/", "appointments/", 
-                       "plans/", "inventory/", "payments/", "reports/", "admin/", "docs", "openapi.json")
-        
-        if any(full_path.startswith(p) for p in api_prefixes):
+        api_prefixes = {
+            "auth",
+            "api",
+            "users",
+            "customers",
+            "appointments",
+            "services",
+            "plans",
+            "inventory",
+            "payments",
+            "reports",
+            "cashregister",
+            "invoices",
+            "business",
+            "admin",
+            "docs",
+            "openapi.json",
+            "health",
+        }
+
+        if any(full_path == p or full_path.startswith(f"{p}/") for p in api_prefixes):
             raise HTTPException(status_code=404, detail="Not found")
         
         # Skip static file extensions

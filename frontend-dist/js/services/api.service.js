@@ -67,6 +67,16 @@ export class ApiService {
 
             // 204 No Content (DELETE) has no body to parse
             if (response.status === 204) return null;
+
+            const contentType = response.headers.get('content-type') || '';
+            if (!contentType.includes('application/json')) {
+                const raw = await response.text();
+                const requestError = new Error(`Respuesta no JSON del servidor en ${method} ${endpoint}`);
+                requestError.status = response.status;
+                requestError.raw = raw?.slice?.(0, 200) || '';
+                throw requestError;
+            }
+
             return await response.json();
         } catch (error) {
             console.error(`API Error [${method} ${endpoint}]:`, error);
@@ -192,11 +202,11 @@ export class ApiService {
 
     // ========== SERVICES ==========
     async getServices() {
-        return this.get('/services');
+        return this.get('/services/');
     }
 
     async createService(service) {
-        return this.post('/services', service);
+        return this.post('/services/', service);
     }
 
     async updateService(serviceId, service) {

@@ -218,6 +218,7 @@ export class CustomersView {
         const customerId = form.dataset.customerId;
         const isEdit = customerId && customerId !== '';
         const hasPet = this.businessConfig?.has_pet_relationship;
+        let createdCustomerId = null;
         
         const customerData = {
             full_name: formData.get('full_name'),
@@ -234,10 +235,23 @@ export class CustomersView {
             } else {
                 const created = await apiService.createCustomer(customerData);
                 savedCustomerId = created?.id || customerId;
+                createdCustomerId = savedCustomerId;
             }
 
             if (hasPet && savedCustomerId) {
-                await this.savePetIfPresent(formData, savedCustomerId);
+                try {
+                    await this.savePetIfPresent(formData, savedCustomerId);
+                } catch (petError) {
+                    // Compensating action: avoid leaving orphan customer when pet save fails on create.
+                    if (!isEdit && createdCustomerId) {
+                        try {
+                            await apiService.delete(`/customers/${createdCustomerId}`);
+                        } catch (_rollbackError) {
+                            // If rollback fails, keep original pet error as primary signal.
+                        }
+                    }
+                    throw petError;
+                }
             }
             modal.close(modalElement);
             await this.loadCustomers();
@@ -278,12 +292,14 @@ export class CustomersView {
         if (!customer) return;
 
         let pet = null;
+        let petLoadFailed = false;
         if (this.businessConfig?.has_pet_relationship) {
             try {
                 const pets = await apiService.getPets(customerId);
                 pet = Array.isArray(pets) && pets.length ? pets[0] : null;
             } catch (_error) {
                 pet = null;
+                petLoadFailed = true;
             }
         }
 
@@ -293,7 +309,7 @@ export class CustomersView {
                 <div class="form-group"><label>Tipo</label><input type="text" value="${pet.animal_type || '-'}" disabled></div>
                 <div class="form-group"><label>Notas mascota</label><textarea rows="2" disabled>${pet.notes || '-'}</textarea></div>
               `
-            : '<div class="form-group"><label>Mascota</label><input type="text" value="Sin datos" disabled></div>';
+            : `<div class="form-group"><label>Mascota</label><input type="text" value="${petLoadFailed ? 'No disponible (error al cargar)' : 'Sin datos'}" disabled></div>`;
 
         const content = `
             <div class="modal-form">
@@ -435,7 +451,7 @@ export class CustomersView {
             weight_kg: this.toFloat(formData.get('pet_weight_kg')),
             gender: formData.get('pet_gender') || null,
             date_of_birth: formData.get('pet_date_of_birth') || null,
-            microchip: formData.get('pet_microchip') || null,
+            microchip: this.normalizeMicrochip(formData.get('pet_microchip')),
             neutered_spayed: formData.get('pet_neutered_spayed') === 'on',
             allergies: formData.get('pet_allergies') || null,
             current_medications: formData.get('pet_current_medications') || null,
@@ -443,6 +459,19 @@ export class CustomersView {
             vaccination_status: formData.get('pet_vaccination_status') || null,
             notes: formData.get('pet_notes') || null
         };
+    }
+
+    normalizeMicrochip(value) {
+        if (!value) return null;
+        const normalized = String(value).trim();
+        if (!normalized) return null;
+
+        const lower = normalized.toLowerCase();
+        if (['si', 'sí', 'no', 'n/a', 'na', 'ninguno', 'ninguna'].includes(lower)) {
+            return null;
+        }
+
+        return normalized;
     }
 
     normalizeDateTime(value) {

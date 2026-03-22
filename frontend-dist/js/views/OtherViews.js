@@ -1133,21 +1133,20 @@ export class CashRegisterView {
 
     async init() {
         try {
-            // Cargar inventario, servicios y clientes EN PARALELO
-            const [items, services, customers] = await Promise.all([
+            // Cargar inventario, servicios y clientes en paralelo sin abortar todo si uno falla.
+            const [itemsResult, servicesResult, customersResult] = await Promise.allSettled([
                 apiService.getInventoryItems(),
                 apiService.getServices(),
                 apiService.getCustomers()
             ]);
-            
-            if (Array.isArray(items)) {
-                this.inventory = items;
-            }
-            
-            if (Array.isArray(services)) {
-                this.services = services;
-            }
-            
+
+            const items = itemsResult.status === 'fulfilled' ? itemsResult.value : [];
+            const services = servicesResult.status === 'fulfilled' ? servicesResult.value : [];
+            const customers = customersResult.status === 'fulfilled' ? customersResult.value : [];
+
+            this.inventory = Array.isArray(items) ? items : [];
+            this.services = Array.isArray(services) ? services : [];
+
             if (Array.isArray(customers)) {
                 this.customersCache = customers;
                 const select = document.getElementById('cashCustomer');
@@ -1163,6 +1162,18 @@ export class CashRegisterView {
 
             // Renderizar productos (inventario + servicios) después de cargar
             this.renderProducts();
+
+            const failedSources = [];
+            if (itemsResult.status === 'rejected') failedSources.push('inventario');
+            if (servicesResult.status === 'rejected') failedSources.push('servicios');
+            if (customersResult.status === 'rejected') failedSources.push('clientes');
+            if (failedSources.length > 0) {
+                modal.alert({
+                    type: 'warning',
+                    title: 'Carga parcial',
+                    message: `Caja cargada parcialmente. Falló: ${failedSources.join(', ')}.`
+                });
+            }
             
             // Cargar transacciones de caja del día
             try {
@@ -1196,6 +1207,11 @@ export class CashRegisterView {
             }
         } catch (error) {
             console.error('Error loading cash register data:', error);
+            modal.alert({
+                type: 'error',
+                title: 'Error',
+                message: 'No se pudo inicializar Caja: ' + (error?.message || 'Error desconocido')
+            });
         }
 
         // Event listeners
