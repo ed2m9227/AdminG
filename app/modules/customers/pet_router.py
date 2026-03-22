@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from app.db.session import get_db
 from app.models.pet import Pet
 from app.models.customer import Customer
@@ -8,6 +9,18 @@ from app.core.security import get_current_user
 from app.modules.customers.pet_schemas import PetCreate, PetOut, PetUpdate
 
 router = APIRouter(prefix="/customers/{customer_id}/pets", tags=["Pets"])
+
+
+def normalize_microchip_value(value: str | None) -> str | None:
+    """Normalize empty/generic values to None to avoid fake duplicates like 'Si'/'No'."""
+    if value is None:
+        return None
+    normalized = value.strip()
+    if not normalized:
+        return None
+    if normalized.lower() in {"si", "sí", "no", "n/a", "na", "ninguno", "ninguna"}:
+        return None
+    return normalized
 
 
 def resolve_user(
@@ -70,7 +83,7 @@ def create_pet(
         weight_kg=payload.weight_kg,
         gender=payload.gender,
         date_of_birth=payload.date_of_birth,
-        microchip=payload.microchip,
+        microchip=normalize_microchip_value(payload.microchip),
         neutered_spayed=payload.neutered_spayed,
         allergies=payload.allergies,
         current_medications=payload.current_medications,
@@ -79,7 +92,13 @@ def create_pet(
         notes=payload.notes
     )
     db.add(pet)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError as e:
+        db.rollback()
+        if "pets.microchip" in str(e):
+            raise HTTPException(status_code=400, detail="El código de microchip ya existe. Usa un valor único o déjalo vacío.")
+        raise
     db.refresh(pet)
     return pet
 
@@ -138,11 +157,19 @@ def update_pet(
         raise HTTPException(status_code=404, detail="Pet not found")
     
     update_data = payload.model_dump(exclude_unset=True)
+    if "microchip" in update_data:
+        update_data["microchip"] = normalize_microchip_value(update_data["microchip"])
     for field, value in update_data.items():
         setattr(pet, field, value)
     
     db.add(pet)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError as e:
+        db.rollback()
+        if "pets.microchip" in str(e):
+            raise HTTPException(status_code=400, detail="El código de microchip ya existe. Usa un valor único o déjalo vacío.")
+        raise
     db.refresh(pet)
     return pet
 

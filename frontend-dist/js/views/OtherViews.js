@@ -1392,6 +1392,7 @@ export class CashRegisterView {
 
             // Sync with server status endpoint
             await this.syncCashRegisterStatus();
+            this.checkCashRegisterStatus();
             this.updateMovements();
         } catch (error) {
             console.warn('Error refreshing cash movements:', error);
