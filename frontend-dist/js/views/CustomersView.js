@@ -13,6 +13,7 @@ export class CustomersView {
     constructor() {
         this.customers = [];
         this.businessConfig = null;
+        this._customersClickHandler = null;
         this.petFieldLabels = {
             name: 'Nombre',
             animal_type: 'Tipo de Animal',
@@ -139,22 +140,36 @@ export class CustomersView {
 
     attachEventListeners() {
         // Botón nuevo cliente
-        document.getElementById('btnNewCustomer')?.addEventListener('click', () => {
-            this.showCustomerModal();
-        });
+        const btnNewCustomer = document.getElementById('btnNewCustomer');
+        if (btnNewCustomer) {
+            const clonedBtn = btnNewCustomer.cloneNode(true);
+            btnNewCustomer.replaceWith(clonedBtn);
+            clonedBtn.addEventListener('click', () => {
+                this.showCustomerModal();
+            });
+        }
 
-        // Botones de editar
-        document.addEventListener('click', async (e) => {
+        // Botones de editar (delegación en contenedor para evitar listeners acumulados)
+        const tableContainer = document.getElementById('customersTableContainer');
+        if (!tableContainer) return;
+
+        if (this._customersClickHandler) {
+            tableContainer.removeEventListener('click', this._customersClickHandler);
+        }
+
+        this._customersClickHandler = async (e) => {
             const viewBtn = e.target.closest('[data-view-customer]');
             if (viewBtn) {
                 const customerId = viewBtn.dataset.viewCustomer;
                 await this.viewCustomer(customerId);
+                return;
             }
 
             const editBtn = e.target.closest('[data-edit]');
             if (editBtn) {
                 const customerId = editBtn.dataset.edit;
                 await this.editCustomer(customerId);
+                return;
             }
             
             const deleteBtn = e.target.closest('[data-delete]');
@@ -162,7 +177,9 @@ export class CustomersView {
                 const customerId = deleteBtn.dataset.delete;
                 this.deleteCustomer(customerId);
             }
-        });
+        };
+
+        tableContainer.addEventListener('click', this._customersClickHandler);
     }
 
     showCustomerModal(customer = null, pet = null) {

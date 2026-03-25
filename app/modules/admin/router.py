@@ -714,7 +714,7 @@ def get_member_movements(
             result["movements"]["customers"] = [
                 {
                     "id": c.id,
-                    "name": c.name,
+                    "full_name": c.full_name,
                     "email": c.email,
                     "phone": c.phone,
                     "created_at": c.created_at.isoformat()
@@ -731,6 +731,7 @@ def get_member_movements(
                 {
                     "id": a.id,
                     "customer_id": a.customer_id,
+                    "customer_name": a.customer.full_name if a.customer else None,
                     "scheduled_at": a.scheduled_at.isoformat(),
                     "status": a.status,
                     "notes": a.notes,

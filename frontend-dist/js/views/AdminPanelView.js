@@ -899,7 +899,7 @@ export class TeamMovementsView {
                     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;">
                         ${movements.customers.map(c => `
                             <div style="padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
-                                <div style="font-weight: 600; font-size: 13px;">${c.name}</div>
+                                <div style="font-weight: 600; font-size: 13px;">${c.full_name || 'Sin nombre'}</div>
                                 <div style="font-size: 11px; color: #666; margin-top: 4px;">${c.email || 'N/A'}</div>
                                 <div style="font-size: 11px; color: #666;">${c.phone || 'N/A'}</div>
                             </div>
@@ -919,6 +919,7 @@ export class TeamMovementsView {
                             <thead>
                                 <tr style="border-bottom: 2px solid #ddd;">
                                     <th style="text-align: left; padding: 8px;">Fecha</th>
+                                    <th style="text-align: left; padding: 8px;">Cliente</th>
                                     <th style="text-align: left; padding: 8px;">Estado</th>
                                     <th style="text-align: left; padding: 8px;">Notas</th>
                                 </tr>
@@ -927,6 +928,7 @@ export class TeamMovementsView {
                                 ${movements.appointments.map(a => `
                                     <tr style="border-bottom: 1px solid #eee;">
                                         <td style="padding: 8px;">${new Date(a.scheduled_at).toLocaleDateString('es-ES')}</td>
+                                        <td style="padding: 8px;">${a.customer_name || 'N/A'}</td>
                                         <td style="padding: 8px;">${a.status}</td>
                                         <td style="padding: 8px; color: #666; font-size: 12px;">${a.notes || 'N/A'}</td>
                                     </tr>
