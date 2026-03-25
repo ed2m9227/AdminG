@@ -27,6 +27,8 @@ import { masterAdminView, teamManagementView, teamMovementsView } from './views/
 import { BusinessTypesView } from './views/BusinessTypesView.js';
 import businessConfigView from './views/BusinessConfigView.js';
 import invoicesView from './views/InvoicesView.js';
+import documentsView from './views/DocumentsView.js';
+import authorizationsView from './views/AuthorizationsView.js';
 import modal from './components/Modal.js';
 import { normalizePlanCode } from './utils/plans.js';
 
@@ -126,29 +128,7 @@ class App {
                 await router.navigate('dashboard');
                 return;
             }
-            await this.renderProtectedView({
-                render: () => `
-                    <div class="card">
-                        <div class="card-header"><h2 class="card-title">📄 Documentos</h2></div>
-                        <div class="card-body">
-                            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;">
-                                <div style="padding:16px;border:1px solid #e5e7eb;border-radius:10px;background:#f8fafc;">
-                                    <div style="font-weight:700;margin-bottom:6px;">Consentimientos</div>
-                                    <div style="font-size:13px;color:#64748b;">Plantillas para consentimiento informado y aceptación de tratamiento.</div>
-                                </div>
-                                <div style="padding:16px;border:1px solid #e5e7eb;border-radius:10px;background:#f8fafc;">
-                                    <div style="font-weight:700;margin-bottom:6px;">Responsabilidad</div>
-                                    <div style="font-size:13px;color:#64748b;">Documentos de exoneración, recepción y soporte operativo.</div>
-                                </div>
-                                <div style="padding:16px;border:1px solid #e5e7eb;border-radius:10px;background:#f8fafc;">
-                                    <div style="font-weight:700;margin-bottom:6px;">Próximo paso backend</div>
-                                    <div style="font-size:13px;color:#64748b;">Persistencia, firma y versionado de plantillas/documentos emitidos.</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>`,
-                init: () => {}
-            });
+            await this.renderProtectedView(documentsView);
         });
 
         router.register('authorizations', async () => {
@@ -159,29 +139,7 @@ class App {
                 await router.navigate('dashboard');
                 return;
             }
-            await this.renderProtectedView({
-                render: () => `
-                    <div class="card">
-                        <div class="card-header"><h2 class="card-title">✅ Autorizaciones</h2></div>
-                        <div class="card-body">
-                            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;">
-                                <div style="padding:16px;border:1px solid #e5e7eb;border-radius:10px;background:#f8fafc;">
-                                    <div style="font-weight:700;margin-bottom:6px;">Solicitudes</div>
-                                    <div style="font-size:13px;color:#64748b;">Registro y seguimiento de autorizaciones por procedimiento o servicio.</div>
-                                </div>
-                                <div style="padding:16px;border:1px solid #e5e7eb;border-radius:10px;background:#f8fafc;">
-                                    <div style="font-weight:700;margin-bottom:6px;">Estados</div>
-                                    <div style="font-size:13px;color:#64748b;">Pendiente, aprobada, rechazada y vencida con trazabilidad operativa.</div>
-                                </div>
-                                <div style="padding:16px;border:1px solid #e5e7eb;border-radius:10px;background:#f8fafc;">
-                                    <div style="font-weight:700;margin-bottom:6px;">Próximo paso backend</div>
-                                    <div style="font-size:13px;color:#64748b;">Modelo persistente, vencimientos, adjuntos y auditoría de aprobación.</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>`,
-                init: () => {}
-            });
+            await this.renderProtectedView(authorizationsView);
         });
 
         // Nuevas rutas de administración
