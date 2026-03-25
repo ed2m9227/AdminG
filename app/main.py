@@ -284,6 +284,8 @@ if frontend_dist.exists():
             "reports",
             "cashregister",
             "invoices",
+            "documents",
+            "authorizations",
             "business",
             "admin",
             "notifications",
