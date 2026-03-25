@@ -3,8 +3,8 @@ from sqlalchemy.orm import Session, joinedload
 from app.db.session import get_db
 from app.models.appointment import Appointment
 from app.models.customer import Customer
-from app.models.inventory import InventoryItem
 from app.models.service_package import ServicePackage
+from app.models.service import Service
 from app.modules.appointments.schemas import AppointmentCreate, AppointmentOut, AppointmentUpdate
 from app.core.security import get_current_user
 from app.core.features import Feature, has_feature
@@ -35,18 +35,12 @@ def get_user_ids_for_data_sharing(user: User, db: Session):
         child_ids = [uid for (uid,) in db.query(User.id).filter(User.parent_user_id == user.id).all()]
         return [user.id, *child_ids]
 
-
-def get_accessible_service(service_id: int, user_ids: list[int], db: Session) -> InventoryItem | None:
-    """Look up a service by id from inventory_items (item_type='service').
-    Falls back to any active inventory service owned by the user if the exact match
-    is not found â€” this handles the mismatch between legacy Service model and the
-    InventoryItem-based services that the frontend manages.
-    """
-    return db.query(InventoryItem).filter(
-        InventoryItem.id == service_id,
-        InventoryItem.user_id.in_(user_ids),
-        InventoryItem.item_type == 'service',
-        InventoryItem.is_active == True,
+def get_accessible_service(service_id: int, user_ids: list[int], db: Session) -> Service | None:
+    """Look up a service by id from the services table (FK target of Appointment.service_id)."""
+    return db.query(Service).filter(
+        Service.id == service_id,
+        Service.user_id.in_(user_ids),
+        Service.is_active == True,
     ).first()
 
 def require_appointment_feature(user: User, feature: Feature):
@@ -152,6 +146,16 @@ def update_appointment(
         raise HTTPException(status_code=404, detail="Appointment not found")
 
     update_data = payload.model_dump(exclude_unset=True)
+
+    # Validate new customer_id belongs to the user's scope
+    if "customer_id" in update_data and update_data["customer_id"] is not None:
+        new_customer = db.query(Customer).filter(
+            Customer.id == update_data["customer_id"],
+            Customer.user_id.in_(user_ids)
+        ).first()
+        if not new_customer:
+            raise HTTPException(status_code=404, detail="Customer not found")
+
     if "service_id" in update_data and update_data["service_id"] is not None:
         service = get_accessible_service(update_data["service_id"], user_ids, db)
         if not service:

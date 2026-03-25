@@ -319,7 +319,11 @@ export class DashboardView {
                 'create payments': 'Crear pagos',
                 'create customers': 'Crear clientes',
                 'view payments': 'Ver pagos',
-                'use cashregister': 'Usar caja registradora'
+                'use cashregister': 'Usar caja registradora',
+                'view documents': 'Documentos',
+                'create documents': 'Crear documentos',
+                'view authorizations': 'Autorizaciones',
+                'create authorizations': 'Crear autorizaciones'
             };
 
             const featureLabels = features.map(f => {
@@ -362,9 +366,17 @@ export class DashboardView {
                 this.updateStat('statInventory', this.stats.inventory);
             }
 
-            // Appointments (count for today)
+            // Appointments (count for today only)
             if (appointmentsData.status === 'fulfilled' && Array.isArray(appointmentsData.value)) {
-                this.stats.appointments = appointmentsData.value.length || 0;
+                const now = new Date();
+                const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+                const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
+                const todayAppts = appointmentsData.value.filter(a => {
+                    if (!a.scheduled_at) return false;
+                    const d = new Date(a.scheduled_at);
+                    return d >= todayStart && d < todayEnd;
+                });
+                this.stats.appointments = todayAppts.length || 0;
                 this.updateStat('statAppointments', this.stats.appointments);
             }
 
@@ -461,6 +473,11 @@ export class DashboardView {
                         <div style="color: white; font-size: 14px; margin-bottom: 8px;">Tu plan actual</div>
                         <div style="color: white; font-size: 24px; font-weight: bold;">${planName}</div>
                     </div>
+                    ${plan === 'pro' ? `
+                        <div style="margin-bottom:12px;padding:12px;border-radius:8px;background:#fff7ed;color:#c2410c;font-size:12px;">
+                            <strong>Upgrade sugerido:</strong> Documentos y Autorizaciones quedaron reservados para MAX.
+                        </div>
+                    ` : ''}
                     <div style="margin-bottom: 12px;">
                         <strong style="color: #2c3e50;">✨ Funciones disponibles:</strong>
                     </div>

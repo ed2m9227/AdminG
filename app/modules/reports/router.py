@@ -74,6 +74,8 @@ def get_dashboard_metrics(
     # Metrics for current month
     now = datetime.utcnow()
     month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    tomorrow_start = today_start + timedelta(days=1)
     
     user_id = current_user.id
     
@@ -88,6 +90,15 @@ def get_dashboard_metrics(
     ).filter(
         Customer.user_id == user_id,
         Appointment.scheduled_at >= month_start
+    ).count()
+
+    appointments_today = db.query(Appointment).join(
+        Customer, Appointment.customer_id == Customer.id
+    ).filter(
+        Customer.user_id == user_id,
+        Appointment.scheduled_at >= today_start,
+        Appointment.scheduled_at < tomorrow_start,
+        Appointment.status.in_(["scheduled", "confirmed"]),
     ).count()
     
     # Revenue this month (Payments + Cash Sales)
@@ -143,6 +154,7 @@ def get_dashboard_metrics(
     return DashboardMetrics(
         total_customers=total_customers,
         total_appointments_month=appointments_month,
+        total_appointments_today=appointments_today,
         total_transactions_month=total_transactions,
         total_revenue_month=float(total_revenue),
         average_ticket=average_ticket,
@@ -306,21 +318,24 @@ def get_appointment_report(
     user_id = current_user.id
     check_reports_access(current_user, ["starter", "pro", "max"])
     
-    appointments = db.query(Appointment).filter(
-        Appointment.user_id == user_id,
-        Appointment.appointment_date >= request.start_date,
-        Appointment.appointment_date <= request.end_date,
+    appointments = db.query(Appointment).join(
+        Customer, Appointment.customer_id == Customer.id
+    ).filter(
+        Customer.user_id == user_id,
+        Appointment.scheduled_at >= request.start_date,
+        Appointment.scheduled_at <= request.end_date,
     ).all()
     
     total = len(appointments)
     completed = len([a for a in appointments if a.status == "completed"])
-    cancelled = len([a for a in appointments if a.status == "cancelled"])
+    cancelled = len([a for a in appointments if a.status in ("cancelled", "canceled")])
+    no_show = len([a for a in appointments if a.status == "no_show"])
     
     return AppointmentReport(
         total_appointments=total,
         completed_appointments=completed,
         cancelled_appointments=cancelled,
-        no_show_rate=float((total - completed) / total * 100) if total > 0 else 0,
+        no_show_rate=float(no_show / total * 100) if total > 0 else 0,
         average_duration=0.0,  # Placeholder
         busiest_hours=[],  # Placeholder
     )

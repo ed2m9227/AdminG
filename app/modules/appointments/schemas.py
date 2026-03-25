@@ -21,6 +21,7 @@ class AppointmentCreate(AppointmentBase):
     pass
 
 class AppointmentUpdate(BaseModel):
+    customer_id: int | None = None
     service_id: int | None = None
     service_package_id: int | None = None
     scheduled_at: datetime | None = None

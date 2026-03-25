@@ -22,6 +22,7 @@ function getErrorMessage(error) {
 export class AppointmentsView {
     constructor() {
         this.appointments = [];
+        this._appointmentsClickHandler = null;
     }
 
     render() {
@@ -81,8 +82,8 @@ export class AppointmentsView {
         return table.render({
             columns,
             data: this.appointments,
-            emptyMessage: 'No hay citas programadas',
-            emptyIcon: '📅'
+            emptyMessage: 'No hay citas para mostrar',
+            emptyIcon: '📋',
         });
     }
 
@@ -98,54 +99,64 @@ export class AppointmentsView {
         // Event listeners
         const btnNew = document.getElementById('btnNewAppointment');
         if (btnNew) {
-            btnNew.addEventListener('click', () => this.showNewAppointmentModal());
+            const newBtn = btnNew.cloneNode(true);
+            btnNew.replaceWith(newBtn);
+            newBtn.addEventListener('click', () => this.showNewAppointmentModal());
         }
-        
-        // Delete appointment listener
-        document.addEventListener('click', async (e) => {
-            const deleteBtn = e.target.closest('[data-delete-appointment]');
-            if (deleteBtn) {
-                const appointmentId = deleteBtn.dataset.deleteAppointment;
-                const confirmed = await modal.confirm({
-                    title: 'Confirmar eliminación',
-                    message: '¿Estás seguro de que quieres eliminar esta cita?',
-                    confirmText: 'Eliminar',
-                    cancelText: 'Cancelar'
-                });
-                
-                if (confirmed) {
-                    try {
-                        await apiService.delete(`/appointments/${appointmentId}`);
-                        await this.init();
-                        await modal.alert({ title: 'Éxito', message: 'Cita eliminada correctamente', type: 'success' });
-                    } catch (error) {
-                        const errorMsg = getErrorMessage(error);
-                        await modal.alert({ title: 'Error', message: 'Error al eliminar cita: ' + errorMsg, type: 'error' });
+
+        const tableContainer = document.getElementById('appointmentsContainer');
+        if (tableContainer) {
+            if (this._appointmentsClickHandler) {
+                tableContainer.removeEventListener('click', this._appointmentsClickHandler);
+            }
+
+            this._appointmentsClickHandler = async (e) => {
+                const deleteBtn = e.target.closest('[data-delete-appointment]');
+                if (deleteBtn) {
+                    const appointmentId = deleteBtn.dataset.deleteAppointment;
+                    const confirmed = await modal.confirm({
+                        title: 'Confirmar eliminación',
+                        message: '¿Estás seguro de que quieres eliminar esta cita?',
+                        confirmText: 'Eliminar',
+                        cancelText: 'Cancelar'
+                    });
+
+                    if (confirmed) {
+                        try {
+                            await apiService.delete(`/appointments/${appointmentId}`);
+                            await this.init();
+                            await modal.alert({ title: 'Éxito', message: 'Cita eliminada correctamente', type: 'success' });
+                        } catch (error) {
+                            const errorMsg = getErrorMessage(error);
+                            await modal.alert({ title: 'Error', message: 'Error al eliminar cita: ' + errorMsg, type: 'error' });
+                        }
+                    }
+                    return;
+                }
+
+                const viewBtn = e.target.closest('[data-view-appointment]');
+                if (viewBtn) {
+                    const appointmentId = viewBtn.dataset.viewAppointment;
+                    const appointment = this.appointments.find(a => a.id === parseInt(appointmentId, 10));
+                    if (appointment) this.showViewAppointmentModal(appointment);
+                    return;
+                }
+
+                const editBtn = e.target.closest('[data-edit-appointment]');
+                if (editBtn) {
+                    const appointmentId = editBtn.dataset.editAppointment;
+                    const appointment = this.appointments.find(a => a.id === parseInt(appointmentId, 10));
+                    if (appointment) {
+                        this.showEditAppointmentModal(appointment).catch(err => {
+                            console.error('Edit appointment modal error:', err);
+                            modal.alert({ type: 'error', title: 'Error', message: String(err?.message || err) });
+                        });
                     }
                 }
-            }
-        });
+            };
 
-        // Edit appointment listener
-        document.addEventListener('click', async (e) => {
-            const viewBtn = e.target.closest('[data-view-appointment]');
-            if (viewBtn) {
-                const appointmentId = viewBtn.dataset.viewAppointment;
-                const appointment = this.appointments.find(a => a.id === parseInt(appointmentId));
-                if (appointment) {
-                    this.showViewAppointmentModal(appointment);
-                }
-            }
-
-            const editBtn = e.target.closest('[data-edit-appointment]');
-            if (editBtn) {
-                const appointmentId = editBtn.dataset.editAppointment;
-                const appointment = this.appointments.find(a => a.id === parseInt(appointmentId));
-                if (appointment) {
-                    this.showEditAppointmentModal(appointment);
-                }
-            }
-        });
+            tableContainer.addEventListener('click', this._appointmentsClickHandler);
+        }
     }
 
     async showNewAppointmentModal() {
@@ -160,6 +171,15 @@ export class AppointmentsView {
 
         const customers = customersResult.status === 'fulfilled' ? customersResult.value : null;
         const services = servicesResult.status === 'fulfilled' ? servicesResult.value : null;
+        const customerNameMap = new Map();
+        if (Array.isArray(customers)) {
+            customers.forEach(c => {
+                const key = (c.full_name || '').trim().toLowerCase();
+                if (!key) return;
+                customerNameMap.set(key, (customerNameMap.get(key) || 0) + 1);
+            });
+        }
+        const hasDuplicateCustomerNames = Array.from(customerNameMap.values()).some(count => count >= 2);
 
         const formatCurrency = (value) => {
             if (!value) return '$0';
@@ -196,6 +216,7 @@ export class AppointmentsView {
             <form id="appointmentForm">
                 <div class="form-group">
                     <label>Cliente *</label>
+                    ${hasDuplicateCustomerNames ? '<p style="margin: 0 0 8px; padding: 8px; border-radius: 6px; background: #fff7ed; color: #9a3412; font-size: 12px;">⚠️ Si hay clientes con nombres duplicados, verifica bien el cliente antes de guardar.</p>' : ''}
                     <select name="customer_id" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px;">
                         ${customersOptions}
                     </select>
@@ -244,15 +265,35 @@ export class AppointmentsView {
             // Safely parse service_id - check for empty/null/NaN
             const serviceIdStr = (formData.get('service_id') || '').trim();
             const parsedServiceId = serviceIdStr ? parseInt(serviceIdStr) : null;
+
+            // Ensure scheduled_at always has seconds
+            const rawNewDate = (formData.get('scheduled_at') || '').trim();
             
             const appointmentData = {
                 customer_id: parseInt(formData.get('customer_id')),
-                scheduled_at: formData.get('scheduled_at'),
+                scheduled_at: rawNewDate.length === 16 ? rawNewDate + ':00' : rawNewDate,
                 service_id: !isNaN(parsedServiceId) ? parsedServiceId : null,
                 duration_minutes: 60,
                 status: formData.get('status') || 'scheduled',
                 notes: formData.get('notes')
             };
+
+            // Warn when customer already has a scheduled/confirmed appointment at same date/time.
+            const duplicateExact = this.appointments.find(a =>
+                a.customer_id === appointmentData.customer_id &&
+                ['scheduled', 'confirmed'].includes((a.status || '').toLowerCase()) &&
+                new Date(a.scheduled_at).getTime() === new Date(appointmentData.scheduled_at).getTime()
+            );
+
+            if (duplicateExact) {
+                const continueAnyway = await modal.confirm({
+                    title: '⚠️ Posible cita duplicada',
+                    message: 'Este cliente ya tiene una cita en la misma fecha y hora. ¿Desea continuar?',
+                    confirmText: 'Continuar',
+                    cancelText: 'Cancelar'
+                });
+                if (!continueAnyway) return;
+            }
             
             try {
                 await apiService.post('/appointments/', appointmentData);
@@ -302,9 +343,10 @@ export class AppointmentsView {
             servicesOptions = '<option value="">No hay servicios disponibles</option>';
         }
 
-        // Format the datetime-local input from ISO string
+        // Format the datetime-local input from ISO string (use local time, not UTC)
         const scheduledDate = new Date(appointment.scheduled_at);
-        const isoString = scheduledDate.toISOString().slice(0, 16);
+        const pad = (n) => String(n).padStart(2, '0');
+        const isoString = `${scheduledDate.getFullYear()}-${pad(scheduledDate.getMonth() + 1)}-${pad(scheduledDate.getDate())}T${pad(scheduledDate.getHours())}:${pad(scheduledDate.getMinutes())}`;
 
         const html = `
             <form id="appointmentForm">
@@ -359,9 +401,13 @@ export class AppointmentsView {
             const serviceIdStr = (formData.get('service_id') || '').trim();
             const parsedServiceId = serviceIdStr ? parseInt(serviceIdStr) : null;
             
+            // Ensure scheduled_at always has seconds (some Python versions require it)
+            const rawDateValue = (formData.get('scheduled_at') || '').trim();
+            const scheduledAtValue = rawDateValue.length === 16 ? rawDateValue + ':00' : rawDateValue;
+
             const appointmentData = {
                 customer_id: parseInt(formData.get('customer_id')),
-                scheduled_at: formData.get('scheduled_at'),
+                scheduled_at: scheduledAtValue,
                 service_id: !isNaN(parsedServiceId) ? parsedServiceId : null,
                 duration_minutes: 60,
                 status: formData.get('status') || 'scheduled',
@@ -609,6 +655,7 @@ export class PaymentsView {
                         <ul style="list-style:none;padding:0;margin:0 0 10px;font-size:12px;color:#555;line-height:1.8">
                             ${p.features.map(f => `<li>✓ ${f}</li>`).join('')}
                         </ul>
+                        ${p.lockedFeatures?.length ? `<div style="margin-bottom:10px;padding:8px;border-radius:6px;background:#fff7ed;color:#c2410c;font-size:11px;font-weight:700;">Solo MAX incluye: ${p.lockedFeatures.join(', ')}</div>` : ''}
                         ${p.code===currentPlan
                             ? `<div style="text-align:center;color:#667eea;font-size:11px;font-weight:700;padding:6px;background:#ebebff;border-radius:4px">✓ Plan actual</div>`
                             : (p.nequiLink
@@ -1121,6 +1168,7 @@ export class CashRegisterView {
                             <h2 class="card-title">Movimientos</h2>
                         </div>
                         <div class="card-body">
+                            <div id="voidRequestsPanel" style="display:none;margin-bottom:10px;"></div>
                             <div id="movementsList" style="max-height: 300px; overflow-y: auto; font-size: 12px;">
                                 <p style="color: #7f8c8d; text-align: center;">Sin movimientos</p>
                             </div>
@@ -1192,12 +1240,16 @@ export class CashRegisterView {
                             customer = customers.find(c => c.id === t.customer_id);
                         }
                         return {
+                            id: t.id,
                             type: t.transaction_type,
                             amount: t.amount,
                             timestamp: new Date(t.created_at).toLocaleTimeString('es-CO'),
                             created_at: t.created_at,
                             customer: customer ? customer.full_name : null,
-                            description: t.description
+                            description: t.description,
+                            is_voided: !!t.is_voided,
+                            void_reason: t.void_reason || null,
+                            voided_at: t.voided_at || null
                         };
                     });
                     await this.syncCashRegisterStatus();  // Sync with server first
@@ -1415,12 +1467,16 @@ export class CashRegisterView {
                             customer = this.customersCache.find(c => c.id === t.customer_id);
                         }
                         return {
+                            id: t.id,
                             type: t.transaction_type,
                             amount: t.amount,
                             timestamp: new Date(t.created_at).toLocaleTimeString('es-CO'),
                             created_at: t.created_at,
                             customer: customer ? customer.full_name : null,
-                            description: t.description
+                            description: t.description,
+                            is_voided: !!t.is_voided,
+                            void_reason: t.void_reason || null,
+                            voided_at: t.voided_at || null
                         };
                     });
                 } else {
@@ -1836,45 +1892,166 @@ export class CashRegisterView {
     updateMovements() {
         const container = document.getElementById('movementsList');
         if (!container) return;
+        const user = authService.getCurrentUser();
+        const isOwner = !user?.parent_user_id;
 
         if (this.movements.length === 0) {
             container.innerHTML = '<p style="color: #7f8c8d; text-align: center;">Sin movimientos</p>';
-        } else {
-            container.innerHTML = this.movements.map(movement => {
-                let icon, label, color;
-                
-                if (movement.type === 'expense') {
-                    icon = '📊';
-                    label = 'Gasto';
-                    color = '#ef4444';
-                } else if (movement.type === 'base') {
-                    icon = '💰';
-                    label = 'Base';
-                    color = '#10b981';
-                } else if (movement.type === 'sale') {
-                    icon = '💳';
-                    label = movement.customer ? `Venta a ${movement.customer}` : 'Venta';
-                    color = '#0ea5e9';
-                } else if (movement.type === 'close') {
-                    icon = '🔒';
-                    label = 'Cierre de Caja';
-                    color = '#8b5cf6';
+            return;
+        }
+
+        container.innerHTML = this.movements.map((movement) => {
+            let icon, label, color;
+            const isVoided = !!movement.is_voided;
+            const canVoidType = !['base', 'close'].includes(movement.type);
+
+            if (movement.type === 'expense') {
+                icon = '📊';
+                label = 'Gasto';
+                color = '#ef4444';
+            } else if (movement.type === 'base') {
+                icon = '💰';
+                label = 'Base';
+                color = '#10b981';
+            } else if (movement.type === 'sale') {
+                icon = '💳';
+                label = movement.customer ? `Venta a ${movement.customer}` : 'Venta';
+                color = '#0ea5e9';
+            } else if (movement.type === 'close') {
+                icon = '🔒';
+                label = 'Cierre de Caja';
+                color = '#8b5cf6';
+            } else {
+                icon = '📝';
+                label = 'Movimiento';
+                color = '#6b7280';
+            }
+
+            const voidedBadge = isVoided
+                ? '<span style="font-size:10px;background:#fee2e2;color:#991b1b;border-radius:4px;padding:1px 5px;margin-left:4px;">ANULADO</span>'
+                : '';
+            const voidInfo = isVoided
+                ? `<div style="color:#ef4444;font-size:10px;margin-top:2px;">Motivo: ${movement.void_reason || '—'}</div>`
+                : '';
+
+            let actionBtn = '';
+            if (!isVoided && canVoidType && movement.id) {
+                if (isOwner) {
+                    actionBtn = `<button style="background:none;border:1px solid #fca5a5;color:#ef4444;border-radius:4px;padding:2px 6px;font-size:10px;cursor:pointer;margin-left:6px;" data-void-tx="${movement.id}" title="Anular movimiento">🗑️</button>`;
                 } else {
-                    icon = '📝';
-                    label = 'Movimiento';
-                    color = '#6b7280';
+                    actionBtn = `<button style="background:none;border:1px solid #fbbf24;color:#d97706;border-radius:4px;padding:2px 6px;font-size:10px;cursor:pointer;margin-left:6px;" data-requestvoid-tx="${movement.id}" title="Solicitar anulación al administrador">⚠️</button>`;
                 }
-                
-                return `
-                    <div style="padding: 8px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: flex-start; font-size: 11px;">
-                        <div style="flex: 1;">
-                            <div>${icon} <strong style="color: ${color};">${label}</strong></div>
-                            <div style="color: #9ca3af; margin-top: 2px;">${movement.timestamp}</div>
-                        </div>
-                        <span style="color: ${color}; font-weight: 600; min-width: 70px; text-align: right;">${this.formatCurrency(movement.amount)}</span>
+            }
+
+            return `
+                <div style="padding:8px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:flex-start;font-size:11px;${isVoided ? 'opacity:0.55;text-decoration:line-through;' : ''}">
+                    <div style="flex:1;">
+                        <div>${icon} <strong style="color:${color};">${label}</strong>${voidedBadge}${actionBtn}</div>
+                        <div style="color:#9ca3af;margin-top:2px;">${movement.timestamp}</div>
+                        ${voidInfo}
                     </div>
-                `;
-            }).join('');
+                    <span style="color:${isVoided ? '#9ca3af' : color};font-weight:600;min-width:70px;text-align:right;">${this.formatCurrency(movement.amount)}</span>
+                </div>
+            `;
+        }).join('');
+
+        container.onclick = async (e) => {
+            const voidBtn = e.target.closest('[data-void-tx]');
+            const requestBtn = e.target.closest('[data-requestvoid-tx]');
+            if (voidBtn) await this._handleVoidTransaction(parseInt(voidBtn.dataset.voidTx, 10));
+            if (requestBtn) await this._handleRequestVoid(parseInt(requestBtn.dataset.requestvoidTx, 10));
+        };
+
+        if (isOwner) {
+            this._loadVoidRequests();
+        }
+    }
+
+    async _handleVoidTransaction(txId) {
+        const reason = await modal.prompt({
+            title: '🗑️ Anular Movimiento',
+            message: 'Ingrese el motivo de la anulación (requerido para auditoría):',
+            placeholder: 'Ej: Registro duplicado por error',
+        });
+        if (!reason || !reason.trim()) return;
+        try {
+            await apiService.post(`/cashregister/transactions/${txId}/void`, { reason: reason.trim() });
+            await modal.alert({ title: '✅ Anulado', message: 'Movimiento anulado y registrado en auditoría.', type: 'success' });
+            await this.refreshMovements();
+        } catch (err) {
+            await modal.alert({ title: 'Error', message: err?.detail || err?.message || 'No se pudo anular', type: 'error' });
+        }
+    }
+
+    async _handleRequestVoid(txId) {
+        const reason = await modal.prompt({
+            title: '⚠️ Solicitar Anulación',
+            message: 'Explique el motivo al administrador (este movimiento requiere su autorización):',
+            placeholder: 'Ej: Se registró dos veces por error',
+        });
+        if (!reason || !reason.trim()) return;
+        try {
+            await apiService.post(`/cashregister/transactions/${txId}/request-void`, { reason: reason.trim() });
+            await modal.alert({ title: '✅ Solicitud Enviada', message: 'El administrador recibirá tu solicitud de anulación.', type: 'success' });
+        } catch (err) {
+            await modal.alert({ title: 'Error', message: err?.detail || err?.message || 'No se pudo enviar', type: 'error' });
+        }
+    }
+
+    async _loadVoidRequests() {
+        const panel = document.getElementById('voidRequestsPanel');
+        if (!panel) return;
+        try {
+            const requests = await apiService.get('/cashregister/void-requests');
+            const pending = (requests || []).filter(r => r.status === 'pending');
+            if (pending.length === 0) {
+                panel.innerHTML = '';
+                panel.style.display = 'none';
+                return;
+            }
+            panel.style.display = 'block';
+            panel.innerHTML = `
+                <div style="font-weight:600;color:#b45309;margin-bottom:8px;">⚠️ ${pending.length} solicitud(es) de anulación pendiente(s)</div>
+                ${pending.map(r => `
+                    <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:8px;margin-bottom:6px;font-size:12px;">
+                        <div><strong>${r.transaction_type?.toUpperCase()}</strong> • ${this.formatCurrency(r.transaction_amount)} — <em>${r.transaction_description || '—'}</em></div>
+                        <div style="color:#78716c;margin-top:2px;">Solicitado por: ${r.requested_by_email} • ${new Date(r.created_at).toLocaleString('es-CO')}</div>
+                        <div style="color:#b45309;margin-top:2px;">Motivo: ${r.reason}</div>
+                        <div style="margin-top:6px;display:flex;gap:6px;">
+                            <button class="btn btn-success btn-sm" style="font-size:11px;padding:3px 10px;" data-approve-void="${r.id}">✅ Aprobar</button>
+                            <button class="btn btn-danger btn-sm" style="font-size:11px;padding:3px 10px;" data-deny-void="${r.id}">❌ Denegar</button>
+                        </div>
+                    </div>
+                `).join('')}
+            `;
+            panel.onclick = async (e) => {
+                const approveBtn = e.target.closest('[data-approve-void]');
+                const denyBtn = e.target.closest('[data-deny-void]');
+                if (approveBtn) await this._resolveVoidRequest(parseInt(approveBtn.dataset.approveVoid, 10), true);
+                if (denyBtn) await this._resolveVoidRequest(parseInt(denyBtn.dataset.denyVoid, 10), false);
+            };
+        } catch (_) {
+        }
+    }
+
+    async _resolveVoidRequest(reqId, approve) {
+        const note = await modal.prompt({
+            title: approve ? '✅ Aprobar Anulación' : '❌ Denegar Anulación',
+            message: approve
+                ? 'El movimiento será anulado. ¿Desea agregar una nota? (opcional)'
+                : 'Explique por qué deniega la solicitud (opcional):',
+            placeholder: 'Nota opcional...'
+        });
+        try {
+            await apiService.post(`/cashregister/void-requests/${reqId}/resolve`, { approve, note: note || null });
+            await modal.alert({
+                title: approve ? '✅ Aprobado' : '❌ Denegado',
+                message: approve ? 'Movimiento anulado y registrado en auditoría.' : 'Solicitud denegada.',
+                type: approve ? 'success' : 'warning'
+            });
+            await this.refreshMovements();
+        } catch (err) {
+            await modal.alert({ title: 'Error', message: err?.detail || err?.message || 'Error', type: 'error' });
         }
     }
 
@@ -2028,7 +2205,7 @@ export class ReportsView {
                         <h3>📅 Citas del Mes</h3>
                         <div class="value">${this.metrics?.total_appointments_month || 0}</div>
                         <p style="font-size: 12px; color: #7f8c8d; margin-top: 5px;">
-                            Promedio por venta: ${this.formatCurrency(this.metrics?.average_ticket || 0)}
+                            Hoy: ${this.metrics?.total_appointments_today || 0} • Ticket promedio: ${this.formatCurrency(this.metrics?.average_ticket || 0)}
                         </p>
                     </div>
                     
@@ -2095,6 +2272,7 @@ export class ReportsView {
             this.metrics = {
                 total_customers: 0,
                 total_appointments_month: 0,
+                total_appointments_today: 0,
                 total_transactions_month: 0,
                 total_revenue_month: 0,
                 average_ticket: 0,
