@@ -346,18 +346,18 @@ export class DashboardView {
 
     async loadStats() {
         try {
-            const [customersData, inventoryData, appointmentsData, paymentsData, cashTransactions] = await Promise.allSettled([
-                apiService.getCustomers(),
+            const [metricsData, inventoryData] = await Promise.allSettled([
+                apiService.getReportsDashboard(),
                 apiService.getInventoryItems(),
-                apiService.getAppointments(),
-                apiService.getPayments(),
-                apiService.get('/cashregister/transactions?limit=1000')
             ]);
 
-            // Customers
-            if (customersData.status === 'fulfilled' && Array.isArray(customersData.value)) {
-                this.stats.customers = customersData.value.length || 0;
+            if (metricsData.status === 'fulfilled' && metricsData.value) {
+                this.stats.customers = metricsData.value.total_customers || 0;
+                this.stats.appointments = metricsData.value.total_appointments_today || 0;
+                this.stats.revenue = metricsData.value.total_revenue_month || 0;
                 this.updateStat('statCustomers', this.stats.customers);
+                this.updateStat('statAppointments', this.stats.appointments);
+                this.updateStat('statRevenue', this.stats.revenue);
             }
 
             // Inventory
@@ -365,58 +365,6 @@ export class DashboardView {
                 this.stats.inventory = inventoryData.value.length || 0;
                 this.updateStat('statInventory', this.stats.inventory);
             }
-
-            // Appointments (count for today only)
-            if (appointmentsData.status === 'fulfilled' && Array.isArray(appointmentsData.value)) {
-                const now = new Date();
-                const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
-                const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
-                const todayAppts = appointmentsData.value.filter(a => {
-                    if (!a.scheduled_at) return false;
-                    const d = new Date(a.scheduled_at);
-                    return d >= todayStart && d < todayEnd;
-                });
-                this.stats.appointments = todayAppts.length || 0;
-                this.updateStat('statAppointments', this.stats.appointments);
-            }
-
-            // Revenue calculation - Payments + Cash Sales - Cash Expenses
-            let paymentRevenue = 0;
-            let cashSales = 0;
-            let cashExpenses = 0;
-            
-            if (paymentsData.status === 'fulfilled' && Array.isArray(paymentsData.value)) {
-                console.log('🔍 DashboardView: Payments fetched:', paymentsData.value);
-                const completedPayments = paymentsData.value.filter(p => p.status === 'completed');
-                console.log('✅ DashboardView: Completed payments:', completedPayments);
-                paymentRevenue = completedPayments
-                    .reduce((sum, p) => sum + (parseFloat(p.final_amount) || parseFloat(p.amount) || 0), 0);
-            } else {
-                console.warn('⚠️ DashboardView: Payment data not fulfilled or not an array:', paymentsData);
-            }
-            
-            // Cash register transactions
-            if (cashTransactions.status === 'fulfilled' && Array.isArray(cashTransactions.value)) {
-                const today = new Date();
-                const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-                
-                cashTransactions.value.forEach(t => {
-                    const transDate = new Date(t.created_at);
-                    if (transDate >= monthStart) {
-                        if (t.transaction_type === 'sale') {
-                            cashSales += parseFloat(t.amount) || 0;
-                        } else if (t.transaction_type === 'expense') {
-                            cashExpenses += parseFloat(t.amount) || 0;
-                        }
-                    }
-                });
-                
-                console.log('💰 Cash sales:', cashSales, '💸 Cash expenses:', cashExpenses);
-            }
-            
-            this.stats.revenue = paymentRevenue + cashSales - cashExpenses;
-            console.log('💰 DashboardView: Total revenue (Payments + Cash Sales - Expenses):', this.stats.revenue);
-            this.updateStat('statRevenue', this.stats.revenue);
         } catch (error) {
             console.error('Error loading dashboard stats:', error);
         }
@@ -541,8 +489,8 @@ export class DashboardView {
 
     getRoleLabel(role) {
         const roleLabels = {
-            'admin': '🔑 Admin (Cuenta Maestra)',
-            'manager': '👔 Manager (Dueño del Plan)',
+            'admin': '🔑 Administrador',
+            'manager': '👔 Manager',
             'team': '👥 Equipo',
             'viewer': '👥 Equipo'
         };
@@ -551,8 +499,8 @@ export class DashboardView {
 
     getRoleDescription(role) {
         const roleDescriptions = {
-            'admin': '✓ Cuenta maestra con acceso total y control global',
-            'manager': '✓ Dueño del plan con control de configuración, planes y equipo',
+            'admin': '✓ Acceso total y control global',
+            'manager': '✓ Control de configuración, planes y equipo',
             'team': '✓ Cuenta de equipo con acceso limitado según permisos',
             'viewer': '✓ Cuenta de equipo con acceso limitado según permisos'
         };

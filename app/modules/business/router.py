@@ -33,7 +33,7 @@ def get_business_types():
             type="veterinaria",
             label="Veterinaria",
             description="Clínica veterinaria",
-            customer_label="Dueño",
+            customer_label="Responsable",
             pet_label="Mascota",
             has_pet=True
         ),

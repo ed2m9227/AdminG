@@ -87,7 +87,7 @@ export class BusinessTypesView {
                 </div>
                 <div class="bt-item-meta">
                     <span class="badge ${type.supports_pets ? 'badge-success' : 'badge-gray'}">
-                        ${type.supports_pets ? '🐾 Con Mascotas' : 'Sin Mascotas'}
+                        ${type.supports_pets ? '🐾 Con registro relacionado' : 'Operación directa'}
                     </span>
                 </div>
             </div>

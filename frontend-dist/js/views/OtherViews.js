@@ -1645,11 +1645,11 @@ export class CashRegisterView {
             btnOpen.style.display = 'none';
             btnClose.style.display = 'none';
             if (this.cashRegisterOpen) {
-                statusDiv.innerHTML = '✅ Caja Abierta (sesion del padre)';
+                statusDiv.innerHTML = '✅ Caja Abierta (sesión central activa)';
                 statusDiv.style.background = 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)';
                 statusDiv.style.color = '#065f46';
             } else {
-                statusDiv.innerHTML = '🔒 Caja Cerrada (esperando apertura del padre)';
+                statusDiv.innerHTML = '🔒 Caja Cerrada (pendiente de apertura central)';
                 statusDiv.style.background = 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)';
                 statusDiv.style.color = '#991b1b';
             }

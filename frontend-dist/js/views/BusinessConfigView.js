@@ -89,9 +89,12 @@ export class BusinessConfigView {
         if (!container) return;
 
         const config = this.businessConfig || {};
+        const currentUser = authService.getCurrentUser();
         const types = this.businessTypes || [];
         const hasPet = !!config.has_pet_relationship;
         const petFieldsEnabled = config.pet_fields_enabled || {};
+        const billingProfile = config.custom_fields?.billing_profile || {};
+        const canManageBillingProfile = !currentUser?.parent_user_id;
 
         const typeOptions = types.map(t => {
             const selected = t.type === config.business_type ? 'selected' : '';
@@ -139,9 +142,65 @@ export class BusinessConfigView {
                 <div class="form-group">
                     <label>
                         <input type="checkbox" name="has_pet_relationship" ${hasPet ? 'checked' : ''}>
-                        Tiene relacion con mascotas
+                        Usa registro relacionado adicional
                     </label>
                 </div>
+
+                ${canManageBillingProfile ? `
+                <div class="form-group" style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; margin-top: 12px;">
+                    <div style="font-weight: 700; margin-bottom: 12px;">Perfil fiscal para facturación en Colombia</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Razón social / nombre comercial</label>
+                            <input type="text" name="billing_legal_name" value="${billingProfile.legal_name || config.business_name || ''}">
+                        </div>
+                        <div class="form-group">
+                            <label>Tipo documento</label>
+                            <select name="billing_document_type">
+                                <option value="NIT" ${billingProfile.document_type === 'NIT' ? 'selected' : ''}>NIT</option>
+                                <option value="CC" ${billingProfile.document_type === 'CC' ? 'selected' : ''}>CC</option>
+                                <option value="CE" ${billingProfile.document_type === 'CE' ? 'selected' : ''}>CE</option>
+                                <option value="RUT" ${billingProfile.document_type === 'RUT' ? 'selected' : ''}>RUT</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Número documento</label>
+                            <input type="text" name="billing_document_number" value="${billingProfile.document_number || ''}">
+                        </div>
+                        <div class="form-group">
+                            <label>Régimen</label>
+                            <select name="billing_tax_regime">
+                                <option value="" ${!billingProfile.tax_regime ? 'selected' : ''}>Seleccionar...</option>
+                                <option value="Responsable de IVA" ${billingProfile.tax_regime === 'Responsable de IVA' ? 'selected' : ''}>Responsable de IVA</option>
+                                <option value="No responsable de IVA" ${billingProfile.tax_regime === 'No responsable de IVA' ? 'selected' : ''}>No responsable de IVA</option>
+                                <option value="Régimen simple" ${billingProfile.tax_regime === 'Régimen simple' ? 'selected' : ''}>Régimen simple</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Dirección</label>
+                            <input type="text" name="billing_address" value="${billingProfile.address || ''}">
+                        </div>
+                        <div class="form-group">
+                            <label>Ciudad / municipio</label>
+                            <input type="text" name="billing_city" value="${billingProfile.city || ''}">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Email de facturación</label>
+                            <input type="email" name="billing_email" value="${billingProfile.email || ''}">
+                        </div>
+                        <div class="form-group">
+                            <label>Resolución / referencia DIAN</label>
+                            <input type="text" name="billing_resolution" value="${billingProfile.resolution || ''}">
+                        </div>
+                    </div>
+                </div>
+                ` : ''}
 
                 <div class="form-group">
                     <label>Campos de Mascotas</label>
@@ -188,8 +247,24 @@ export class BusinessConfigView {
             appointment_label: formData.get('appointment_label') || 'Cita',
             pet_label: formData.get('pet_label') || null,
             has_pet_relationship: formData.get('has_pet_relationship') === 'on',
-            pet_fields_enabled: this.getEnabledPetFields(form)
+            pet_fields_enabled: this.getEnabledPetFields(form),
+            custom_fields: {
+                ...(this.businessConfig?.custom_fields || {})
+            }
         };
+
+        if (!authService.getCurrentUser()?.parent_user_id) {
+            payload.custom_fields.billing_profile = {
+                legal_name: formData.get('billing_legal_name') || null,
+                document_type: formData.get('billing_document_type') || null,
+                document_number: formData.get('billing_document_number') || null,
+                tax_regime: formData.get('billing_tax_regime') || null,
+                address: formData.get('billing_address') || null,
+                city: formData.get('billing_city') || null,
+                email: formData.get('billing_email') || null,
+                resolution: formData.get('billing_resolution') || null,
+            };
+        }
 
         try {
             const updated = await apiService.updateBusinessConfig(payload);

@@ -25,7 +25,7 @@ class BusinessType(str, Enum):
         """Retorna configuración default según tipo de negocio"""
         defaults = {
             "veterinaria": {
-                "customer_label": "Dueño",
+                "customer_label": "Responsable",
                 "pet_label": "Mascota",
                 "appointment_label": "Cita",
                 "has_pet_relationship": True,

@@ -11,6 +11,8 @@ from app.models.invoice import Invoice, InvoiceItem
 from app.models.tax_config import TaxConfig
 from app.models.customer import Customer
 from app.models.payment import Payment
+from app.models.business_config import BusinessConfiguration
+from app.models.user import User
 from app.core.security import get_current_user
 from app.modules.invoices.schemas import (
     InvoiceCreate, InvoiceResponse, 
@@ -30,6 +32,27 @@ def to_money(value: Decimal) -> Decimal:
 def require_admin(current_user: dict) -> None:
     if current_user.get("role") not in {"admin", "master_admin"}:
         raise HTTPException(status_code=403, detail="Admin role required")
+
+
+def resolve_user(
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    user = db.query(User).filter(User.id == int(current_user["id"])).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
+
+def get_user_ids_for_data_sharing(user: User, db: Session):
+    if user.parent_user_id:
+        sibling_ids = [
+            uid for (uid,) in db.query(User.id).filter(User.parent_user_id == user.parent_user_id).all()
+        ]
+        return list(dict.fromkeys([user.parent_user_id, user.id, *sibling_ids]))
+
+    child_ids = [uid for (uid,) in db.query(User.id).filter(User.parent_user_id == user.id).all()]
+    return [user.id, *child_ids]
 
 
 def generate_invoice_number(db: Session) -> str:
@@ -62,17 +85,18 @@ def get_active_tax_rate(db: Session, tax_type: str, applies_to: str = "all") -> 
 def generate_invoice(
     data: InvoiceCreate,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(resolve_user)
 ):
     """
     Genera una factura con cálculo automático de IVA y retención
     """
     # Validar que el cliente existe
-    user_id = int(current_user["id"])
+    user_id = current_user.id
+    user_ids = get_user_ids_for_data_sharing(current_user, db)
 
     customer = db.query(Customer).filter(
         Customer.id == data.customer_id,
-        Customer.user_id == user_id
+        Customer.user_id.in_(user_ids)
     ).first()
     if not customer:
         raise HTTPException(status_code=404, detail="Customer not found")
@@ -81,7 +105,7 @@ def generate_invoice(
     if data.payment_id:
         payment = db.query(Payment).filter(
             Payment.id == data.payment_id,
-            Payment.user_id == user_id
+            Payment.user_id.in_(user_ids)
         ).first()
         if not payment:
             raise HTTPException(status_code=404, detail="Payment not found")
@@ -187,12 +211,13 @@ def generate_invoice(
 def get_invoice(
     invoice_id: int,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(resolve_user)
 ):
     """Obtiene una factura por ID."""
+    user_ids = get_user_ids_for_data_sharing(current_user, db)
     invoice = db.query(Invoice).filter(
         Invoice.id == invoice_id,
-        Invoice.user_id == int(current_user["id"])
+        Invoice.user_id.in_(user_ids)
     ).first()
     if not invoice:
         raise HTTPException(status_code=404, detail="Invoice not found")
@@ -206,10 +231,11 @@ def list_invoices(
     limit: int = 100,
     customer_id: int | None = None,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(resolve_user)
 ):
     """Lista todas las facturas del usuario actual."""
-    query = db.query(Invoice).filter(Invoice.user_id == int(current_user["id"]))
+    user_ids = get_user_ids_for_data_sharing(current_user, db)
+    query = db.query(Invoice).filter(Invoice.user_id.in_(user_ids))
     
     if customer_id:
         query = query.filter(Invoice.customer_id == customer_id)
@@ -258,17 +284,20 @@ def list_tax_configs(
 def download_invoice_pdf(
     invoice_id: int,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(resolve_user)
 ):
     """Descarga la factura como PDF."""
+    user_ids = get_user_ids_for_data_sharing(current_user, db)
     invoice = db.query(Invoice).filter(
         Invoice.id == invoice_id,
-        Invoice.user_id == int(current_user["id"])
+        Invoice.user_id.in_(user_ids)
     ).first()
     if not invoice:
         raise HTTPException(status_code=404, detail="Invoice not found")
 
     customer = db.query(Customer).filter(Customer.id == invoice.customer_id).first()
+    business_config = db.query(BusinessConfiguration).filter(BusinessConfiguration.user_id == invoice.user_id).first()
+    billing_profile = (business_config.custom_fields or {}).get("billing_profile", {}) if business_config else {}
 
     try:
         from reportlab.lib.pagesizes import letter
@@ -288,7 +317,36 @@ def download_invoice_pdf(
     pdf.drawString(50, y, "Invoice")
     y -= 30
 
+    issuer_name = billing_profile.get("legal_name") or (business_config.business_name if business_config else None) or "Negocio"
+    issuer_doc_type = billing_profile.get("document_type") or "NIT"
+    issuer_doc_number = billing_profile.get("document_number")
+    issuer_regime = billing_profile.get("tax_regime")
+    issuer_city = billing_profile.get("city")
+    issuer_address = billing_profile.get("address")
+    issuer_email = billing_profile.get("email")
+    issuer_resolution = billing_profile.get("resolution")
+
+    pdf.setFont("Helvetica-Bold", 11)
+    pdf.drawString(50, y, issuer_name[:70])
+    y -= 16
+
     pdf.setFont("Helvetica", 10)
+    if issuer_doc_number:
+        pdf.drawString(50, y, f"{issuer_doc_type}: {issuer_doc_number}")
+        y -= 16
+    if issuer_regime:
+        pdf.drawString(50, y, f"Régimen: {issuer_regime}")
+        y -= 16
+    if issuer_address or issuer_city:
+        pdf.drawString(50, y, f"Dirección: {(issuer_address or '').strip()} {(('- ' + issuer_city) if issuer_city else '')}".strip())
+        y -= 16
+    if issuer_email:
+        pdf.drawString(50, y, f"Email: {issuer_email}")
+        y -= 16
+    if issuer_resolution:
+        pdf.drawString(50, y, f"Referencia fiscal: {issuer_resolution}")
+        y -= 20
+
     pdf.drawString(50, y, f"Invoice Number: {invoice.invoice_number}")
     y -= 16
     pdf.drawString(50, y, f"Issued At: {invoice.issued_at.strftime('%Y-%m-%d %H:%M')}")

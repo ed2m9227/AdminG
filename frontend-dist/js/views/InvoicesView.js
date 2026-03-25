@@ -619,8 +619,14 @@ class InvoicesView {
             size: 'medium' 
         });
 
+        const quickParams = new URLSearchParams(window.location.search || '');
+        const prefillCustomerId = quickParams.get('customer_id');
+        const prefillSubtotal = Number(quickParams.get('subtotal') || 0);
+        const prefillNotes = quickParams.get('notes') || '';
+
         // Setup item management
         const invoiceItems = [];
+        const form = document.getElementById('invoiceForm');
         const itemsContainer = document.getElementById('invoiceItems');
         const itemSelect = document.getElementById('itemSelect');
         const itemQty = document.getElementById('itemQty');
@@ -670,6 +676,25 @@ class InvoicesView {
                 });
             });
         };
+
+        const customerSelect = form?.querySelector('select[name="customer_id"]');
+        const notesField = form?.querySelector('textarea[name="notes"]');
+        if (customerSelect && prefillCustomerId) {
+            customerSelect.value = prefillCustomerId;
+        }
+        if (notesField && prefillNotes) {
+            notesField.value = prefillNotes;
+        }
+        if (prefillSubtotal > 0 && invoiceItems.length === 0) {
+            invoiceItems.push({
+                source_type: 'custom',
+                description: prefillNotes || 'Concepto facturable',
+                unit_price: prefillSubtotal,
+                quantity: 1,
+            });
+            renderItems();
+            updateTotal();
+        }
 
         btnAddItem.addEventListener('click', () => {
             const selectedValue = itemSelect.value;
@@ -729,7 +754,6 @@ class InvoicesView {
             }
         });
 
-        const form = document.getElementById('invoiceForm');
         form?.addEventListener('submit', async (e) => {
             e.preventDefault();
             const formData = new FormData(form);
@@ -765,8 +789,10 @@ class InvoicesView {
                     type: 'success'
                 });
                 
-                // Reload data if needed
-                await this.loadData();
+                await this.loadInvoices();
+                if (window.location.search) {
+                    window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
+                }
             } catch (error) {
                 console.error('Error creating invoice:', error);
                 let errorMsg = error.message || 'Error desconocido';
