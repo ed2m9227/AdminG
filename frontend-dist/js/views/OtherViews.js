@@ -25,6 +25,15 @@ export class AppointmentsView {
         this._appointmentsClickHandler = null;
     }
 
+    formatCurrency(value) {
+        return new Intl.NumberFormat('es-CO', {
+            style: 'currency',
+            currency: 'COP',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        }).format(value || 0);
+    }
+
     render() {
         const user = authService.getCurrentUser();
         const isAdmin = user && user.role === 'admin';

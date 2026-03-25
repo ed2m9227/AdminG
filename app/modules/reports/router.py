@@ -35,6 +35,17 @@ def resolve_user(
         raise HTTPException(status_code=404, detail="User not found")
     return user
 
+
+def get_user_ids_for_data_sharing(user: User, db: Session):
+    if user.parent_user_id:
+        sibling_ids = [
+            uid for (uid,) in db.query(User.id).filter(User.parent_user_id == user.parent_user_id).all()
+        ]
+        return list(dict.fromkeys([user.parent_user_id, user.id, *sibling_ids]))
+
+    child_ids = [uid for (uid,) in db.query(User.id).filter(User.parent_user_id == user.id).all()]
+    return [user.id, *child_ids]
+
 LEGACY_PLAN_MAP = {
     "basic": "starter",
     "AdminG_Basic": "starter",
@@ -77,25 +88,25 @@ def get_dashboard_metrics(
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
     tomorrow_start = today_start + timedelta(days=1)
     
-    user_id = current_user.id
+    user_ids = get_user_ids_for_data_sharing(current_user, db)
     
     # Total customers
     total_customers = db.query(Customer).filter(
-        Customer.user_id == user_id
+        Customer.user_id.in_(user_ids)
     ).count()
     
     # Appointments this month (need to join with Customer to filter by user)
     appointments_month = db.query(Appointment).join(
         Customer, Appointment.customer_id == Customer.id
     ).filter(
-        Customer.user_id == user_id,
+        Customer.user_id.in_(user_ids),
         Appointment.scheduled_at >= month_start
     ).count()
 
     appointments_today = db.query(Appointment).join(
         Customer, Appointment.customer_id == Customer.id
     ).filter(
-        Customer.user_id == user_id,
+        Customer.user_id.in_(user_ids),
         Appointment.scheduled_at >= today_start,
         Appointment.scheduled_at < tomorrow_start,
         Appointment.status.in_(["scheduled", "confirmed"]),
@@ -103,7 +114,7 @@ def get_dashboard_metrics(
     
     # Revenue this month (Payments + Cash Sales)
     revenue_query = db.query(Payment).filter(
-        Payment.user_id == user_id,
+        Payment.user_id.in_(user_ids),
         Payment.status == "completed",
         or_(
             Payment.paid_at >= month_start,
@@ -115,7 +126,7 @@ def get_dashboard_metrics(
     
     # Cash register transactions this month
     cash_sales = db.query(CashTransaction).filter(
-        CashTransaction.user_id == user_id,
+        CashTransaction.user_id.in_(user_ids),
         CashTransaction.transaction_type == "sale",
         CashTransaction.created_at >= month_start
     ).all()
@@ -124,7 +135,7 @@ def get_dashboard_metrics(
     
     # Cash register expenses this month
     cash_expenses = db.query(CashTransaction).filter(
-        CashTransaction.user_id == user_id,
+        CashTransaction.user_id.in_(user_ids),
         CashTransaction.transaction_type == "expense",
         CashTransaction.created_at >= month_start
     ).all()
@@ -140,7 +151,7 @@ def get_dashboard_metrics(
     
     # Pending payments
     pending = db.query(Payment).filter(
-        Payment.user_id == user_id,
+        Payment.user_id.in_(user_ids),
         Payment.status == "pending"
     )
     pending_amount = sum(p.final_amount for p in pending.all()) or Decimal(0)
@@ -175,45 +186,33 @@ def get_revenue_report(
     - AdminG Plus+ 
     - AdminPro Start+
     """
-    user_id = current_user.id
+    user_ids = get_user_ids_for_data_sharing(current_user, db)
     check_reports_access(current_user, ["starter", "pro", "max"])
     
-    print(f"📊 Revenue Report - User: {user_id}, Period: {request.start_date} to {request.end_date}")
-    
     payments = db.query(Payment).filter(
-        Payment.user_id == user_id,
+        Payment.user_id.in_(user_ids),
         Payment.created_at >= request.start_date,
         Payment.created_at <= request.end_date,
     ).all()
-    
+
     payment_revenue = sum(p.final_amount for p in payments if p.status == "completed") or Decimal(0)
-    print(f"  💳 Payments: {len(payments)}, Revenue: {payment_revenue}")
     
     # Cash register transactions in period
     cash_sales = db.query(CashTransaction).filter(
-        CashTransaction.user_id == user_id,
+        CashTransaction.user_id.in_(user_ids),
         CashTransaction.transaction_type == "sale",
         CashTransaction.created_at >= request.start_date,
         CashTransaction.created_at <= request.end_date,
-    
     ).all()
     cash_sales_total = sum(t.amount for t in cash_sales) or Decimal(0)
-    print(f"  🤑 Cash Sales: {len(cash_sales)}, Total: {cash_sales_total}")
     
     cash_expenses = db.query(CashTransaction).filter(
-        CashTransaction.user_id == user_id,
+        CashTransaction.user_id.in_(user_ids),
         CashTransaction.transaction_type == "expense",
         CashTransaction.created_at >= request.start_date,
         CashTransaction.created_at <= request.end_date
     ).all()
     cash_expenses_total = sum(t.amount for t in cash_expenses) or Decimal(0)
-    print(f"  💸 Cash Expenses: {len(cash_expenses)}, Total: {cash_expenses_total}")
-    
-    # Debug: Check all cash transactions for user
-    all_cash = db.query(CashTransaction).filter(CashTransaction.user_id == user_id).all()
-    print(f"  📋 Total Cash Transactions (all dates): {len(all_cash)}")
-    for t in all_cash[-5:]:  # Show last 5
-        print(f"     - {t.transaction_type}: ${t.amount} on {t.created_at}")
     
     pending = sum(p.final_amount for p in payments if p.status == "pending") or Decimal(0)
     
@@ -278,17 +277,17 @@ def get_customer_report(
     - AdminG Plus+
     - AdminPro Start+
     """
-    user_id = current_user.id
+    user_ids = get_user_ids_for_data_sharing(current_user, db)
     check_reports_access(current_user, ["starter", "pro", "max"])
     
     # Total customers
     total_customers = db.query(Customer).filter(
-        Customer.user_id == user_id
+        Customer.user_id.in_(user_ids)
     ).count()
     
     # New customers in period
     new_customers = db.query(Customer).filter(
-        Customer.user_id == user_id,
+        Customer.user_id.in_(user_ids),
         Customer.created_at >= request.start_date,
         Customer.created_at <= request.end_date,
     ).count()
@@ -315,13 +314,13 @@ def get_appointment_report(
     - AdminG Plus+
     - AdminPro Start+
     """
-    user_id = current_user.id
+    user_ids = get_user_ids_for_data_sharing(current_user, db)
     check_reports_access(current_user, ["starter", "pro", "max"])
     
     appointments = db.query(Appointment).join(
         Customer, Appointment.customer_id == Customer.id
     ).filter(
-        Customer.user_id == user_id,
+        Customer.user_id.in_(user_ids),
         Appointment.scheduled_at >= request.start_date,
         Appointment.scheduled_at <= request.end_date,
     ).all()
@@ -351,17 +350,18 @@ def get_inventory_report(
     Available for:
     - AdminPro Start+ (with inventory)
     """
-    user_id = current_user.id
+    user_ids = get_user_ids_for_data_sharing(current_user, db)
     check_reports_access(current_user, ["pro", "max"])
     
     items = db.query(InventoryItem).filter(
-        InventoryItem.user_id == user_id
+        InventoryItem.user_id.in_(user_ids)
     ).all()
     
     low_stock = len([i for i in items if i.quantity <= i.min_quantity])
     total_value = sum(i.unit_price * i.quantity for i in items) or Decimal(0)
     
     movements = db.query(InventoryMovement).filter(
+        InventoryMovement.user_id.in_(user_ids),
         InventoryMovement.created_at >= request.start_date,
         InventoryMovement.created_at <= request.end_date,
     ).all()
