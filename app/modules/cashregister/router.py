@@ -16,6 +16,9 @@ from app.models.cash_register_session import CashRegisterSession
 from app.models.customer import Customer
 from app.models.inventory import InventoryItem
 from pydantic import BaseModel
+import json
+from app.models.audit_log import AuditLog, VoidRequest
+from fastapi import Request
 
 router = APIRouter(
     prefix="/cashregister",
@@ -47,6 +50,28 @@ class CashTransactionOut(BaseModel):
     
     class Config:
         from_attributes = True
+
+class CashTransactionOutFull(BaseModel):
+    id: int
+    transaction_type: str
+    amount: float
+    description: Optional[str]
+    customer_id: Optional[int] = None
+    created_at: datetime
+    is_voided: bool = False
+    void_reason: Optional[str] = None
+    voided_by_user_id: Optional[int] = None
+    voided_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+class VoidTransactionRequest(BaseModel):
+    reason: str
+
+class ResolveVoidRequest(BaseModel):
+    approve: bool
+    note: Optional[str] = None
 
 class OpenCashRegister(BaseModel):
     initial_amount: float
@@ -169,20 +194,21 @@ async def create_transaction(
     
     return db_transaction
 
-@router.get("/transactions", response_model=List[CashTransactionOut])
-async def get_transactions(
+
+@router.get("/transactions", response_model=List[CashTransactionOutFull])
+async def get_transactions_full(
     limit: int = 100,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Listar transacciones de caja del usuario actual"""
+    """Listar transacciones con estado de anulación (reemplaza el GET anterior)."""
     user = db.query(User).filter(User.id == int(current_user["id"])).first()
     user_ids = get_shared_user_ids(user, db)
-    
+
     transactions = db.query(CashTransaction).filter(
         CashTransaction.user_id.in_(user_ids)
     ).order_by(CashTransaction.created_at.desc()).limit(limit).all()
-    
+
     return transactions
 
 @router.post("/open")
@@ -314,6 +340,8 @@ async def reset_cash_register(
     if user.parent_user_id:
         raise HTTPException(status_code=403, detail="Solo el usuario padre puede resetear caja")
     
+    user_ids = get_shared_user_ids(user, db)
+
     # Cierra todas las sesiones activas del usuario
     sessions = db.query(CashRegisterSession).filter(
         CashRegisterSession.user_id == user.id,
@@ -322,10 +350,27 @@ async def reset_cash_register(
     
     count = 0
     for session in sessions:
+        transactions = db.query(CashTransaction).filter(
+            CashTransaction.user_id.in_(user_ids),
+            CashTransaction.created_at >= session.opened_at
+        ).all()
+
+        sales = sum(float(t.amount) for t in transactions if t.transaction_type == 'sale')
+        expenses = sum(float(t.amount) for t in transactions if t.transaction_type == 'expense')
+        final_balance = float(session.initial_amount) + sales - expenses
+
         session.is_active = False
         session.closed_at = datetime.utcnow()
-        session.final_amount = session.initial_amount  # Cerrar sin cambios
+        session.final_amount = final_balance
         db.add(session)
+
+        close_transaction = CashTransaction(
+            user_id=user.id,
+            transaction_type='close',
+            amount=final_balance,
+            description=f'Cierre por reset - Balance final: {final_balance}'
+        )
+        db.add(close_transaction)
         count += 1
     
     db.commit()
@@ -401,3 +446,229 @@ async def close_previous_day_cash(
         "transaction_count": len(transactions),
         "status": "closed"
     }
+
+
+ # ─── Void / Anulación de Movimientos ────────────────────────────────────────
+
+@router.post("/transactions/{transaction_id}/void")
+async def void_transaction(
+    transaction_id: int,
+    body: VoidTransactionRequest,
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Anular un movimiento de caja (solo usuario padre/owner).
+    Registra en audit_log para trazabilidad completa.
+    """
+    user = db.query(User).filter(User.id == int(current_user["id"])).first()
+
+    if user.parent_user_id:
+        raise HTTPException(
+            status_code=403,
+            detail="Solo el administrador puede anular movimientos directamente. Use /request-void para solicitar anulación."
+        )
+
+    user_ids = get_shared_user_ids(user, db)
+
+    tx = db.query(CashTransaction).filter(
+        CashTransaction.id == transaction_id,
+        CashTransaction.user_id.in_(user_ids)
+    ).first()
+    if not tx:
+        raise HTTPException(status_code=404, detail="Movimiento no encontrado")
+    if tx.is_voided:
+        raise HTTPException(status_code=400, detail="Este movimiento ya fue anulado anteriormente")
+    if tx.transaction_type in ('base', 'close'):
+        raise HTTPException(status_code=400, detail="No se pueden anular movimientos de tipo base o cierre de caja")
+
+    old_data = {
+        "amount": float(tx.amount),
+        "transaction_type": tx.transaction_type,
+        "description": tx.description,
+        "created_at": tx.created_at.isoformat()
+    }
+
+    tx.is_voided = True
+    tx.void_reason = body.reason.strip()
+    tx.voided_by_user_id = user.id
+    tx.voided_at = datetime.utcnow()
+    db.add(tx)
+
+    ip = request.client.host if request.client else None
+    audit = AuditLog(
+        user_id=user.id,
+        action="void_transaction",
+        entity_type="cash_transaction",
+        entity_id=transaction_id,
+        detail=json.dumps({"reason": body.reason, "old_data": old_data}, ensure_ascii=False),
+        ip_address=ip
+    )
+    db.add(audit)
+    db.commit()
+
+    return {"success": True, "message": "Movimiento anulado correctamente", "transaction_id": transaction_id}
+
+
+@router.post("/transactions/{transaction_id}/request-void")
+async def request_void_transaction(
+    transaction_id: int,
+    body: VoidTransactionRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Usuario hijo solicita anulación de un movimiento al administrador.
+    """
+    user = db.query(User).filter(User.id == int(current_user["id"])).first()
+    user_ids = get_shared_user_ids(user, db)
+
+    tx = db.query(CashTransaction).filter(
+        CashTransaction.id == transaction_id,
+        CashTransaction.user_id.in_(user_ids)
+    ).first()
+    if not tx:
+        raise HTTPException(status_code=404, detail="Movimiento no encontrado")
+    if tx.is_voided:
+        raise HTTPException(status_code=400, detail="Este movimiento ya fue anulado")
+    if tx.transaction_type in ('base', 'close'):
+        raise HTTPException(status_code=400, detail="No se pueden solicitar anulación de movimientos de base o cierre")
+
+    # Evitar solicitudes duplicadas pendientes
+    existing = db.query(VoidRequest).filter(
+        VoidRequest.transaction_id == transaction_id,
+        VoidRequest.status == "pending"
+    ).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Ya existe una solicitud de anulación pendiente para este movimiento")
+
+    void_req = VoidRequest(
+        transaction_id=transaction_id,
+        requested_by=user.id,
+        reason=body.reason.strip()
+    )
+    db.add(void_req)
+    db.commit()
+    db.refresh(void_req)
+
+    return {
+        "success": True,
+        "message": "Solicitud de anulación enviada al administrador",
+        "void_request_id": void_req.id
+    }
+
+
+@router.get("/void-requests")
+async def get_void_requests(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Listar solicitudes de anulación pendientes/historial (solo owner/padre)."""
+    user = db.query(User).filter(User.id == int(current_user["id"])).first()
+    if user.parent_user_id:
+        raise HTTPException(status_code=403, detail="Solo el administrador puede ver solicitudes de anulación")
+
+    user_ids = get_shared_user_ids(user, db)
+
+    requests = (
+        db.query(VoidRequest)
+        .join(CashTransaction, VoidRequest.transaction_id == CashTransaction.id)
+        .filter(CashTransaction.user_id.in_(user_ids))
+        .order_by(VoidRequest.created_at.desc())
+        .limit(100)
+        .all()
+    )
+
+    result = []
+    for vr in requests:
+        tx = vr.transaction
+        requester_name = vr.requester.email if vr.requester else "desconocido"
+        result.append({
+            "id": vr.id,
+            "transaction_id": vr.transaction_id,
+            "transaction_type": tx.transaction_type if tx else None,
+            "transaction_amount": float(tx.amount) if tx else None,
+            "transaction_description": tx.description if tx else None,
+            "transaction_date": tx.created_at.isoformat() if tx else None,
+            "requested_by_email": requester_name,
+            "reason": vr.reason,
+            "status": vr.status,
+            "created_at": vr.created_at.isoformat(),
+            "resolved_at": vr.resolved_at.isoformat() if vr.resolved_at else None
+        })
+
+    return result
+
+
+@router.post("/void-requests/{void_request_id}/resolve")
+async def resolve_void_request(
+    void_request_id: int,
+    body: ResolveVoidRequest,
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Owner aprueba o deniega una solicitud de anulación de movimiento."""
+    user = db.query(User).filter(User.id == int(current_user["id"])).first()
+    if user.parent_user_id:
+        raise HTTPException(status_code=403, detail="Solo el administrador puede resolver solicitudes de anulación")
+
+    void_req = db.query(VoidRequest).filter(VoidRequest.id == void_request_id).first()
+    if not void_req:
+        raise HTTPException(status_code=404, detail="Solicitud no encontrada")
+    if void_req.status != "pending":
+        raise HTTPException(status_code=400, detail="Esta solicitud ya fue resuelta")
+
+    # Verify ownership
+    user_ids = get_shared_user_ids(user, db)
+    tx = db.query(CashTransaction).filter(
+        CashTransaction.id == void_req.transaction_id,
+        CashTransaction.user_id.in_(user_ids)
+    ).first()
+    if not tx:
+        raise HTTPException(status_code=403, detail="Sin acceso a este movimiento")
+
+    void_req.status = "approved" if body.approve else "denied"
+    void_req.resolved_by = user.id
+    void_req.resolved_at = datetime.utcnow()
+    db.add(void_req)
+
+    ip = request.client.host if request.client else None
+
+    if body.approve:
+        old_data = {
+            "amount": float(tx.amount),
+            "transaction_type": tx.transaction_type,
+            "description": tx.description
+        }
+        tx.is_voided = True
+        tx.void_reason = f"Aprobado por admin. Motivo solicitado: {void_req.reason}" + (f" | Nota admin: {body.note}" if body.note else "")
+        tx.voided_by_user_id = user.id
+        tx.voided_at = datetime.utcnow()
+        db.add(tx)
+
+        audit = AuditLog(
+            user_id=user.id,
+            action="approve_void",
+            entity_type="void_request",
+            entity_id=void_request_id,
+            detail=json.dumps({"reason": void_req.reason, "note": body.note, "old_data": old_data}, ensure_ascii=False),
+            ip_address=ip
+        )
+    else:
+        audit = AuditLog(
+            user_id=user.id,
+            action="deny_void",
+            entity_type="void_request",
+            entity_id=void_request_id,
+            detail=json.dumps({"reason": void_req.reason, "note": body.note}, ensure_ascii=False),
+            ip_address=ip
+        )
+    db.add(audit)
+    db.commit()
+
+    action_label = "aprobada y movimiento anulado" if body.approve else "denegada"
+    return {"success": True, "message": f"Solicitud {action_label}", "void_request_id": void_request_id}
+
+
