@@ -41,7 +41,7 @@ export class Header {
         const title = this.titles[currentRoute] || 'AdminG';
         const badgeHtml = this._notifCount > 0
             ? `<span id="notifBadge" style="position:absolute;top:-4px;right:-4px;background:#ef4444;color:#fff;border-radius:50%;width:18px;height:18px;font-size:11px;display:flex;align-items:center;justify-content:center;font-weight:700;">${this._notifCount > 9 ? '9+' : this._notifCount}</span>`
-            : `<span id="notifBadge" style="display:none;position:absolute;top:-4px;right:-4px;background:#ef4444;color:#fff;border-radius:50%;width:18px;height:18px;font-size:11px;display:flex;align-items:center;justify-content:center;font-weight:700;"></span>`;
+            : `<span id="notifBadge" style="display:none;position:absolute;top:-4px;right:-4px;background:#ef4444;color:#fff;border-radius:50%;width:18px;height:18px;font-size:11px;align-items:center;justify-content:center;font-weight:700;"></span>`;
 
         return `
             <div class="topbar">
@@ -151,14 +151,15 @@ export class Header {
                 const btn = e.target.closest('[data-notif-id]');
                 if (!btn) return;
                 const nid = parseInt(btn.getAttribute('data-notif-id'));
-                await apiService.post(`/notifications/${nid}/read`, {});
                 const n = this._notifList.find(x => x.id === nid);
+                await apiService.post(`/notifications/${nid}/read`, {});
                 if (n && !n.is_read) {
                     n.is_read = true;
                     this._notifCount = Math.max(0, this._notifCount - 1);
                 }
                 this._renderDropdown();
                 this._updateBadge();
+                this._openNotificationTarget(n);
             });
         }
 
@@ -166,13 +167,14 @@ export class Header {
         this._startPolling();
     }
 
-    _toggleDropdown() {
+    async _toggleDropdown() {
         const dd = document.getElementById('notifDropdown');
         if (!dd) return;
         const isVisible = dd.style.display !== 'none';
         if (isVisible) {
             dd.style.display = 'none';
         } else {
+            await this._fetchNotifications();
             this._renderDropdown();
             dd.style.display = 'block';
         }
@@ -181,24 +183,64 @@ export class Header {
     _renderDropdown() {
         const listEl = document.getElementById('notifList');
         if (!listEl) return;
-        if (!this._notifList.length) {
+        const notifications = this._prepareNotificationsForView(this._notifList);
+        if (!notifications.length) {
             listEl.innerHTML = `<p style="padding:16px;color:#9ca3af;text-align:center;">Sin notificaciones</p>`;
             return;
         }
-        const iconMap = { low_stock: '📦', appointment: '📅', special_date: '🎉', document: '📄' };
-        listEl.innerHTML = this._notifList.map(n => `
-            <div data-notif-id="${n.id}" style="padding:10px 16px;cursor:pointer;border-bottom:1px solid #f0f0f0;background:${n.is_read ? '#fff' : '#f0f4ff'};">
+        const iconMap = {
+            low_stock: '📦',
+            appointment: '📅',
+            appointment_today: '🗓️',
+            appointment_overdue: '⏰',
+            duplicate_appointment: '⚠️',
+            duplicate_customer: '🧾',
+            special_date: '🎉',
+            document: '📄'
+        };
+        listEl.innerHTML = notifications.map(n => `
+            <div data-notif-id="${n.id}" style="padding:10px 16px;cursor:pointer;border-bottom:1px solid #f0f0f0;background:${n.is_read ? '#f8fafc' : '#eef2ff'};opacity:${n.is_read ? '0.78' : '1'};transition:opacity .2s ease, background-color .2s ease;">
                 <div style="display:flex;gap:8px;align-items:flex-start;">
                     <span style="font-size:16px;">${iconMap[n.type] || '🔔'}</span>
                     <div style="flex:1;">
-                        <div style="font-weight:${n.is_read ? '400' : '600'};font-size:13px;">${n.title}</div>
-                        ${n.message ? `<div style="font-size:12px;color:#6b7280;margin-top:2px;">${n.message}</div>` : ''}
+                        <div style="font-weight:${n.is_read ? '400' : '600'};font-size:13px;color:${n.is_read ? '#64748b' : '#111827'};">${n.title}</div>
+                        ${n.message ? `<div style="font-size:12px;color:${n.is_read ? '#94a3b8' : '#6b7280'};margin-top:2px;">${n.message}</div>` : ''}
                         <div style="font-size:11px;color:#9ca3af;margin-top:3px;">${new Date(n.created_at).toLocaleString('es-CO')}</div>
                     </div>
                     ${!n.is_read ? '<span style="width:8px;height:8px;border-radius:50%;background:#6366f1;flex-shrink:0;margin-top:4px;"></span>' : ''}
                 </div>
             </div>
         `).join('');
+    }
+
+    _prepareNotificationsForView(list) {
+        if (!Array.isArray(list) || list.length === 0) return [];
+
+        // Dedupe race-created notifications by semantic signature (same type/reference/text/date).
+        const deduped = [];
+        const seen = new Set();
+
+        for (const n of list) {
+            const createdDate = new Date(n.created_at || Date.now()).toISOString().slice(0, 10);
+            const key = [
+                n.type || '',
+                n.reference_type || '',
+                n.reference_id ?? '',
+                (n.title || '').trim().toLowerCase(),
+                (n.message || '').trim().toLowerCase(),
+                createdDate,
+            ].join('|');
+
+            if (seen.has(key)) continue;
+            seen.add(key);
+            deduped.push(n);
+        }
+
+        // Show unread first, then recent read entries.
+        return deduped.sort((a, b) => {
+            if (!!a.is_read !== !!b.is_read) return a.is_read ? 1 : -1;
+            return new Date(b.created_at) - new Date(a.created_at);
+        });
     }
 
     _updateBadge() {
@@ -217,9 +259,13 @@ export class Header {
             if (!authService.isAuthenticated()) return;
             const list = await apiService.get('/notifications/');
             if (Array.isArray(list)) {
-                this._notifList = list;
-                this._notifCount = list.filter(n => !n.is_read).length;
+                this._notifList = this._prepareNotificationsForView(list);
+                this._notifCount = this._notifList.filter(n => !n.is_read).length;
                 this._updateBadge();
+                const dd = document.getElementById('notifDropdown');
+                if (dd && dd.style.display !== 'none') {
+                    this._renderDropdown();
+                }
             }
         } catch {
             // silent — notifications are non-critical
@@ -236,6 +282,22 @@ export class Header {
         if (this._pollTimer) {
             clearInterval(this._pollTimer);
             this._pollTimer = null;
+        }
+    }
+
+    _openNotificationTarget(notification) {
+        if (!notification) return;
+        const t = notification.type;
+        if (t === 'low_stock') {
+            router.navigate('inventory');
+            return;
+        }
+        if (['appointment', 'appointment_today', 'appointment_overdue', 'duplicate_appointment'].includes(t)) {
+            router.navigate('appointments');
+            return;
+        }
+        if (t === 'duplicate_customer') {
+            router.navigate('customers');
         }
     }
 
