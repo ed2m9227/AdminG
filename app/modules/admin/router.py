@@ -320,6 +320,8 @@ def get_team_members(
                     "id": m.member.id,
                     "email": m.member.email,
                     "role_in_team": m.role_in_team,
+                    "relationship_type": "internal_user" if m.member.parent_user_id == user.id else "external_partner_owner",
+                    "relationship_label": "Usuario Interno" if m.member.parent_user_id == user.id else "Socio Externo",
                     "status": m.status,
                     "joined_at": m.joined_at.isoformat() if m.joined_at else None,
                     "invited_at": m.invited_at.isoformat(),
@@ -355,10 +357,25 @@ def invite_team_member(
         
         member = db.query(User).filter(User.email == email).first()
         if not member:
-            raise HTTPException(status_code=404, detail="Usuario no encontrado")
+            raise HTTPException(status_code=404, detail="Cuenta no encontrada. Invitar miembro requiere una cuenta existente tipo dueño")
         
         if member.id == user.id:
             raise HTTPException(status_code=400, detail="No puedes invitarte a ti mismo")
+
+        # Invitar miembro = socio externo con cuenta dueña independiente.
+        if member.parent_user_id == user.id:
+            raise HTTPException(
+                status_code=400,
+                detail="Esta cuenta ya es usuario interno de tu negocio. Usa su rol interno en +Crear Usuario"
+            )
+        if member.parent_user_id is not None and member.parent_user_id != user.id:
+            raise HTTPException(
+                status_code=400,
+                detail="Solo puedes invitar cuentas dueñas independientes (no subcuentas de otro negocio)"
+            )
+
+        if role not in ["partner", "manager", "viewer"]:
+            raise HTTPException(status_code=400, detail="Rol inválido para socio invitado")
         
         existing = db.query(TeamUser).filter(
             TeamUser.team_owner_id == user.id,
@@ -420,8 +437,8 @@ def create_team_user(
         if existing:
             raise HTTPException(status_code=400, detail="El email ya está registrado")
 
-        if role not in ["viewer", "editor", "manager", "admin"]:
-            raise HTTPException(status_code=400, detail="Rol inválido")
+        if role not in ["viewer", "editor", "manager"]:
+            raise HTTPException(status_code=400, detail="Rol inválido para usuario interno")
 
         # Crear usuario hijo con onboarding ya completado
         new_user = User(

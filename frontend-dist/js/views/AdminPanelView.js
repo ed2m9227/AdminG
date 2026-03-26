@@ -278,11 +278,15 @@ export class TeamManagementView {
                     <div class="card-header">
                         <h3>Miembros del Equipo</h3>
                         <div style="display: flex; gap: 10px;">
-                            <button class="btn btn-success" id="inviteUserBtn">+ Invitar Miembro</button>
-                            <button class="btn btn-primary" id="createUserBtn">+ Crear Usuario</button>
+                            <button class="btn btn-success" id="inviteUserBtn">+ Invitar Miembro (Socio Externo)</button>
+                            <button class="btn btn-primary" id="createUserBtn">+ Crear Usuario Interno</button>
                         </div>
                     </div>
                     <div class="card-body" id="teamMembersContainer">
+                        <div style="margin-bottom: 12px; padding: 10px 12px; border-radius: 8px; background: #f8fafc; border: 1px solid #e5e7eb; font-size: 12px; color: #334155;">
+                            Crear Usuario Interno: crea subcuenta hija del negocio actual con rol operativo.<br>
+                            Invitar Miembro: vincula una cuenta dueña externa como socio colaborador.
+                        </div>
                         <!-- Se llena con tabla -->
                     </div>
                 </div>
@@ -354,6 +358,7 @@ export class TeamManagementView {
     renderTeamMembers() {
         const columns = [
             { key: 'email', label: 'Email' },
+            { key: 'relationship_label', label: 'Tipo de Vinculo' },
             { key: 'role_in_team', label: 'Rol en Equipo' },
             { key: 'status', label: 'Estado', type: 'badge' },
             { key: 'joined_at', label: 'Unido', type: 'date' },
@@ -384,7 +389,7 @@ export class TeamManagementView {
             <div style="padding: 10px 0;">
                 <div style="margin-bottom: 20px;">
                     <label style="display: block; font-weight: 500; margin-bottom: 8px; color: #333;">
-                        📧 Email del Usuario
+                        📧 Email de Cuenta Socia (Dueño Externo)
                     </label>
                     <input type="email" id="inviteEmail" placeholder="usuario@ejemplo.com" 
                            style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 6px;
@@ -396,21 +401,21 @@ export class TeamManagementView {
                 
                 <div style="margin-bottom: 20px;">
                     <label style="display: block; font-weight: 500; margin-bottom: 8px; color: #333;">
-                        👤 Rol en el Equipo
+                        👤 Rol del Socio en tu Operación
                     </label>
                     <select id="inviteRole" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; 
                                                   border-radius: 6px; font-size: 14px; box-sizing: border-box;
                                                   background: white; cursor: pointer;
                                                   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
-                        <option value="editor" selected>Editor (lectura y creación)</option>
-                        <option value="manager">Gerente (acceso completo)</option>
-                        <option value="viewer">Lector (ver y crear)</option>
+                        <option value="partner" selected>Socio (coordinación entre cuentas)</option>
+                        <option value="manager">Gerente delegado (aprobaciones y operación)</option>
+                        <option value="viewer">Observador (solo consulta)</option>
                     </select>
                 </div>
 
                 <div style="padding: 12px; background: #e3f2fd; border-radius: 6px; border-left: 4px solid #2196f3;
                            color: #1565c0; font-size: 13px; margin-bottom: 20px;">
-                    ℹ️ <strong>Nota:</strong> Se enviará una invitación por email al usuario con instrucciones para aceptar y configurar su contraseña.
+                    ℹ️ <strong>Nota:</strong> Este flujo es para socios con cuenta dueña independiente. Las subcuentas internas se crean con +Crear Usuario Interno.
                 </div>
             </div>
         `;
@@ -466,7 +471,7 @@ export class TeamManagementView {
 
                 modal.alert({
                     title: '✅ Éxito',
-                    message: `Invitación enviada a ${email}. El usuario recibirá un correo con instrucciones.`,
+                    message: `Invitación enviada a ${email} como socio externo.`,
                     type: 'success'
                 });
                 modal.close(modalEl);
@@ -490,7 +495,7 @@ export class TeamManagementView {
             <div style="padding: 10px 0;">
                 <div style="margin-bottom: 20px;">
                     <label style="display: block; font-weight: 500; margin-bottom: 8px; color: #333;">
-                        📧 Email del Nuevo Usuario
+                        📧 Email del Usuario Interno
                     </label>
                     <input type="email" id="createEmail" placeholder="usuario@ejemplo.com" 
                            style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 6px;
@@ -515,21 +520,21 @@ export class TeamManagementView {
 
                 <div style="margin-bottom: 20px;">
                     <label style="display: block; font-weight: 500; margin-bottom: 8px; color: #333;">
-                        👤 Rol en el Equipo
+                        👤 Rol Operativo Interno
                     </label>
                     <select id="createRole" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; 
                                                   border-radius: 6px; font-size: 14px; box-sizing: border-box;
                                                   background: white; cursor: pointer;
                                                   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
-                        <option value="editor" selected>Editor (lectura y creación)</option>
-                        <option value="manager">Gerente (acceso completo)</option>
-                        <option value="viewer">Lector (ver y crear)</option>
+                        <option value="editor" selected>Editor interno</option>
+                        <option value="manager">Gerente interno</option>
+                        <option value="viewer">Lector interno</option>
                     </select>
                 </div>
 
                 <div style="padding: 12px; background: #fff3cd; border-radius: 6px; border-left: 4px solid #ff9800;
                            color: #856404; font-size: 13px; margin-bottom: 20px;">
-                    ⚠️ <strong>Importante:</strong> Guarda esta contraseña. Se recomienda que el usuario la cambie en su primer inicio de sesión.
+                    ⚠️ <strong>Importante:</strong> Este usuario quedará como subcuenta hija del negocio actual.
                 </div>
             </div>
         `;
