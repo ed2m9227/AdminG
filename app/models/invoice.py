@@ -11,6 +11,7 @@ class Invoice(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     customer_id = Column(Integer, ForeignKey("customers.id"), nullable=False)
     payment_id = Column(Integer, ForeignKey("payments.id"), nullable=True)  # Vinculación opcional con payment
+    authorization_id = Column(Integer, ForeignKey("authorizations.id"), nullable=True, index=True)
     
     # Montos
     subtotal = Column(Numeric(10, 2), nullable=False)  # Total sin impuestos
@@ -32,6 +33,7 @@ class Invoice(Base):
     user = relationship("User", foreign_keys=[user_id])
     customer = relationship("Customer", foreign_keys=[customer_id])
     payment = relationship("Payment", foreign_keys=[payment_id])
+    authorization = relationship("Authorization", back_populates="linked_invoice", foreign_keys=[authorization_id])
     items = relationship("InvoiceItem", back_populates="invoice", cascade="all, delete-orphan")
 
 

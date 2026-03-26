@@ -619,19 +619,26 @@ class InvoicesView {
             size: 'medium' 
         });
 
+        // Read URL params and clear them immediately so they don't persist on re-open
         const quickParams = new URLSearchParams(window.location.search || '');
         const prefillCustomerId = quickParams.get('customer_id');
         const prefillSubtotal = Number(quickParams.get('subtotal') || 0);
         const prefillNotes = quickParams.get('notes') || '';
+        const prefillServiceId = Number(quickParams.get('service_id') || 0);
+        const prefillAuthorizationId = Number(quickParams.get('authorization_id') || 0);
+        if (window.location.search) {
+            window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
+        }
 
-        // Setup item management
+        // Setup item management — scope ALL queries to the modal element to avoid
+        // collisions with same-ID elements in the embedded page form
         const invoiceItems = [];
-        const form = document.getElementById('invoiceForm');
-        const itemsContainer = document.getElementById('invoiceItems');
-        const itemSelect = document.getElementById('itemSelect');
-        const itemQty = document.getElementById('itemQty');
-        const btnAddItem = document.getElementById('btnAddItem');
-        const subtotalInput = document.getElementById('invoiceSubtotal');
+        const form = invoiceModal.querySelector('#invoiceForm');
+        const itemsContainer = invoiceModal.querySelector('#invoiceItems');
+        const itemSelect = invoiceModal.querySelector('#itemSelect');
+        const itemQty = invoiceModal.querySelector('#itemQty');
+        const btnAddItem = invoiceModal.querySelector('#btnAddItem');
+        const subtotalInput = invoiceModal.querySelector('#invoiceSubtotal');
         
         // Store services/products for reference
         const itemsMap = {};
@@ -684,6 +691,20 @@ class InvoicesView {
         }
         if (notesField && prefillNotes) {
             notesField.value = prefillNotes;
+        }
+        if (prefillServiceId > 0 && invoiceItems.length === 0) {
+            const service = services.find((item) => item.id === prefillServiceId);
+            if (service) {
+                invoiceItems.push({
+                    source_type: 'service',
+                    service_id: service.id,
+                    description: service.name || 'Servicio',
+                    unit_price: parseFloat(service.price ?? service.unit_price ?? 0),
+                    quantity: 1,
+                });
+                renderItems();
+                updateTotal();
+            }
         }
         if (prefillSubtotal > 0 && invoiceItems.length === 0) {
             invoiceItems.push({
@@ -775,6 +796,7 @@ class InvoicesView {
             
             const invoiceData = {
                 customer_id: parseInt(formData.get('customer_id')),
+                authorization_id: prefillAuthorizationId || null,
                 items: invoiceItemsData,
                 notes: formData.get('notes') || null
             };

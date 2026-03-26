@@ -820,13 +820,23 @@ export class PaymentsView {
             size: 'medium' 
         });
 
+        const quickParams = new URLSearchParams(window.location.search || '');
+        const prefillCustomerId = quickParams.get('customer_id');
+        const prefillServiceId = Number(quickParams.get('service_id') || 0);
+        const prefillNotes = quickParams.get('notes') || '';
+        const prefillAuthorizationId = Number(quickParams.get('authorization_id') || 0);
+        if (window.location.search) {
+            window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
+        }
+
         // Setup item management
         const paymentItems = [];
-        const itemsContainer = document.getElementById('paymentItems');
-        const itemSelect = document.getElementById('itemSelect');
-        const itemQty = document.getElementById('itemQty');
-        const btnAddItem = document.getElementById('btnAddItem');
-        const amountInput = document.getElementById('paymentAmount');
+        const form = paymentModal.querySelector('#paymentForm');
+        const itemsContainer = paymentModal.querySelector('#paymentItems');
+        const itemSelect = paymentModal.querySelector('#itemSelect');
+        const itemQty = paymentModal.querySelector('#itemQty');
+        const btnAddItem = paymentModal.querySelector('#btnAddItem');
+        const amountInput = paymentModal.querySelector('#paymentAmount');
         
         // Store services/products for reference
         const itemsMap = {};
@@ -860,6 +870,29 @@ export class PaymentsView {
                 });
             });
         };
+
+        const customerSelect = form?.querySelector('select[name="customer_id"]');
+        const notesField = form?.querySelector('textarea[name="notes"]');
+        if (customerSelect && prefillCustomerId) {
+            customerSelect.value = prefillCustomerId;
+        }
+        if (notesField && prefillNotes) {
+            notesField.value = prefillNotes;
+        }
+        if (prefillServiceId > 0) {
+            const service = services.find((item) => item.id === prefillServiceId);
+            if (service) {
+                paymentItems.push({
+                    source_type: 'service',
+                    service_id: service.id,
+                    description: service.name || 'Servicio',
+                    unit_price: parseFloat(service.price ?? service.unit_price ?? 0),
+                    quantity: 1,
+                });
+                renderItems();
+                updateTotal();
+            }
+        }
 
         btnAddItem.addEventListener('click', () => {
             const selectedValue = itemSelect.value;
@@ -938,7 +971,6 @@ export class PaymentsView {
             }
         });
 
-        const form = document.getElementById('paymentForm');
         form?.addEventListener('submit', async (e) => {
             e.preventDefault();
             const formData = new FormData(form);
@@ -950,6 +982,7 @@ export class PaymentsView {
             
             const paymentData = {
                 customer_id: parseInt(formData.get('customer_id')),
+                authorization_id: prefillAuthorizationId || null,
                 amount: parseFloat(formData.get('amount')),
                 method: formData.get('method'),
                 status: formData.get('status') || 'completed',
@@ -1096,6 +1129,7 @@ export class CashRegisterView {
         this.movements = [];
         this.customersCache = [];
         this.cashRegisterOpen = false;
+        this.staleCashSession = null;
     }
 
     formatCurrency(value) {
@@ -1194,6 +1228,7 @@ export class CashRegisterView {
         this.total = 0;
         this.movements = [];
         this.cashRegisterOpen = false;
+        this.staleCashSession = null;
 
         try {
             // Cargar inventario, servicios y clientes en paralelo sin abortar todo si uno falla.
@@ -1510,16 +1545,18 @@ export class CashRegisterView {
             // Get server status to override local state
             const status = await apiService.get('/cashregister/');
             this.cashRegisterOpen = (status?.status === 'open');
+            this.staleCashSession = null;
             
-            // Check for stale/old session (opened in previous day)
+            // Detect stale/old session without triggering destructive actions during sync.
             if (this.cashRegisterOpen && status?.opened_at) {
                 const openDate = new Date(status.opened_at).toDateString();
                 const today = new Date().toDateString();
                 
                 if (openDate !== today) {
-                    // Caja was opened in a previous day - offer to close it
                     console.warn('⚠️ Detected open session from previous day:', openDate);
-                    await this.handleStaleCashRegister(status);
+                    this.staleCashSession = {
+                        openedAt: status.opened_at
+                    };
                 }
             }
             
@@ -1638,6 +1675,9 @@ export class CashRegisterView {
         const btnClose = document.getElementById('btnCloseCash');
         const statusDiv = document.getElementById('cashRegisterStatus');
         const isSubUser = !!authService.getCurrentUser()?.parent_user_id;
+        const staleOpenedAt = this.staleCashSession?.openedAt
+            ? new Date(this.staleCashSession.openedAt).toLocaleDateString('es-CO')
+            : null;
 
         if (!btnOpen || !btnClose || !statusDiv) return;
 
@@ -1645,7 +1685,9 @@ export class CashRegisterView {
             btnOpen.style.display = 'none';
             btnClose.style.display = 'none';
             if (this.cashRegisterOpen) {
-                statusDiv.innerHTML = '✅ Caja Abierta (sesión central activa)';
+                statusDiv.innerHTML = staleOpenedAt
+                    ? `✅ Caja Abierta (sesión central activa desde ${staleOpenedAt})`
+                    : '✅ Caja Abierta (sesión central activa)';
                 statusDiv.style.background = 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)';
                 statusDiv.style.color = '#065f46';
             } else {
@@ -1660,7 +1702,9 @@ export class CashRegisterView {
             // Caja abierta: mostrar botón cerrar
             btnOpen.style.display = 'none';
             btnClose.style.display = 'block';
-            statusDiv.innerHTML = '✅ Caja Abierta';
+            statusDiv.innerHTML = staleOpenedAt
+                ? `✅ Caja Abierta desde ${staleOpenedAt}`
+                : '✅ Caja Abierta';
             statusDiv.style.background = 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)';
             statusDiv.style.color = '#065f46';
         } else {

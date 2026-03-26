@@ -11,10 +11,13 @@ from app.models.inventory import InventoryItem, InventoryCategory, InventoryMove
 from app.models.inventory_package import InventoryPackage, InventoryPackageItem
 from app.models.team_user import TeamUser
 from app.models.cash_transaction import CashTransaction
+from app.models.document import Document
+from app.models.authorization import Authorization
 from app.models.invoice import Invoice, InvoiceItem
 from app.models.tax_config import TaxConfig
 from app.models.service_package import ServicePackage, ServicePackageItem
 from app.models.notification import Notification
+from app.models.audit_log import AuditLog, VoidRequest
 
 __all__ = [
     "User", 
@@ -33,9 +36,14 @@ __all__ = [
     "InventoryMovement",
     "TeamUser",
     "CashTransaction",
+    "Document",
+    "Authorization",
     "Invoice",
     "InvoiceItem",
     "TaxConfig",
     "ServicePackage",
-    "ServicePackageItem"
+    "ServicePackageItem",
+    "Notification",
+    "AuditLog",
+    "VoidRequest"
 ]

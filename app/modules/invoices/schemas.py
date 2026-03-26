@@ -30,6 +30,7 @@ class InvoiceItemResponse(BaseModel):
 class InvoiceCreate(BaseModel):
     customer_id: int
     payment_id: Optional[int] = None
+    authorization_id: Optional[int] = None
     items: List[InvoiceItemCreate]
     notes: Optional[str] = None
     apply_iva: bool = True  # Si aplicar IVA automáticamente
@@ -46,6 +47,7 @@ class InvoiceResponse(BaseModel):
     user_id: int
     customer_id: int
     payment_id: Optional[int] = None
+    authorization_id: Optional[int] = None
     subtotal: Decimal
     iva_percentage: Decimal
     iva_amount: Decimal

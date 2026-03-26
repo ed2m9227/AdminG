@@ -10,6 +10,7 @@ class Payment(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     customer_id = Column(Integer, ForeignKey("customers.id"), nullable=False)
     invoice_id = Column(Integer, ForeignKey("invoices.id"), nullable=True)  # NUEVO: Vinculación a factura
+    authorization_id = Column(Integer, ForeignKey("authorizations.id"), nullable=True)
     appointment_id = Column(Integer, ForeignKey("appointments.id"), nullable=True)
     service_id = Column(Integer, ForeignKey("services.id"), nullable=True)  # DEPRECATED
     service_package_id = Column(Integer, ForeignKey("service_packages.id"), nullable=True)  # DEPRECATED
@@ -27,6 +28,7 @@ class Payment(Base):
 
     customer = relationship("Customer", back_populates="payments")
     invoice = relationship("Invoice", foreign_keys=[invoice_id])  # NUEVO
+    authorization = relationship("Authorization", back_populates="linked_payment", foreign_keys=[authorization_id])
     appointment = relationship("Appointment", back_populates="payments")
     service = relationship("Service", foreign_keys=[service_id])
     service_package = relationship("ServicePackage", foreign_keys=[service_package_id])

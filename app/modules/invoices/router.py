@@ -11,6 +11,7 @@ from app.models.invoice import Invoice, InvoiceItem
 from app.models.tax_config import TaxConfig
 from app.models.customer import Customer
 from app.models.payment import Payment
+from app.models.authorization import Authorization
 from app.models.business_config import BusinessConfiguration
 from app.models.user import User
 from app.core.security import get_current_user
@@ -92,6 +93,7 @@ def generate_invoice(
     """
     # Validar que el cliente existe
     user_id = current_user.id
+    owner_id = current_user.parent_user_id if current_user.parent_user_id else current_user.id
     user_ids = get_user_ids_for_data_sharing(current_user, db)
 
     customer = db.query(Customer).filter(
@@ -100,6 +102,21 @@ def generate_invoice(
     ).first()
     if not customer:
         raise HTTPException(status_code=404, detail="Customer not found")
+
+    authorization = None
+    if data.authorization_id:
+        authorization = db.query(Authorization).filter(
+            Authorization.id == data.authorization_id,
+            Authorization.user_id == owner_id,
+        ).first()
+        if not authorization:
+            raise HTTPException(status_code=404, detail="Authorization not found")
+        if authorization.status != "approved":
+            raise HTTPException(status_code=400, detail="Solo se puede facturar una autorización aprobada")
+        if authorization.customer_id != data.customer_id:
+            raise HTTPException(status_code=400, detail="La autorización no corresponde al cliente de la factura")
+        if authorization.linked_invoice:
+            raise HTTPException(status_code=400, detail="La autorización ya está vinculada a una factura")
     
     # Validar payment si se especificó
     if data.payment_id:
@@ -174,6 +191,7 @@ def generate_invoice(
         user_id=user_id,
         customer_id=data.customer_id,
         payment_id=data.payment_id,
+        authorization_id=data.authorization_id,
         subtotal=subtotal,
         iva_percentage=iva_percentage,
         iva_amount=iva_amount,

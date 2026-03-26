@@ -6,6 +6,7 @@ import logging
 import os
 from pathlib import Path
 from app.db.session import SessionLocal
+from app.db.startup_migrations import run_sqlite_startup_migrations
 from app.modules.auth.router import router as auth_router
 from app.modules.users.router import router as users_router
 from app.modules.customers.router import router as customers_router
@@ -81,12 +82,17 @@ def startup_event():
     try:
         from app.db.base import Base
         from app.db.session import engine
-        import sqlite3
-        
         # Ensure all tables exist
         logger.info("Creating database tables...")
         Base.metadata.create_all(bind=engine)
         logger.info("Database tables created/verified")
+
+        try:
+            migrated = run_sqlite_startup_migrations("app.db")
+            if migrated:
+                logger.info(f"Startup migrations applied: {', '.join(migrated)}")
+        except Exception as e:
+            logger.warning(f"Could not run startup migrations: {e}")
         
         # Seed plans
         db = SessionLocal()
@@ -96,20 +102,6 @@ def startup_event():
             logger.info("Plans seeded successfully")
         finally:
             db.close()
-
-        # Ensure users table has plan_start_date column (SQLite)
-        try:
-            conn = sqlite3.connect("app.db")
-            cur = conn.cursor()
-            cur.execute("PRAGMA table_info(users)")
-            columns = [row[1] for row in cur.fetchall()]
-            if "plan_start_date" not in columns:
-                cur.execute("ALTER TABLE users ADD COLUMN plan_start_date DATETIME DEFAULT (datetime('now'))")
-                conn.commit()
-                logger.info("Added plan_start_date column to users table")
-            conn.close()
-        except Exception as e:
-            logger.warning(f"Could not update users table: {e}")
 
         # Ensure default admin user exists
         try:
@@ -149,19 +141,6 @@ def startup_event():
             except Exception:
                 pass
 
-        # Ensure customers table has user_id (SQLite)
-        try:
-            conn = sqlite3.connect("app.db")
-            cur = conn.cursor()
-            cur.execute("PRAGMA table_info(customers)")
-            columns = [row[1] for row in cur.fetchall()]
-            if "user_id" not in columns:
-                cur.execute("ALTER TABLE customers ADD COLUMN user_id INTEGER")
-                conn.commit()
-                logger.info("Added user_id column to customers table")
-            conn.close()
-        except Exception as e:
-            logger.warning(f"Could not update customers table: {e}")
     except Exception as e:
         logger.error(f"Error in startup: {e}", exc_info=True)
 

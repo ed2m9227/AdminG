@@ -39,6 +39,7 @@ class PaymentCreate(BaseModel):
     
     customer_id: int | None = None
     invoice_id: int | str | None = None  # Accept flexible types
+    authorization_id: int | str | None = None
     appointment_id: int | str | None = None  # Accept flexible types
     service_id: int | str | None = None  # DEPRECATED
     service_package_id: int | str | None = None  # DEPRECATED
@@ -63,6 +64,7 @@ class PaymentOut(BaseModel):
     customer_id: int
     customer: CustomerInfo | None = None
     invoice_id: int | None = None  # NUEVO
+    authorization_id: int | None = None
     appointment_id: int | None = None
     service_id: int | None = None
     service_package_id: int | None = None

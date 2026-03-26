@@ -9,6 +9,7 @@ from app.models.user import User
 from app.models.customer import Customer
 from app.models.service import Service
 from app.models.inventory import InventoryItem
+from app.models.authorization import Authorization
 from sqlalchemy import or_
 from app.modules.payments.schemas import (
     PaymentCreate,
@@ -117,6 +118,22 @@ def create_payment(
         ).first()
         if not customer:
             raise HTTPException(status_code=404, detail="Customer not found")
+
+    owner_id = current_user.parent_user_id if current_user.parent_user_id else current_user.id
+    authorization = None
+    if payload.authorization_id:
+        authorization = db.query(Authorization).filter(
+            Authorization.id == payload.authorization_id,
+            Authorization.user_id == owner_id,
+        ).first()
+        if not authorization:
+            raise HTTPException(status_code=404, detail="Authorization not found")
+        if authorization.status != "approved":
+            raise HTTPException(status_code=400, detail="Solo se puede registrar pago sobre una autorización aprobada")
+        if authorization.customer_id != customer.id:
+            raise HTTPException(status_code=400, detail="La autorización no corresponde al cliente del pago")
+        if authorization.linked_payment:
+            raise HTTPException(status_code=400, detail="La autorización ya está vinculada a un pago")
     
     # Safely convert amount to Decimal
     amount_value = Decimal(str(payload.amount)) if payload.amount else Decimal('0')
@@ -151,6 +168,7 @@ def create_payment(
         user_id=current_user.id,
         customer_id=customer.id,
         invoice_id=payload.invoice_id,  # NUEVO
+        authorization_id=payload.authorization_id,
         appointment_id=payload.appointment_id,
         service_id=payload.service_id,
         service_package_id=payload.service_package_id,
