@@ -357,11 +357,18 @@ def get_inventory_report(
         InventoryItem.user_id.in_(user_ids)
     ).all()
     
-    low_stock = len([i for i in items if i.quantity <= i.min_quantity])
-    total_value = sum(i.unit_price * i.quantity for i in items) or Decimal(0)
+    inventory_products = [item for item in items if (item.item_type or "product") == "product"]
+    low_stock = len([
+        item for item in inventory_products
+        if (item.quantity or 0) <= (item.min_quantity or 0)
+    ])
+    total_value = sum((item.unit_price or Decimal(0)) * (item.quantity or 0) for item in inventory_products) or Decimal(0)
     
-    movements = db.query(InventoryMovement).filter(
-        InventoryMovement.user_id.in_(user_ids),
+    movements = db.query(InventoryMovement).join(
+        InventoryItem,
+        InventoryMovement.item_id == InventoryItem.id,
+    ).filter(
+        InventoryItem.user_id.in_(user_ids),
         InventoryMovement.created_at >= request.start_date,
         InventoryMovement.created_at <= request.end_date,
     ).all()
@@ -377,7 +384,7 @@ def get_inventory_report(
     ]
 
     return InventoryReport(
-        total_items=len(items),
+        total_items=len(inventory_products),
         low_stock_items=low_stock,
         total_value=float(total_value),
         movement_history=movement_history,

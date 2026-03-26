@@ -6,7 +6,6 @@
 
 import authService from '../services/auth.service.js';
 import router from '../utils/router.js';
-import sidebar from './Sidebar.js';
 import apiService from '../services/api.service.js';
 
 export class Header {
@@ -100,16 +99,6 @@ export class Header {
             });
         }
 
-        // Hamburger menu toggle - event delegation AND direct
-        const toggleBtn = document.getElementById('sidebarToggle');
-        if (toggleBtn) {
-            toggleBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                sidebar.toggleSidebar();
-            });
-        }
-
         // Notification bell
         const bell = document.getElementById('notifBell');
         if (bell) {
@@ -134,9 +123,6 @@ export class Header {
         document.addEventListener('click', (e) => {
             if (e.target.id === 'logoutBtn') {
                 this.handleLogout();
-            }
-            if (e.target.id === 'sidebarToggle' || e.target.closest('#sidebarToggle')) {
-                sidebar.toggleSidebar();
             }
             if (!e.target.closest('#notifWrapper')) {
                 const dd = document.getElementById('notifDropdown');
