@@ -18,6 +18,7 @@ from app.modules.payments.schemas import (
     PlanUpgradeRequest,
     PlanUpgradeResponse,
 )
+from app.core.collaboration import get_scope_user_ids, resolve_collaboration_owner_id
 from app.core.security import get_current_user
 from app.core.features import Feature, has_feature
 
@@ -37,14 +38,14 @@ def get_user_ids_for_data_sharing(user_id: int, db: Session):
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         return [user_id]
-    if user and user.parent_user_id:
-        # Sub-usuario: incluir padre, propio y hermanos
-        sibling_ids = [uid for (uid,) in db.query(User.id).filter(User.parent_user_id == user.parent_user_id).all()]
-        return list(dict.fromkeys([user.parent_user_id, user.id, *sibling_ids]))
-    else:
-        # Usuario padre/admin: incluir datos propios y de sub-usuarios
-        child_ids = [uid for (uid,) in db.query(User.id).filter(User.parent_user_id == user.id).all()]
-        return [user.id, *child_ids]
+
+    owner_id = resolve_collaboration_owner_id(
+        user,
+        db,
+        allow_external=True,
+        allowed_owner_plans={"max", "admin"},
+    )
+    return get_scope_user_ids(owner_id, db)
 
 
 def resolve_user(
@@ -73,7 +74,12 @@ def require_payment_manage_access(user: User):
 def get_or_create_walk_in_customer(user: User, db: Session) -> Customer:
     """Get or create a shared walk-in customer. Always owned by the parent account."""
     # Always anchor to the parent so the whole family group shares one record
-    owner_id = user.parent_user_id if user.parent_user_id else user.id
+    owner_id = resolve_collaboration_owner_id(
+        user,
+        db,
+        allow_external=True,
+        allowed_owner_plans={"max", "admin"},
+    )
     customer = db.query(Customer).filter(
         Customer.user_id == owner_id,
         Customer.full_name == WALK_IN_CUSTOMER_NAME,
@@ -119,7 +125,14 @@ def create_payment(
         if not customer:
             raise HTTPException(status_code=404, detail="Customer not found")
 
-    owner_id = current_user.parent_user_id if current_user.parent_user_id else current_user.id
+    collaboration_owner_id = resolve_collaboration_owner_id(
+        current_user,
+        db,
+        allow_external=True,
+        allowed_owner_plans={"max", "admin"},
+    )
+    owner_id = current_user.parent_user_id if current_user.parent_user_id else collaboration_owner_id
+    payment_user_id = owner_id if (not current_user.parent_user_id and collaboration_owner_id != current_user.id) else current_user.id
     authorization = None
     if payload.authorization_id:
         authorization = db.query(Authorization).filter(
@@ -165,7 +178,7 @@ def create_payment(
     )
     
     payment = Payment(
-        user_id=current_user.id,
+        user_id=payment_user_id,
         customer_id=customer.id,
         invoice_id=payload.invoice_id,  # NUEVO
         authorization_id=payload.authorization_id,

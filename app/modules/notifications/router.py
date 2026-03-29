@@ -9,6 +9,7 @@ from sqlalchemy import func
 from datetime import datetime, timedelta
 from typing import List
 from app.db.session import get_db
+from app.core.collaboration import get_scope_user_ids, resolve_collaboration_owner_id
 from app.core.security import get_current_user
 from app.models.user import User
 from app.models.notification import Notification
@@ -22,9 +23,13 @@ OVERDUE_GRACE_MINUTES = 10
 
 
 def get_owner_and_scope(user: User, db: Session):
-    owner_id = user.parent_user_id if user.parent_user_id else user.id
-    child_ids = [uid for (uid,) in db.query(User.id).filter(User.parent_user_id == owner_id).all()]
-    return owner_id, [owner_id, *child_ids]
+    owner_id = resolve_collaboration_owner_id(
+        user,
+        db,
+        allow_external=True,
+        allowed_owner_plans={"max", "admin"},
+    )
+    return owner_id, get_scope_user_ids(owner_id, db)
 
 
 @router.get("/")

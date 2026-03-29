@@ -5,6 +5,7 @@ from app.db.session import get_db
 from app.models.pet import Pet
 from app.models.customer import Customer
 from app.models.user import User
+from app.core.collaboration import get_scope_user_ids, resolve_collaboration_owner_id
 from app.core.security import get_current_user
 from app.modules.customers.pet_schemas import PetCreate, PetOut, PetUpdate
 
@@ -34,15 +35,14 @@ def resolve_user(
 
 
 def get_user_ids_for_scope(user: User, db: Session):
-    """Shared scope: parent + self + siblings (sub-user) or self + children (parent)."""
-    if user.parent_user_id:
-        sibling_ids = [
-            uid for (uid,) in db.query(User.id).filter(User.parent_user_id == user.parent_user_id).all()
-        ]
-        return list(dict.fromkeys([user.parent_user_id, user.id, *sibling_ids]))
-
-    child_ids = [uid for (uid,) in db.query(User.id).filter(User.parent_user_id == user.id).all()]
-    return [user.id, *child_ids]
+    """MAX-only external collaboration for full operational scope."""
+    owner_id = resolve_collaboration_owner_id(
+        user,
+        db,
+        allow_external=True,
+        allowed_owner_plans={"max", "admin"},
+    )
+    return get_scope_user_ids(owner_id, db)
 
 
 def get_customer_or_404(customer_id: int, current_user: User, db: Session):

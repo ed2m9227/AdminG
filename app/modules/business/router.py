@@ -46,6 +46,14 @@ def get_business_types():
             has_pet=False
         ),
         BusinessTypeInfo(
+            type="nutricion",
+            label="Nutrición",
+            description="Consultorio de nutrición y alimentación",
+            customer_label="Paciente",
+            pet_label=None,
+            has_pet=False
+        ),
+        BusinessTypeInfo(
             type="peluqueria",
             label="Peluquería",
             description="Salón de peluquería",
@@ -86,6 +94,14 @@ def get_business_types():
             has_pet=False
         ),
         BusinessTypeInfo(
+            type="medicina_general",
+            label="Medicina General",
+            description="Consulta de medicina general",
+            customer_label="Paciente",
+            pet_label=None,
+            has_pet=False
+        ),
+        BusinessTypeInfo(
             type="salon",
             label="Salón de Belleza",
             description="Salón de belleza",
@@ -106,6 +122,14 @@ def get_business_types():
             label="Fisioterapia",
             description="Centro de fisioterapia",
             customer_label="Paciente",
+            pet_label=None,
+            has_pet=False
+        ),
+        BusinessTypeInfo(
+            type="propiedad_horizontal",
+            label="Propiedad Horizontal",
+            description="Administración de copropiedades, torres y conjuntos",
+            customer_label="Residente",
             pet_label=None,
             has_pet=False
         ),
@@ -143,6 +167,8 @@ def create_business_config(
                     db.add(current_user)
             else:
                 setattr(existing, field, value)
+        current_user.business_type = existing.business_type
+        db.add(current_user)
         db.add(existing)
         db.commit()
         db.refresh(existing)
@@ -170,7 +196,8 @@ def create_business_config(
     # Si viene plan en el payload, actualizar el usuario
     if hasattr(payload, 'plan') and payload.plan:
         current_user.plan = payload.plan
-        db.add(current_user)
+    current_user.business_type = payload.business_type
+    db.add(current_user)
     
     db.add(config)
     db.commit()
@@ -217,6 +244,10 @@ def update_business_config(
                 db.add(current_user)
         else:
             setattr(config, field, value)
+
+    if 'business_type' in update_data and update_data['business_type']:
+        current_user.business_type = update_data['business_type']
+        db.add(current_user)
     
     db.add(config)
     db.commit()
@@ -249,8 +280,10 @@ def reset_config_to_defaults(
     config.appointment_label = defaults.get("appointment_label", "Cita")
     config.pet_fields_enabled = defaults.get("pet_fields_enabled", {})
     config.has_pet_relationship = defaults.get("has_pet_relationship", False)
+    current_user.business_type = business_type
     
     db.add(config)
+    db.add(current_user)
     db.commit()
     db.refresh(config)
     return config

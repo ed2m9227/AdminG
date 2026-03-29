@@ -11,6 +11,7 @@ import modal from './Modal.js';
 
 export class Sidebar {
     constructor() {
+        this.mobileBreakpoint = 576;
         this.allMenuItems = [
             // Core
             { id: 'dashboard', icon: '📊', label: 'Dashboard', route: 'dashboard', alwaysShow: true },
@@ -37,14 +38,73 @@ export class Sidebar {
         ];
         this.userFeatures = [];
         this.itemAccessMap = {};
+        this.businessLabels = {
+            customer: 'Clientes',
+            appointment: 'Citas',
+        };
+        this.businessLabelsLoaded = false;
+    }
+
+    getDefaultLabelsByBusinessType(businessType) {
+        const normalized = (businessType || '').toLowerCase();
+        const labelsByType = {
+            veterinaria: { customer: 'Propietarios', appointment: 'Citas' },
+            consultorio: { customer: 'Pacientes', appointment: 'Consultas' },
+            clinica: { customer: 'Pacientes', appointment: 'Consultas' },
+            dentista: { customer: 'Pacientes', appointment: 'Consultas' },
+            dental: { customer: 'Pacientes', appointment: 'Consultas' },
+            fisioterapia: { customer: 'Pacientes', appointment: 'Sesiones' },
+            nutricion: { customer: 'Pacientes', appointment: 'Consultas' },
+            medicina_general: { customer: 'Pacientes', appointment: 'Consultas' },
+            barberia: { customer: 'Clientes', appointment: 'Turnos' },
+            salon: { customer: 'Clientes', appointment: 'Turnos' },
+            spa: { customer: 'Clientes', appointment: 'Reservas' },
+            inmobiliaria: { customer: 'Clientes', appointment: 'Visitas' },
+            propiedad_horizontal: { customer: 'Residentes', appointment: 'Reservas' },
+        };
+
+        return labelsByType[normalized] || { customer: 'Clientes', appointment: 'Citas' };
+    }
+
+    async loadBusinessLabels(forceReload = false) {
+        if (!forceReload && this.businessLabelsLoaded) {
+            return;
+        }
+
+        const user = authService.getCurrentUser();
+        const fallback = this.getDefaultLabelsByBusinessType(user?.business_type);
+
+        try {
+            const config = await apiService.getBusinessConfig();
+            this.businessLabels = {
+                customer: config?.customer_label || fallback.customer,
+                appointment: config?.appointment_label || fallback.appointment,
+            };
+        } catch (_error) {
+            this.businessLabels = fallback;
+        }
+
+        this.businessLabelsLoaded = true;
+    }
+
+    getMenuItemsWithDynamicLabels() {
+        return this.allMenuItems.map(item => {
+            if (item.id === 'customers') {
+                return { ...item, label: this.businessLabels.customer || item.label };
+            }
+            if (item.id === 'appointments') {
+                return { ...item, label: this.businessLabels.appointment || item.label };
+            }
+            return item;
+        });
     }
 
     /**
      * Cargar features disponibles para el usuario actual (UNA SOLA VEZ)
      */
-    async loadUserFeatures() {
+    async loadUserFeatures(forceReload = false) {
         // Si ya están cargadas, no volver a cargar
-        if (this.userFeatures.length > 0) {
+        if (!forceReload && this.userFeatures.length > 0) {
             console.log('✅ Features already loaded, skipping...');
             return;
         }
@@ -115,13 +175,22 @@ export class Sidebar {
                 'admin_panel'
             ]
         };
-        const features = [...(featuresByPlan[plan] || featuresByPlan['free'])];
+        let features = [...(featuresByPlan[plan] || featuresByPlan['free'])];
 
         if (plan === 'starter' && !isParentAccount) {
-            return features.filter(feature => ![
+            features = features.filter(feature => ![
                 'edit_customers', 'delete_customers',
                 'edit_appointments', 'delete_appointments',
                 'edit_products', 'delete_products'
+            ].includes(feature));
+        }
+
+        const businessType = (user?.business_type || '').toLowerCase();
+        const healthcareTypes = ['veterinaria', 'consultorio', 'clinica', 'dentista', 'dental', 'fisioterapia', 'nutricion', 'medicina_general'];
+        if (businessType && !healthcareTypes.includes(businessType)) {
+            features = features.filter(feature => ![
+                'view_documents', 'create_documents', 'edit_documents', 'delete_documents',
+                'view_authorizations', 'create_authorizations', 'manage_authorizations'
             ].includes(feature));
         }
 
@@ -142,10 +211,11 @@ export class Sidebar {
         const user = authService.getCurrentUser();
         const isAdmin = user?.role === 'admin';
         const isSubUser = !!user?.parent_user_id;
+        const menuItems = this.getMenuItemsWithDynamicLabels();
         this.itemAccessMap = {};
         
         // Filtrar items por rol y sub-usuario. Las restricciones por plan se muestran bloqueadas.
-        const visibleByRole = this.allMenuItems.filter(item => {
+        const visibleByRole = menuItems.filter(item => {
             // Sub-usuarios no ven Reportes ni Mi Equipo
             if (isSubUser && (item.id === 'reports' || item.id === 'team')) {
                 return false;
@@ -239,7 +309,7 @@ export class Sidebar {
                 const blocked = menuItem.dataset.blocked === 'true';
                 if (route) {
                     if (blocked) {
-                        const blockedItem = this.allMenuItems.find(item => item.route === route);
+                        const blockedItem = this.getMenuItemsWithDynamicLabels().find(item => item.route === route);
                         if (blockedItem) {
                             this.showPlanBlockedModal(blockedItem);
                         }
@@ -277,12 +347,21 @@ export class Sidebar {
     toggleSidebar() {
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('sidebarOverlay');
-        const isActive = sidebar?.classList.contains('active');
-        
-        if (isActive) {
-            this.closeSidebar();
+        const dashboardLayout = document.querySelector('.dashboard-layout');
+        const isMobile = window.innerWidth <= this.mobileBreakpoint;
+
+        if (isMobile) {
+            const isActive = sidebar?.classList.contains('active');
+            if (isActive) {
+                this.closeSidebar();
+            } else {
+                this.openSidebar();
+            }
         } else {
-            this.openSidebar();
+            dashboardLayout?.classList.toggle('sidebar-collapsed');
+            // Ensure mobile-only drawer states are reset on desktop toggle.
+            sidebar?.classList.remove('active');
+            overlay?.classList.remove('active');
         }
     }
 
@@ -293,6 +372,12 @@ export class Sidebar {
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('sidebarOverlay');
         const dashboardLayout = document.querySelector('.dashboard-layout');
+        const isMobile = window.innerWidth <= this.mobileBreakpoint;
+
+        if (!isMobile) {
+            dashboardLayout?.classList.add('sidebar-collapsed');
+            return;
+        }
         
         if (sidebar && sidebar.classList.contains('active')) {
             sidebar.classList.remove('active');
@@ -312,6 +397,12 @@ export class Sidebar {
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('sidebarOverlay');
         const dashboardLayout = document.querySelector('.dashboard-layout');
+        const isMobile = window.innerWidth <= this.mobileBreakpoint;
+
+        if (!isMobile) {
+            dashboardLayout?.classList.remove('sidebar-collapsed');
+            return;
+        }
         
         if (sidebar && !sidebar.classList.contains('active')) {
             sidebar.classList.add('active');

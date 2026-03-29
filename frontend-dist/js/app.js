@@ -30,7 +30,6 @@ import invoicesView from './views/InvoicesView.js';
 import documentsView from './views/DocumentsView.js';
 import authorizationsView from './views/AuthorizationsView.js';
 import modal from './components/Modal.js';
-import { normalizePlanCode } from './utils/plans.js';
 
 if (typeof window !== 'undefined' && typeof window.newUrlFound !== 'function') {
     // Guard for injected launcher scripts that expect this global.
@@ -121,10 +120,11 @@ class App {
         });
 
         router.register('documents', async () => {
-            const user = await authService.loadCurrentUser();
-            const plan = normalizePlanCode(user?.plan || 'free');
-            if (!['max', 'admin'].includes(plan)) {
-                modal.showError('Documentos está disponible solo en el plan MAX');
+            await authService.loadCurrentUser();
+            const featureData = await authService.loadFeatures();
+            const features = featureData?.features || authService.getFeatures() || [];
+            if (!features.includes('view_documents')) {
+                modal.showError('No tienes acceso al módulo Documentos con tu plan/tipo de negocio actual');
                 await router.navigate('dashboard');
                 return;
             }
@@ -132,10 +132,11 @@ class App {
         });
 
         router.register('authorizations', async () => {
-            const user = await authService.loadCurrentUser();
-            const plan = normalizePlanCode(user?.plan || 'free');
-            if (!['max', 'admin'].includes(plan)) {
-                modal.showError('Autorizaciones está disponible solo en el plan MAX');
+            await authService.loadCurrentUser();
+            const featureData = await authService.loadFeatures();
+            const features = featureData?.features || authService.getFeatures() || [];
+            if (!features.includes('view_authorizations')) {
+                modal.showError('No tienes acceso al módulo Autorizaciones con tu plan/tipo de negocio actual');
                 await router.navigate('dashboard');
                 return;
             }
@@ -370,8 +371,11 @@ class App {
             return;
         }
 
-        // Cargar features UNA SOLA VEZ
-        await sidebar.loadUserFeatures();
+        // Forzar recarga para reflejar cambios de plan/rol/tipo de negocio sin hard refresh
+        await Promise.all([
+            sidebar.loadUserFeatures(true),
+            sidebar.loadBusinessLabels(true),
+        ]);
         
         // Renderizar sidebar
         const sidebarHTML = sidebar.render();

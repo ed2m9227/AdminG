@@ -5,12 +5,14 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from app.core.collaboration import get_scope_user_ids, resolve_collaboration_owner_id
 from app.core.security import get_current_user
 from app.db.session import get_db
 from app.models.authorization import Authorization
 from app.models.customer import Customer
 from app.models.document import Document
 from app.models.service import Service
+from app.models.team_user import TeamUser
 from app.models.user import User
 
 router = APIRouter(prefix="/authorizations", tags=["Authorizations"])
@@ -43,9 +45,40 @@ class AuthorizationUpdate(BaseModel):
 
 
 def get_owner_and_scope(user: User, db: Session):
-    owner_id = user.parent_user_id if user.parent_user_id else user.id
-    child_ids = [uid for (uid,) in db.query(User.id).filter(User.parent_user_id == owner_id).all()]
-    return owner_id, [owner_id, *child_ids]
+    # PRO/MAX collaboration for external partner owners in audit modules.
+    owner_id = resolve_collaboration_owner_id(
+        user,
+        db,
+        allow_external=True,
+        allowed_owner_plans={"pro", "max", "admin"},
+    )
+    return owner_id, get_scope_user_ids(owner_id, db)
+
+
+def get_manager_assignees(owner_id: int, db: Session) -> list[User]:
+    """Eligible approvers come from active manager users in Mi Equipo flow."""
+    assignees: list[User] = []
+
+    owner = db.query(User).filter(User.id == owner_id, User.is_active.is_(True)).first()
+    if owner and owner.role == "manager":
+        assignees.append(owner)
+
+    team_memberships = db.query(TeamUser).filter(
+        TeamUser.team_owner_id == owner_id,
+        TeamUser.is_active.is_(True),
+        TeamUser.status == "active",
+        TeamUser.role_in_team == "manager",
+    ).all()
+
+    member_ids = [membership.member_user_id for membership in team_memberships]
+    if member_ids:
+        member_users = db.query(User).filter(User.id.in_(member_ids), User.is_active.is_(True)).all()
+        assignees.extend(member_users)
+
+    dedup: dict[int, User] = {user.id: user for user in assignees}
+    ordered = list(dedup.values())
+    ordered.sort(key=lambda row: (0 if row.id == owner_id else 1, row.email.lower()))
+    return ordered
 
 
 def serialize_authorization(record: Authorization):
@@ -95,26 +128,30 @@ def resolve_service(payload_service_id: Optional[int], payload_service_name: Opt
     return service, service_name
 
 
-def ensure_approver_in_scope(approver_user_id: Optional[int], scope_user_ids: list[int], db: Session):
+def ensure_approver_in_scope(approver_user_id: Optional[int], owner_id: int, scope_user_ids: list[int], db: Session):
     if approver_user_id is None:
         return None
+    eligible_managers = {user.id for user in get_manager_assignees(owner_id, db)}
     approver = db.query(User).filter(User.id == approver_user_id, User.id.in_(scope_user_ids)).first()
     if not approver:
         raise HTTPException(status_code=404, detail="Responsable de aprobación no encontrado")
+    if approver.id not in eligible_managers:
+        raise HTTPException(status_code=400, detail="Solo se pueden asignar gerentes activos del equipo como aprobadores")
     return approver
 
 
-def can_resolve_authorization(current_user: User, owner_id: int, record: Authorization) -> bool:
-    if current_user.role in {"admin", "master_admin"}:
-        return True
+def can_resolve_authorization(current_user: User, owner_id: int, record: Authorization, db: Session) -> bool:
+    manager_ids = {user.id for user in get_manager_assignees(owner_id, db)}
+    if current_user.id not in manager_ids:
+        return False
     if current_user.id == owner_id:
         return True
     return bool(record.assigned_approver_user_id and current_user.id == record.assigned_approver_user_id)
 
 
-def apply_resolution(record: Authorization, new_status: str, decision_reason: Optional[str], acting_user: User, owner_id: int):
+def apply_resolution(record: Authorization, new_status: str, decision_reason: Optional[str], acting_user: User, owner_id: int, db: Session):
     if new_status in TERMINAL_STATUSES:
-        if not can_resolve_authorization(acting_user, owner_id, record):
+        if not can_resolve_authorization(acting_user, owner_id, record, db):
             raise HTTPException(status_code=403, detail="Solo el aprobador asignado o la cuenta principal puede resolver esta autorización")
         if not (decision_reason or "").strip():
             raise HTTPException(status_code=400, detail="El motivo de decisión es obligatorio para aprobar o rechazar")
@@ -136,7 +173,7 @@ def apply_resolution(record: Authorization, new_status: str, decision_reason: Op
         return
 
     if new_status == "expired":
-        if not can_resolve_authorization(acting_user, owner_id, record):
+        if not can_resolve_authorization(acting_user, owner_id, record, db):
             raise HTTPException(status_code=403, detail="Solo el aprobador asignado o la cuenta principal puede vencer esta autorización")
         record.status = "expired"
         record.decision_reason = (decision_reason or record.decision_reason or "Vencida por gestión operativa").strip()
@@ -177,9 +214,8 @@ def list_authorization_assignees(
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
-    owner_id, scope_user_ids = get_owner_and_scope(user, db)
-    scope_users = db.query(User).filter(User.id.in_(scope_user_ids), User.is_active.is_(True)).all()
-    scope_users.sort(key=lambda row: (0 if row.id == owner_id else 1, row.email.lower()))
+    owner_id, _ = get_owner_and_scope(user, db)
+    scope_users = get_manager_assignees(owner_id, db)
     return [
         {
             "id": row.id,
@@ -213,7 +249,7 @@ def create_authorization(
         if not document:
             raise HTTPException(status_code=404, detail="Documento relacionado no encontrado")
 
-    approver = ensure_approver_in_scope(payload.assigned_approver_user_id, scope_user_ids, db)
+    approver = ensure_approver_in_scope(payload.assigned_approver_user_id, owner_id, scope_user_ids, db)
     service, service_name = resolve_service(payload.service_id, payload.service_name, scope_user_ids, db)
 
     record = Authorization(
@@ -257,7 +293,7 @@ def update_authorization(
     if "assigned_approver_user_id" in submitted_fields:
         if record.status in TERMINAL_STATUSES:
             raise HTTPException(status_code=400, detail="No se puede cambiar el aprobador de una autorización ya resuelta")
-        approver = ensure_approver_in_scope(payload.assigned_approver_user_id, scope_user_ids, db)
+        approver = ensure_approver_in_scope(payload.assigned_approver_user_id, owner_id, scope_user_ids, db)
         record.assigned_approver_user_id = approver.id if approver else None
 
     if "title" in submitted_fields and payload.title is not None:
@@ -273,9 +309,9 @@ def update_authorization(
     if "notes" in submitted_fields:
         record.notes = (payload.notes or "").strip() or None
     if "status" in submitted_fields and payload.status is not None:
-        apply_resolution(record, payload.status.strip().lower(), payload.decision_reason, user, owner_id)
+        apply_resolution(record, payload.status.strip().lower(), payload.decision_reason, user, owner_id, db)
     elif "decision_reason" in submitted_fields and record.status in TERMINAL_STATUSES:
-        if not can_resolve_authorization(user, owner_id, record):
+        if not can_resolve_authorization(user, owner_id, record, db):
             raise HTTPException(status_code=403, detail="Solo el aprobador asignado o la cuenta principal puede cambiar el criterio de decisión")
         record.decision_reason = (payload.decision_reason or "").strip() or None
 

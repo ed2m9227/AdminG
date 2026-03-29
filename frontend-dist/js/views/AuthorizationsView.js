@@ -41,6 +41,7 @@ class AuthorizationsView {
                             <div class="form-group">
                                 <label>Responsable de aprobación</label>
                                 <select id="authorizationApprover"></select>
+                                <small style="display:block; margin-top:4px; color:#6b7280; font-size:11px;">Solo gerentes activos (Mi Equipo) que ya aceptaron invitación</small>
                             </div>
                         </div>
                         <div class="form-row">
@@ -223,6 +224,12 @@ class AuthorizationsView {
                 option.textContent = `${user.email} · ${roleLabel}`;
                 select.appendChild(option);
             });
+            if (this.assignees.length === 0) {
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = 'No hay gerentes activos disponibles';
+                select.appendChild(option);
+            }
         } catch (error) {
             modal.showError(error.message || 'No se pudo cargar el equipo de aprobación');
         }

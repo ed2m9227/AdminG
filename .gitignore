@@ -9,11 +9,17 @@ env/
 ENV/
 .venv/
 
-# Database
+# Environment secrets - NUNCA subir al repo
+.env
+*.env
+
+# Database - excluir datos locales (Railway usa volumen propio)
 *.db
 *.sqlite3
 app.db
 test.db
+sql_app.db
+admingpyme.db
 
 # Testing
 .pytest_cache/

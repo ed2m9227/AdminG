@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from app.core.collaboration import get_scope_user_ids, resolve_collaboration_owner_id
 from app.core.security import get_current_user
 from app.db.session import get_db
 from app.models.customer import Customer
@@ -30,9 +31,14 @@ class DocumentUpdate(BaseModel):
 
 
 def get_owner_and_scope(user: User, db: Session):
-    owner_id = user.parent_user_id if user.parent_user_id else user.id
-    child_ids = [uid for (uid,) in db.query(User.id).filter(User.parent_user_id == owner_id).all()]
-    return owner_id, [owner_id, *child_ids]
+    # PRO/MAX collaboration for external partner owners in audit modules.
+    owner_id = resolve_collaboration_owner_id(
+        user,
+        db,
+        allow_external=True,
+        allowed_owner_plans={"pro", "max", "admin"},
+    )
+    return owner_id, get_scope_user_ids(owner_id, db)
 
 
 def serialize_document(document: Document):

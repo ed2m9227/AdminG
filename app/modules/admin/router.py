@@ -8,6 +8,7 @@ from sqlalchemy import or_
 from sqlalchemy.orm import Session
 from typing import List
 from app.db.session import get_db
+from app.core.collaboration import normalize_plan
 from app.core.security import get_current_user, hash_password
 from app.core.features import get_available_features, get_plan_limits, Feature
 from app.models.user import User
@@ -19,6 +20,16 @@ from app.models.pet import Pet
 from app.models.inventory import InventoryCategory, InventoryItem, InventoryMovement
 from app.models.business_config import BusinessConfiguration
 from app.models.service import Service
+from app.models.notification import Notification
+from app.models.invoice import Invoice, InvoiceItem
+from app.models.payment_item import PaymentItem
+from app.models.document import Document
+from app.models.authorization import Authorization
+from app.models.cash_register_session import CashRegisterSession
+from app.models.cash_transaction import CashTransaction
+from app.models.service_package import ServicePackage, ServicePackageItem
+from app.models.inventory_package import InventoryPackage, InventoryPackageItem
+from app.models.audit_log import AuditLog, VoidRequest
 from datetime import datetime
 
 router = APIRouter(
@@ -292,6 +303,99 @@ def deactivate_user(
 
 # ============== TEAM MANAGEMENT ENDPOINTS ==============
 
+@router.delete("/master/users/{user_id}/permanent")
+def permanently_delete_user(
+    user_id: int,
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """Elimina permanentemente una cuenta fallida/sin datos (Master Admin only).
+
+    Solo permite borrado total cuando la cuenta (y sus subusuarios) no tiene
+    registros operativos. Si existen movimientos, se devuelve 409 y debe usarse
+    desactivación por auditoría.
+    """
+    try:
+        if user_id == admin.id:
+            raise HTTPException(status_code=400, detail="No puedes eliminarte a ti mismo")
+
+        target = db.query(User).filter(User.id == user_id).first()
+        if not target:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+        email_deleted = target.email
+
+        # Include direct sub-users in dependency checks and deletion
+        sub_ids = [u.id for u in db.query(User.id).filter(User.parent_user_id == user_id).all()]
+        all_ids = [user_id] + sub_ids
+
+        dependencies = {
+            "clientes": db.query(Customer).filter(Customer.user_id.in_(all_ids)).count(),
+            "servicios": db.query(Service).filter(Service.user_id.in_(all_ids)).count(),
+            "pagos": db.query(Payment).filter(Payment.user_id.in_(all_ids)).count(),
+            "facturas": db.query(Invoice).filter(Invoice.user_id.in_(all_ids)).count(),
+            "inventario_categorias": db.query(InventoryCategory).filter(InventoryCategory.user_id.in_(all_ids)).count(),
+            "inventario_items": db.query(InventoryItem).filter(InventoryItem.user_id.in_(all_ids)).count(),
+            "paquetes_inventario": db.query(InventoryPackage).filter(InventoryPackage.user_id.in_(all_ids)).count(),
+            "paquetes_servicios": db.query(ServicePackage).filter(ServicePackage.user_id.in_(all_ids)).count(),
+            "documentos": db.query(Document).filter(
+                or_(Document.user_id.in_(all_ids), Document.created_by_user_id.in_(all_ids))
+            ).count(),
+            "autorizaciones": db.query(Authorization).filter(
+                or_(
+                    Authorization.user_id.in_(all_ids),
+                    Authorization.requested_by_user_id.in_(all_ids),
+                    Authorization.assigned_approver_user_id.in_(all_ids),
+                    Authorization.resolved_by_user_id.in_(all_ids),
+                )
+            ).count(),
+            "sesiones_caja": db.query(CashRegisterSession).filter(CashRegisterSession.user_id.in_(all_ids)).count(),
+            "movimientos_caja": db.query(CashTransaction).filter(
+                or_(CashTransaction.user_id.in_(all_ids), CashTransaction.voided_by_user_id.in_(all_ids))
+            ).count(),
+            "auditoria": db.query(AuditLog).filter(AuditLog.user_id.in_(all_ids)).count(),
+            "solicitudes_anulacion": db.query(VoidRequest).filter(
+                or_(VoidRequest.requested_by.in_(all_ids), VoidRequest.resolved_by.in_(all_ids))
+            ).count(),
+        }
+
+        used_dependencies = {k: v for k, v in dependencies.items() if v > 0}
+        if used_dependencies:
+            raise HTTPException(
+                status_code=409,
+                detail={
+                    "message": "La cuenta tiene datos operativos y no puede eliminarse permanentemente.",
+                    "hint": "Usa desactivar usuario para conservar auditoria.",
+                    "dependencies": used_dependencies,
+                },
+            )
+
+        # If no operational data exists, purge lightweight references then users
+        db.query(Notification).filter(Notification.user_id.in_(all_ids)).delete(synchronize_session=False)
+        db.query(BusinessConfiguration).filter(BusinessConfiguration.user_id.in_(all_ids)).delete(synchronize_session=False)
+        db.query(TeamUser).filter(
+            or_(TeamUser.team_owner_id.in_(all_ids), TeamUser.member_user_id.in_(all_ids))
+        ).delete(synchronize_session=False)
+
+        db.query(User).filter(User.parent_user_id == user_id).delete(synchronize_session=False)
+        db.query(User).filter(User.id == user_id).delete(synchronize_session=False)
+
+        db.commit()
+
+        return {
+            "success": True,
+            "message": f"Usuario {email_deleted} y todos sus datos han sido eliminados permanentemente.",
+            "deleted_sub_users": len(sub_ids)
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============== TEAM MANAGEMENT ENDPOINTS ==============
+
 
 # ============== TEAM MANAGEMENT ENDPOINTS ==============
 
@@ -344,6 +448,13 @@ def invite_team_member(
 ):
     """Invita un usuario al equipo"""
     try:
+        normalized_plan = normalize_plan(user.plan)
+        if user.role != "admin" and normalized_plan not in {"pro", "max", "admin"}:
+            raise HTTPException(
+                status_code=403,
+                detail="Invitar cuentas dueñas externas está disponible desde plan PRO"
+            )
+
         limits = get_plan_limits(user.plan)
         current_team_size = db.query(TeamUser).filter(
             TeamUser.team_owner_id == user.id
@@ -381,8 +492,39 @@ def invite_team_member(
             TeamUser.team_owner_id == user.id,
             TeamUser.member_user_id == member.id
         ).first()
-        
+
         if existing:
+            # Permitir re-invitación si el vínculo previo no está activo.
+            if (not existing.is_active) or existing.status in ["invited", "suspended"]:
+                existing.role_in_team = role
+                existing.status = "invited"
+                existing.is_active = True
+                existing.invited_at = datetime.utcnow()
+                existing.joined_at = None
+
+                db.add(Notification(
+                    user_id=member.id,
+                    type="team_invite",
+                    title=f"Invitación de equipo: {user.email}",
+                    message=f"{user.email} te invitó como {role}. Puedes aceptar o declinar.",
+                    reference_id=existing.id,
+                    reference_type="team_invite",
+                ))
+
+                db.commit()
+                db.refresh(existing)
+                return {
+                    "success": True,
+                    "message": f"Reinvitación enviada a {email}",
+                    "invitation": {
+                        "id": existing.id,
+                        "email": member.email,
+                        "role": role,
+                        "status": "invited",
+                        "invited_at": existing.invited_at.isoformat()
+                    }
+                }
+
             raise HTTPException(status_code=400, detail="Este usuario ya está en tu equipo")
         
         team_user = TeamUser(
@@ -391,8 +533,19 @@ def invite_team_member(
             role_in_team=role,
             status="invited"
         )
-        
+
         db.add(team_user)
+        db.flush()
+
+        db.add(Notification(
+            user_id=member.id,
+            type="team_invite",
+            title=f"Invitación de equipo: {user.email}",
+            message=f"{user.email} te invitó como {role}. Puedes aceptar o declinar.",
+            reference_id=team_user.id,
+            reference_type="team_invite",
+        ))
+
         db.commit()
         db.refresh(team_user)
         
@@ -407,6 +560,9 @@ def invite_team_member(
                 "invited_at": team_user.invited_at.isoformat()
             }
         }
+    except HTTPException:
+        db.rollback()
+        raise
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
@@ -506,29 +662,74 @@ def create_team_user(
 @router.post("/team/accept-invite/{invitation_id}")
 def accept_team_invite(
     invitation_id: int,
-    user: User = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Acepta una invitación al equipo"""
     try:
+        user = db.query(User).filter(User.id == int(current_user["id"])).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
         invite = db.query(TeamUser).filter(
             TeamUser.id == invitation_id,
-            TeamUser.member_user_id == user.id
+            TeamUser.member_user_id == user.id,
+            TeamUser.status == "invited"
         ).first()
-        
+
         if not invite:
             raise HTTPException(status_code=404, detail="Invitación no encontrada")
-        
+
         invite.status = "active"
         invite.joined_at = datetime.utcnow()
         db.commit()
         db.refresh(invite)
-        
+
         return {
             "success": True,
             "message": "Te has unido al equipo",
             "team_owner_email": invite.team_owner.email
         }
+    except HTTPException:
+        db.rollback()
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/team/decline-invite/{invitation_id}")
+def decline_team_invite(
+    invitation_id: int,
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Declina una invitación al equipo"""
+    try:
+        user = db.query(User).filter(User.id == int(current_user["id"])).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+        invite = db.query(TeamUser).filter(
+            TeamUser.id == invitation_id,
+            TeamUser.member_user_id == user.id,
+            TeamUser.status == "invited"
+        ).first()
+
+        if not invite:
+            raise HTTPException(status_code=404, detail="Invitación no encontrada")
+
+        invite.status = "suspended"
+        invite.is_active = False
+        db.commit()
+
+        return {
+            "success": True,
+            "message": "Invitación declinada"
+        }
+    except HTTPException:
+        db.rollback()
+        raise
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))

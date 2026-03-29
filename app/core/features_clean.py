@@ -128,14 +128,6 @@ PLAN_FEATURES: Dict[str, Set[Feature]] = {
         Feature.VIEW_TEAM,
         Feature.MANAGE_TEAM_USERS,
         Feature.INVITE_USERS,
-        # Documents & Authorizations
-        Feature.VIEW_DOCUMENTS,
-        Feature.CREATE_DOCUMENTS,
-        Feature.EDIT_DOCUMENTS,
-        Feature.DELETE_DOCUMENTS,
-        Feature.VIEW_AUTHORIZATIONS,
-        Feature.CREATE_AUTHORIZATIONS,
-        Feature.MANAGE_AUTHORIZATIONS,
     },
     "max": {
         Feature.VIEW_CUSTOMERS,

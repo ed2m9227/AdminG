@@ -4,6 +4,7 @@ from datetime import datetime
 class DashboardMetrics(BaseModel):
     total_customers: int
     total_appointments_month: int
+    total_appointments_today: int
     total_transactions_month: int
     total_revenue_month: float
     average_ticket: float

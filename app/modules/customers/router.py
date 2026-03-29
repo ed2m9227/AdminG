@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.models.customer import Customer
+from app.core.collaboration import get_scope_user_ids, resolve_collaboration_owner_id
 from app.core.security import get_current_user
 from app.core.features import Feature, has_feature
 from app.models.user import User
@@ -20,17 +21,14 @@ def resolve_user(
     return user
 
 def get_user_ids_for_data_sharing(user: User, db: Session):
-    """Retorna list de user_ids a incluir en queries (para compartir datos padre-hijo)"""
-    if user.parent_user_id:
-        # Sub-usuario: incluir padre, propio y hermanos
-        sibling_ids = [
-            uid for (uid,) in db.query(User.id).filter(User.parent_user_id == user.parent_user_id).all()
-        ]
-        return list(dict.fromkeys([user.parent_user_id, user.id, *sibling_ids]))
-    else:
-        # Usuario padre/admin: incluir datos propios y de sub-usuarios
-        child_ids = [uid for (uid,) in db.query(User.id).filter(User.parent_user_id == user.id).all()]
-        return [user.id, *child_ids]
+    """Retorna user_ids para alcance operativo. Colaboración externa completa solo en MAX."""
+    owner_id = resolve_collaboration_owner_id(
+        user,
+        db,
+        allow_external=True,
+        allowed_owner_plans={"max", "admin"},
+    )
+    return get_scope_user_ids(owner_id, db)
 
 def require_customer_feature(user: User, feature: Feature):
     if has_feature(user.plan, feature, user.role, is_parent_account=not bool(user.parent_user_id)):
@@ -44,8 +42,17 @@ def create_customer(
     current_user: User = Depends(resolve_user)
 ):
     require_customer_feature(current_user, Feature.CREATE_CUSTOMERS)
+
+    owner_id = resolve_collaboration_owner_id(
+        current_user,
+        db,
+        allow_external=True,
+        allowed_owner_plans={"max", "admin"},
+    )
+    target_user_id = owner_id if (not current_user.parent_user_id and owner_id != current_user.id) else current_user.id
+
     customer = Customer(
-        user_id=current_user.id,
+        user_id=target_user_id,
         full_name=payload.full_name,
         phone=payload.phone,
         email=payload.email,

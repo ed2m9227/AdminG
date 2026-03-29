@@ -3,6 +3,7 @@ from decimal import Decimal
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.core.collaboration import get_scope_user_ids, resolve_collaboration_owner_id
 from app.core.security import get_current_user
 from app.db.session import get_db
 from app.models.service import Service
@@ -31,12 +32,23 @@ def resolve_user(
 
 
 def get_user_ids_for_data_sharing(user: User, db: Session):
-    if user.parent_user_id:
-        sibling_ids = [uid for (uid,) in db.query(User.id).filter(User.parent_user_id == user.parent_user_id).all()]
-        return list(dict.fromkeys([user.parent_user_id, user.id, *sibling_ids]))
+    owner_id = resolve_collaboration_owner_id(
+        user,
+        db,
+        allow_external=True,
+        allowed_owner_plans={"max", "admin"},
+    )
+    return get_scope_user_ids(owner_id, db)
 
-    child_ids = [uid for (uid,) in db.query(User.id).filter(User.parent_user_id == user.id).all()]
-    return [user.id, *child_ids]
+
+def get_write_user_id(user: User, db: Session) -> int:
+    owner_id = resolve_collaboration_owner_id(
+        user,
+        db,
+        allow_external=True,
+        allowed_owner_plans={"max", "admin"},
+    )
+    return owner_id if (not user.parent_user_id and owner_id != user.id) else user.id
 
 
 def check_services_access(user: User):
@@ -77,7 +89,7 @@ def get_service_limit(user: User) -> int | None:
 
 def compute_package_totals(
     db: Session,
-    user_id: int,
+    user_ids: list[int],
     items_payload: list,
     discount_percentage: Decimal,
 ):
@@ -93,7 +105,7 @@ def compute_package_totals(
 
         service = db.query(Service).filter(
             Service.id == service_id,
-            Service.user_id == user_id,
+            Service.user_id.in_(user_ids),
             Service.is_active.is_(True),
         ).first()
         if not service:
@@ -118,15 +130,16 @@ def create_service(
     current_user: User = Depends(resolve_user),
 ):
     check_services_access(current_user)
+    target_user_id = get_write_user_id(current_user, db)
 
     limit = get_service_limit(current_user)
     if limit is not None:
-        total = db.query(Service).filter(Service.user_id == current_user.id).count()
+        total = db.query(Service).filter(Service.user_id == target_user_id).count()
         if total >= limit:
             raise HTTPException(status_code=403, detail="Service limit reached for your plan")
 
     service = Service(
-        user_id=current_user.id,
+        user_id=target_user_id,
         name=payload.name,
         description=payload.description,
         price=payload.price,
@@ -185,9 +198,10 @@ def update_service(
 ):
     check_services_access(current_user)
 
+    user_ids = get_user_ids_for_data_sharing(current_user, db)
     service = db.query(Service).filter(
         Service.id == service_id,
-        Service.user_id == current_user.id,
+        Service.user_id.in_(user_ids),
     ).first()
     if not service:
         raise HTTPException(status_code=404, detail="Service not found")
@@ -210,9 +224,10 @@ def delete_service(
 ):
     check_services_access(current_user)
 
+    user_ids = get_user_ids_for_data_sharing(current_user, db)
     service = db.query(Service).filter(
         Service.id == service_id,
-        Service.user_id == current_user.id,
+        Service.user_id.in_(user_ids),
     ).first()
     if not service:
         raise HTTPException(status_code=404, detail="Service not found")
@@ -230,15 +245,17 @@ def create_service_package(
     current_user: User = Depends(resolve_user),
 ):
     check_services_access(current_user)
+    user_ids = get_user_ids_for_data_sharing(current_user, db)
+    target_user_id = get_write_user_id(current_user, db)
     base_price, final_price, package_items = compute_package_totals(
         db,
-        current_user.id,
+        user_ids,
         payload.items,
         Decimal(payload.discount_percentage),
     )
 
     package = ServicePackage(
-        user_id=current_user.id,
+        user_id=target_user_id,
         name=payload.name,
         description=payload.description,
         discount_percentage=payload.discount_percentage,
@@ -266,7 +283,8 @@ def list_service_packages(
     current_user: User = Depends(resolve_user),
 ):
     check_services_access(current_user)
-    query = db.query(ServicePackage).filter(ServicePackage.user_id == current_user.id)
+    user_ids = get_user_ids_for_data_sharing(current_user, db)
+    query = db.query(ServicePackage).filter(ServicePackage.user_id.in_(user_ids))
     if not include_inactive:
         query = query.filter(ServicePackage.is_active.is_(True))
     return query.order_by(ServicePackage.created_at.desc()).offset(skip).limit(limit).all()
@@ -279,9 +297,10 @@ def get_service_package(
     current_user: User = Depends(resolve_user),
 ):
     check_services_access(current_user)
+    user_ids = get_user_ids_for_data_sharing(current_user, db)
     package = db.query(ServicePackage).filter(
         ServicePackage.id == package_id,
-        ServicePackage.user_id == current_user.id,
+        ServicePackage.user_id.in_(user_ids),
     ).first()
     if not package:
         raise HTTPException(status_code=404, detail="Service package not found")
@@ -296,9 +315,10 @@ def update_service_package(
     current_user: User = Depends(resolve_user),
 ):
     check_services_access(current_user)
+    user_ids = get_user_ids_for_data_sharing(current_user, db)
     package = db.query(ServicePackage).filter(
         ServicePackage.id == package_id,
-        ServicePackage.user_id == current_user.id,
+        ServicePackage.user_id.in_(user_ids),
     ).first()
     if not package:
         raise HTTPException(status_code=404, detail="Service package not found")
@@ -315,7 +335,7 @@ def update_service_package(
     items = update_data.get("items")
 
     if items is not None:
-        base_price, final_price, package_items = compute_package_totals(db, current_user.id, items, discount)
+        base_price, final_price, package_items = compute_package_totals(db, user_ids, items, discount)
         package.discount_percentage = discount
         package.base_price = base_price
         package.final_price = final_price
@@ -342,9 +362,10 @@ def delete_service_package(
     current_user: User = Depends(resolve_user),
 ):
     check_services_access(current_user)
+    user_ids = get_user_ids_for_data_sharing(current_user, db)
     package = db.query(ServicePackage).filter(
         ServicePackage.id == package_id,
-        ServicePackage.user_id == current_user.id,
+        ServicePackage.user_id.in_(user_ids),
     ).first()
     if not package:
         raise HTTPException(status_code=404, detail="Service package not found")

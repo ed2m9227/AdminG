@@ -7,6 +7,7 @@
 import authService from '../services/auth.service.js';
 import router from '../utils/router.js';
 import apiService from '../services/api.service.js';
+import modal from './Modal.js';
 
 export class Header {
     constructor() {
@@ -138,6 +139,28 @@ export class Header {
                 if (!btn) return;
                 const nid = parseInt(btn.getAttribute('data-notif-id'));
                 const n = this._notifList.find(x => x.id === nid);
+
+                if (n?.type === 'team_invite' && n?.reference_id) {
+                    const accepted = await modal.confirm({
+                        title: 'Invitación de equipo',
+                        message: `${n.message || 'Tienes una invitación pendiente.'}\n\n¿Deseas aceptar la invitación?`,
+                        confirmText: 'Aceptar',
+                        cancelText: 'Declinar',
+                    });
+
+                    try {
+                        if (accepted) {
+                            await apiService.request(`/admin/team/accept-invite/${n.reference_id}`, 'POST');
+                            await modal.alert({ title: 'Éxito', message: 'Invitación aceptada.', type: 'success' });
+                        } else {
+                            await apiService.request(`/admin/team/decline-invite/${n.reference_id}`, 'POST');
+                            await modal.alert({ title: 'Listo', message: 'Invitación declinada.', type: 'info' });
+                        }
+                    } catch (err) {
+                        await modal.alert({ title: 'Error', message: err.message || 'No se pudo procesar la invitación.', type: 'error' });
+                    }
+                }
+
                 await apiService.post(`/notifications/${nid}/read`, {});
                 if (n && !n.is_read) {
                     n.is_read = true;
@@ -182,7 +205,8 @@ export class Header {
             duplicate_appointment: '⚠️',
             duplicate_customer: '🧾',
             special_date: '🎉',
-            document: '📄'
+            document: '📄',
+            team_invite: '🤝'
         };
         listEl.innerHTML = notifications.map(n => `
             <div data-notif-id="${n.id}" style="padding:10px 16px;cursor:pointer;border-bottom:1px solid #f0f0f0;background:${n.is_read ? '#f8fafc' : '#eef2ff'};opacity:${n.is_read ? '0.78' : '1'};transition:opacity .2s ease, background-color .2s ease;">

@@ -5,6 +5,8 @@
 
 import apiService from '../services/api.service.js';
 import authService from '../services/auth.service.js';
+import sidebar from '../components/Sidebar.js';
+import router from '../utils/router.js';
 
 export class BusinessConfigView {
     constructor() {
@@ -27,6 +29,42 @@ export class BusinessConfigView {
             last_checkup_date: 'Ultimo control',
             vaccination_status: 'Vacunas',
             notes: 'Notas'
+        };
+    }
+
+    getBusinessIdentityRules(businessType) {
+        const healthcareTypes = new Set(['consultorio', 'clinica', 'dentista', 'fisioterapia', 'nutricion', 'medicina_general']);
+        const petTypes = new Set(['veterinaria']);
+        const propertyTypes = new Set(['propiedad_horizontal']);
+
+        if (healthcareTypes.has(businessType)) {
+            return {
+                responsibleLabel: 'Profesional responsable',
+                registrationLabel: 'Registro profesional (RETHUS o equivalente)',
+                registrationPlaceholder: 'Ej: RETHUS 123456',
+            };
+        }
+
+        if (petTypes.has(businessType)) {
+            return {
+                responsibleLabel: 'Responsable medico veterinario',
+                registrationLabel: 'Tarjeta profesional / registro ICA',
+                registrationPlaceholder: 'Ej: TPV-78910',
+            };
+        }
+
+        if (propertyTypes.has(businessType)) {
+            return {
+                responsibleLabel: 'Administrador responsable',
+                registrationLabel: 'Registro de administracion o acta de nombramiento',
+                registrationPlaceholder: 'Ej: Acta 2026-03 / Registro 4455',
+            };
+        }
+
+        return {
+            responsibleLabel: 'Representante o responsable',
+            registrationLabel: 'Registro mercantil o referencia legal',
+            registrationPlaceholder: 'Ej: CAM-2026-001',
         };
     }
 
@@ -94,7 +132,9 @@ export class BusinessConfigView {
         const hasPet = !!config.has_pet_relationship;
         const petFieldsEnabled = config.pet_fields_enabled || {};
         const billingProfile = config.custom_fields?.billing_profile || {};
+        const businessIdentity = config.custom_fields?.business_identity || {};
         const canManageBillingProfile = !currentUser?.parent_user_id;
+        const identityRules = this.getBusinessIdentityRules(config.business_type || 'otro');
 
         const typeOptions = types.map(t => {
             const selected = t.type === config.business_type ? 'selected' : '';
@@ -127,6 +167,48 @@ export class BusinessConfigView {
                     <div class="form-group">
                         <label>Etiqueta de Clientes</label>
                         <input type="text" name="customer_label" value="${config.customer_label || 'Cliente'}">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Descripcion del negocio</label>
+                    <textarea name="business_description" rows="2" placeholder="Describe brevemente tu operacion">${config.business_description || ''}</textarea>
+                </div>
+                <div class="form-group" style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; margin-top: 12px;">
+                    <div style="font-weight: 700; margin-bottom: 12px;">Identificacion legal y responsable</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Razon social o empresa</label>
+                            <input type="text" name="identity_legal_name" value="${businessIdentity.legal_name || config.business_name || ''}">
+                        </div>
+                        <div class="form-group">
+                            <label>${identityRules.responsibleLabel}</label>
+                            <input type="text" name="identity_responsible_name" value="${businessIdentity.responsible_name || ''}">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Tipo documento fiscal</label>
+                            <select name="identity_tax_id_type">
+                                <option value="NIT" ${(businessIdentity.tax_id_type || 'NIT') === 'NIT' ? 'selected' : ''}>NIT</option>
+                                <option value="RUT" ${businessIdentity.tax_id_type === 'RUT' ? 'selected' : ''}>RUT</option>
+                                <option value="CC" ${businessIdentity.tax_id_type === 'CC' ? 'selected' : ''}>CC</option>
+                                <option value="CE" ${businessIdentity.tax_id_type === 'CE' ? 'selected' : ''}>CE</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Numero documento (NIT/ID)</label>
+                            <input type="text" name="identity_tax_id_number" value="${businessIdentity.tax_id_number || ''}">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>${identityRules.registrationLabel}</label>
+                            <input type="text" name="identity_registration_code" value="${businessIdentity.registration_code || ''}" placeholder="${identityRules.registrationPlaceholder}">
+                        </div>
+                        <div class="form-group">
+                            <label>Telefono administrativo</label>
+                            <input type="text" name="identity_contact_phone" value="${businessIdentity.contact_phone || ''}" placeholder="Ej: +57 300 0000000">
+                        </div>
                     </div>
                 </div>
                 <div class="form-row">
@@ -243,13 +325,22 @@ export class BusinessConfigView {
         const payload = {
             business_type: formData.get('business_type'),
             business_name: formData.get('business_name') || null,
+            business_description: formData.get('business_description') || null,
             customer_label: formData.get('customer_label') || 'Cliente',
             appointment_label: formData.get('appointment_label') || 'Cita',
             pet_label: formData.get('pet_label') || null,
             has_pet_relationship: formData.get('has_pet_relationship') === 'on',
             pet_fields_enabled: this.getEnabledPetFields(form),
             custom_fields: {
-                ...(this.businessConfig?.custom_fields || {})
+                ...(this.businessConfig?.custom_fields || {}),
+                business_identity: {
+                    legal_name: formData.get('identity_legal_name') || null,
+                    responsible_name: formData.get('identity_responsible_name') || null,
+                    tax_id_type: formData.get('identity_tax_id_type') || 'NIT',
+                    tax_id_number: formData.get('identity_tax_id_number') || null,
+                    registration_code: formData.get('identity_registration_code') || null,
+                    contact_phone: formData.get('identity_contact_phone') || null,
+                }
             }
         };
 
@@ -269,7 +360,10 @@ export class BusinessConfigView {
         try {
             const updated = await apiService.updateBusinessConfig(payload);
             this.businessConfig = updated;
-            this.renderBusinessConfigForm();
+            await authService.loadCurrentUser();
+            await authService.loadFeatures();
+            await sidebar.loadUserFeatures(true);
+            await router.navigate(router.getCurrentRoute() || 'businessconfig');
         } catch (error) {
             const container = document.getElementById('businessConfigBox');
             if (container) {
@@ -287,7 +381,10 @@ export class BusinessConfigView {
         try {
             const updated = await apiService.resetBusinessConfig(selectedType);
             this.businessConfig = updated;
-            this.renderBusinessConfigForm();
+            await authService.loadCurrentUser();
+            await authService.loadFeatures();
+            await sidebar.loadUserFeatures(true);
+            await router.navigate(router.getCurrentRoute() || 'businessconfig');
         } catch (error) {
             const container = document.getElementById('businessConfigBox');
             if (container) {

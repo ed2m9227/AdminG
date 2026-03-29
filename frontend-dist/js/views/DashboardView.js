@@ -474,6 +474,8 @@ export class DashboardView {
         const emojiMap = {
             'veterinaria': '🏥',
             'barberia': '💈',
+            'nutricion': '🥗',
+            'medicina_general': '🩺',
             'spa': '💆',
             'clinica': '⚕️',
             'salon': '💅',
@@ -481,6 +483,7 @@ export class DashboardView {
             'farmacia': '💊',
             'dental': '🦷',
             'odontologia': '🦷',
+            'propiedad_horizontal': '🏢',
             'otro': '📋'
         };
 

@@ -18,6 +18,7 @@ from app.modules.reports.schemas import (
     InventoryReport,
     ReportRequest,
 )
+from app.core.collaboration import get_scope_user_ids, resolve_collaboration_owner_id
 from app.core.security import get_current_user
 
 router = APIRouter(
@@ -37,14 +38,13 @@ def resolve_user(
 
 
 def get_user_ids_for_data_sharing(user: User, db: Session):
-    if user.parent_user_id:
-        sibling_ids = [
-            uid for (uid,) in db.query(User.id).filter(User.parent_user_id == user.parent_user_id).all()
-        ]
-        return list(dict.fromkeys([user.parent_user_id, user.id, *sibling_ids]))
-
-    child_ids = [uid for (uid,) in db.query(User.id).filter(User.parent_user_id == user.id).all()]
-    return [user.id, *child_ids]
+    owner_id = resolve_collaboration_owner_id(
+        user,
+        db,
+        allow_external=True,
+        allowed_owner_plans={"max", "admin"},
+    )
+    return get_scope_user_ids(owner_id, db)
 
 LEGACY_PLAN_MAP = {
     "basic": "starter",

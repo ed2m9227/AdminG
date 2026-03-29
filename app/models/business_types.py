@@ -12,9 +12,11 @@ class BusinessType(str, Enum):
     ESTETICA = "estetica"
     MASAJES = "masajes"
     DENTISTA = "dentista"
+    MEDICINA_GENERAL = "medicina_general"
     PODOLOGIA = "podologia"
     FISIOTERAPIA = "fisioterapia"
     NUTRICION = "nutricion"
+    PROPIEDAD_HORIZONTAL = "propiedad_horizontal"
     PSICOLOGIA = "psicologia"
     COACHING = "coaching"
     PERSONAL_TRAINING = "personal_training"
@@ -87,6 +89,27 @@ class BusinessType(str, Enum):
                 "customer_label": "Paciente",
                 "pet_label": None,
                 "appointment_label": "Cita",
+                "has_pet_relationship": False,
+                "pet_fields_enabled": {}
+            },
+            "medicina_general": {
+                "customer_label": "Paciente",
+                "pet_label": None,
+                "appointment_label": "Consulta",
+                "has_pet_relationship": False,
+                "pet_fields_enabled": {}
+            },
+            "nutricion": {
+                "customer_label": "Paciente",
+                "pet_label": None,
+                "appointment_label": "Consulta",
+                "has_pet_relationship": False,
+                "pet_fields_enabled": {}
+            },
+            "propiedad_horizontal": {
+                "customer_label": "Residente",
+                "pet_label": None,
+                "appointment_label": "Solicitud",
                 "has_pet_relationship": False,
                 "pet_fields_enabled": {}
             }

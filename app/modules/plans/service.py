@@ -71,7 +71,7 @@ PLAN_DEFINITIONS = {
     "max": {
         "display_name": "AdminG Max",
         "price": 249900,
-        "description": "Plan empresarial: acceso total y escalabilidad",
+        "description": "Plan empresarial: acceso total, documentos, autorizaciones y escalabilidad",
         "limits": {
             "max_users": 100,
             "max_locations": 10,
@@ -88,6 +88,8 @@ PLAN_DEFINITIONS = {
             ("accounting", "Contabilidad", True),
             ("sms_reminders", "Recordatorios por SMS", True),
             ("api", "Acceso a API", True),
+            ("documents", "Documentos", True),
+            ("authorizations", "Autorizaciones", True),
         ]
     },
 }

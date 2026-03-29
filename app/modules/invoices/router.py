@@ -14,6 +14,7 @@ from app.models.payment import Payment
 from app.models.authorization import Authorization
 from app.models.business_config import BusinessConfiguration
 from app.models.user import User
+from app.core.collaboration import get_scope_user_ids, resolve_collaboration_owner_id
 from app.core.security import get_current_user
 from app.modules.invoices.schemas import (
     InvoiceCreate, InvoiceResponse, 
@@ -46,14 +47,13 @@ def resolve_user(
 
 
 def get_user_ids_for_data_sharing(user: User, db: Session):
-    if user.parent_user_id:
-        sibling_ids = [
-            uid for (uid,) in db.query(User.id).filter(User.parent_user_id == user.parent_user_id).all()
-        ]
-        return list(dict.fromkeys([user.parent_user_id, user.id, *sibling_ids]))
-
-    child_ids = [uid for (uid,) in db.query(User.id).filter(User.parent_user_id == user.id).all()]
-    return [user.id, *child_ids]
+    owner_id = resolve_collaboration_owner_id(
+        user,
+        db,
+        allow_external=True,
+        allowed_owner_plans={"max", "admin"},
+    )
+    return get_scope_user_ids(owner_id, db)
 
 
 def generate_invoice_number(db: Session) -> str:
@@ -92,8 +92,14 @@ def generate_invoice(
     Genera una factura con cálculo automático de IVA y retención
     """
     # Validar que el cliente existe
-    user_id = current_user.id
-    owner_id = current_user.parent_user_id if current_user.parent_user_id else current_user.id
+    collaboration_owner_id = resolve_collaboration_owner_id(
+        current_user,
+        db,
+        allow_external=True,
+        allowed_owner_plans={"max", "admin"},
+    )
+    owner_id = current_user.parent_user_id if current_user.parent_user_id else collaboration_owner_id
+    user_id = owner_id if (not current_user.parent_user_id and collaboration_owner_id != current_user.id) else current_user.id
     user_ids = get_user_ids_for_data_sharing(current_user, db)
 
     customer = db.query(Customer).filter(

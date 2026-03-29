@@ -4,7 +4,13 @@
  * Principio SOLID: Single Responsibility
  */
 
-const API_BASE_URL = 'http://127.0.0.1:8000';
+// En producción el frontend se sirve desde el mismo servidor FastAPI,
+// por lo que la base de la API es el origen actual.
+// En desarrollo apuntamos a localhost:8000.
+const API_BASE_URL = (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost')
+    ? 'http://127.0.0.1:8000'
+    : window.location.origin;
+const REQUEST_TIMEOUT_MS = 10000;
 
 export class ApiService {
     constructor() {
@@ -41,7 +47,18 @@ export class ApiService {
         }
 
         try {
-            const response = await fetch(`${this.baseUrl}${endpoint}`, options);
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+            let response;
+            try {
+                response = await fetch(`${this.baseUrl}${endpoint}`, {
+                    ...options,
+                    signal: controller.signal,
+                });
+            } finally {
+                clearTimeout(timeoutId);
+            }
             
             if (!response.ok) {
                 let errorMessage = `HTTP Error: ${response.status}`;
@@ -79,6 +96,12 @@ export class ApiService {
 
             return await response.json();
         } catch (error) {
+            if (error?.name === 'AbortError') {
+                const timeoutError = new Error(`Tiempo de espera agotado en ${method} ${endpoint}`);
+                timeoutError.status = 408;
+                console.error(`API Timeout [${method} ${endpoint}]`);
+                throw timeoutError;
+            }
             console.error(`API Error [${method} ${endpoint}]:`, error);
             throw error;
         }

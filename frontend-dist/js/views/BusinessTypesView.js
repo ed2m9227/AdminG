@@ -481,6 +481,26 @@ export class BusinessTypesView {
                 supports_pets: false
             },
             {
+                code: 'nutricion',
+                label: 'Nutrición',
+                description: 'Consultorios y centros de nutrición para nutricionistas',
+                icon: '🥗',
+                default_label_customers: 'Paciente',
+                default_label_appointments: 'Consulta',
+                default_label_pets: 'N/A',
+                supports_pets: false
+            },
+            {
+                code: 'medicina_general',
+                label: 'Medicina General',
+                description: 'Consultorios y centros de medicina general',
+                icon: '🩺',
+                default_label_customers: 'Paciente',
+                default_label_appointments: 'Consulta',
+                default_label_pets: 'N/A',
+                supports_pets: false
+            },
+            {
                 code: 'spa',
                 label: 'Spa / Estética',
                 description: 'Centros de estética, spas y salones de belleza',
@@ -517,6 +537,16 @@ export class BusinessTypesView {
                 icon: '🦷',
                 default_label_customers: 'Paciente',
                 default_label_appointments: 'Consulta',
+                default_label_pets: 'N/A',
+                supports_pets: false
+            },
+            {
+                code: 'propiedad_horizontal',
+                label: 'Propiedad Horizontal',
+                description: 'Administración de conjuntos, torres y copropiedades',
+                icon: '🏢',
+                default_label_customers: 'Residente',
+                default_label_appointments: 'Solicitud',
                 default_label_pets: 'N/A',
                 supports_pets: false
             },

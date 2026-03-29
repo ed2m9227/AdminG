@@ -128,7 +128,7 @@ PLAN_FEATURES: Dict[str, Set[Feature]] = {
         Feature.VIEW_TEAM,
         Feature.MANAGE_TEAM_USERS,
         Feature.INVITE_USERS,
-        # Documents & Authorizations
+        # Documents & Authorizations for operational audit flow
         Feature.VIEW_DOCUMENTS,
         Feature.CREATE_DOCUMENTS,
         Feature.EDIT_DOCUMENTS,

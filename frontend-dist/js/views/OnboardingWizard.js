@@ -32,7 +32,10 @@ class OnboardingWizard {
                 this.businessTypes = [
                     { code: 'veterinaria', label: 'Veterinaria', icon: '🐾', supports_pets: true },
                     { code: 'barberia', label: 'Barbería', icon: '✂️', supports_pets: false },
+                    { code: 'nutricion', label: 'Nutrición', icon: '🥗', supports_pets: false },
+                    { code: 'medicina_general', label: 'Medicina General', icon: '🩺', supports_pets: false },
                     { code: 'spa', label: 'Spa / Estética', icon: '💆', supports_pets: false },
+                    { code: 'propiedad_horizontal', label: 'Propiedad Horizontal', icon: '🏢', supports_pets: false },
                     { code: 'clinica', label: 'Clínica', icon: '⚕️', supports_pets: false },
                     { code: 'otro', label: 'Otro', icon: '📋', supports_pets: false }
                 ];
@@ -43,7 +46,10 @@ class OnboardingWizard {
             this.businessTypes = [
                 { code: 'veterinaria', label: 'Veterinaria', icon: '🐾', supports_pets: true },
                 { code: 'barberia', label: 'Barbería', icon: '✂️', supports_pets: false },
+                { code: 'nutricion', label: 'Nutrición', icon: '🥗', supports_pets: false },
+                { code: 'medicina_general', label: 'Medicina General', icon: '🩺', supports_pets: false },
                 { code: 'spa', label: 'Spa / Estética', icon: '💆', supports_pets: false },
+                { code: 'propiedad_horizontal', label: 'Propiedad Horizontal', icon: '🏢', supports_pets: false },
                 { code: 'clinica', label: 'Clínica', icon: '⚕️', supports_pets: false },
                 { code: 'otro', label: 'Otro', icon: '📋', supports_pets: false }
             ];
@@ -218,7 +224,7 @@ class OnboardingWizard {
                             <input type="radio" name="plan" value="${plan.code}" 
                                    ${this.formData.plan === plan.code ? 'checked' : ''}
                                    id="plan_${plan.code}">
-                            <div class="plan-card plan-card-content ${plan.code}">
+                            <div class="plan-card plan-card-content ${plan.code} ${this.formData.plan === plan.code ? 'selected' : ''}">
                                 <div class="plan-price-header">
                                     <h3 class="plan-name">${plan.name}</h3>
                                     <div class="plan-price">${plan.priceCOP === 0 ? 'GRATIS' : `$${plan.priceCOP.toLocaleString('es-CO')}`}<span class="plan-price-period">/mes</span></div>
@@ -229,6 +235,11 @@ class OnboardingWizard {
                                         <li>✓ ${feature}</li>
                                     `).join('')}
                                 </ul>
+                                ${plan.lockedFeatures?.length ? `
+                                    <div class="plan-locked-note">
+                                        Bloqueado en este plan: ${plan.lockedFeatures.join(', ')}
+                                    </div>
+                                ` : ''}
                                 ${plan.nequiLink ? `
                                     <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
                                         <a href="${plan.nequiLink}" target="_blank" class="btn btn-next" style="display: inline-block; width: 100%; text-align: center; text-decoration: none; padding: 8px;">
@@ -345,7 +356,10 @@ class OnboardingWizard {
             this.businessTypes = [
                 { code: 'veterinaria', label: 'Veterinaria' },
                 { code: 'barberia', label: 'Barbería' },
+                { code: 'nutricion', label: 'Nutrición' },
+                { code: 'medicina_general', label: 'Medicina General' },
                 { code: 'spa', label: 'Spa / Estética' },
+                { code: 'propiedad_horizontal', label: 'Propiedad Horizontal' },
                 { code: 'clinica', label: 'Clínica' },
                 { code: 'otro', label: 'Otro' }
             ];

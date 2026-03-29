@@ -27,6 +27,7 @@ class UserUpdate(BaseModel):
 class UserOut(UserBase):
     id: int
     is_active: bool
+    business_type: str | None = None
     plan_start_date: datetime
     plan_expires_at: datetime | None = None
     plan_expired: bool = False

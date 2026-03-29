@@ -20,6 +20,37 @@ PAID_PLAN_ALIASES = {
 }
 PLAN_DURATION_DAYS = 30
 
+HEALTHCARE_BUSINESS_TYPES = {
+    "veterinaria",
+    "consultorio",
+    "clinica",
+    "dentista",
+    "dental",
+    "fisioterapia",
+    "nutricion",
+    "medicina_general",
+}
+
+
+def _filter_features_by_business_type(features: list[str], business_type: str | None) -> list[str]:
+    """Apply business-type feature filtering on top of plan/role features."""
+    normalized_type = (business_type or "").strip().lower()
+
+    # Non-healthcare businesses do not need medical-document workflows.
+    if normalized_type and normalized_type not in HEALTHCARE_BUSINESS_TYPES:
+        blocked = {
+            "view_documents",
+            "create_documents",
+            "edit_documents",
+            "delete_documents",
+            "view_authorizations",
+            "create_authorizations",
+            "manage_authorizations",
+        }
+        return [f for f in features if f not in blocked]
+
+    return features
+
 
 def enforce_plan_expiration(user: User, db: Session) -> tuple[bool, datetime | None]:
     """Downgrade expired paid plans to free and return expiration state."""
@@ -60,6 +91,7 @@ def get_current_user_info(
         "role": user.role,
         "plan": user.plan,
         "is_active": user.is_active,
+        "business_type": user.business_type,
         "plan_start_date": user.plan_start_date,
         "plan_expires_at": plan_expires_at,
         "plan_expired": plan_expired,
@@ -116,17 +148,19 @@ def get_user_features(
         raise HTTPException(status_code=404, detail="User not found")
 
     plan_expired, plan_expires_at = enforce_plan_expiration(user, db)
-    
+
     features = get_available_features(
         user.plan,
         user.role,
         is_parent_account=not bool(user.parent_user_id),
     )
+    features = _filter_features_by_business_type(features, user.business_type)
     limits = get_plan_limits(user.plan)
-    
+
     return {
         "plan": user.plan,
         "role": user.role,
+        "business_type": user.business_type,
         "features": features,
         "limits": limits,
         "plan_expired": plan_expired,

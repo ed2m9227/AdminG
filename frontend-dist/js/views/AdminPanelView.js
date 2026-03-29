@@ -152,8 +152,11 @@ export class MasterAdminView {
                 <button class="btn btn-sm btn-info change-role-btn" data-user-id="${userId}">
                     Cambiar Rol
                 </button>
-                <button class="btn btn-sm btn-danger delete-user-btn" data-user-id="${userId}">
-                    Eliminar
+                <button class="btn btn-sm" style="background:#f39c12; color:#fff; border:1px solid #e67e22;" data-user-id="${userId}" data-action="deactivate-user">
+                    Desactivar
+                </button>
+                <button class="btn btn-sm btn-danger" data-user-id="${userId}" data-action="permanent-delete-user">
+                    Eliminar permanente
                 </button>
             </div>
         `;
@@ -195,21 +198,45 @@ export class MasterAdminView {
                 }
             }
 
-            // Eliminar usuario
-            if (e.target.classList.contains('delete-user-btn')) {
+            // Desactivar usuario
+            if (e.target.dataset.action === 'deactivate-user') {
                 const userId = e.target.dataset.userId;
                 const user = this.users.find(u => u.id == userId);
 
                 if (await modal.confirm({
-                    title: 'Eliminar Usuario',
-                    message: `¿Estás seguro de eliminar a ${user.email}?`,
+                    title: 'Desactivar Usuario',
+                    message: `¿Desactivar a ${user.email}?\n\nLa cuenta quedará inactiva y no podrá iniciar sesión, pero sus datos se conservan por auditoría.`,
                     type: 'warning'
                 })) {
                     try {
                         await apiService.request(`/admin/master/users/${userId}`, 'DELETE');
                         modal.alert({
                             title: 'Éxito',
-                            message: 'Usuario eliminado',
+                            message: 'Usuario desactivado',
+                            type: 'success'
+                        });
+                        this.init();
+                    } catch (error) {
+                        modal.alert({ title: 'Error', message: error.message, type: 'error' });
+                    }
+                }
+            }
+
+            // Eliminar permanente
+            if (e.target.dataset.action === 'permanent-delete-user') {
+                const userId = e.target.dataset.userId;
+                const user = this.users.find(u => u.id == userId);
+
+                if (await modal.confirm({
+                    title: 'Eliminar Permanente',
+                    message: `¿Eliminar permanentemente a ${user.email}?\n\nEsta acción solo aplica para cuentas sin datos operativos y no se puede deshacer.`,
+                    type: 'warning'
+                })) {
+                    try {
+                        await apiService.request(`/admin/master/users/${userId}/permanent`, 'DELETE');
+                        modal.alert({
+                            title: 'Éxito',
+                            message: 'Usuario eliminado permanentemente',
                             type: 'success'
                         });
                         this.init();
