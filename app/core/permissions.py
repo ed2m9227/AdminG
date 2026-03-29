@@ -2,8 +2,9 @@ from fastapi import Depends, HTTPException
 from app.core.security import get_current_user
 
 ROLE_PERMISSIONS = {
-    "admin": {"users.read", "users.create"},
-    "staff": {"users.read"},
+    "admin": {"users.read", "users.create", "users.update", "users.delete", "plans.manage"},
+    "manager": {"users.read", "users.create", "users.update"},
+    "team": {"users.read"},
     "viewer": set()
 }
 
