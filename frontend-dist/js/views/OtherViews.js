@@ -7,7 +7,18 @@ import table from '../components/Table.js';
 import apiService from '../services/api.service.js';
 import modal from '../components/Modal.js';
 import authService from '../services/auth.service.js';
+import sidebar from '../components/Sidebar.js';
 import { PLAN_CATALOG, normalizePlanCode } from '../utils/plans.js';
+
+function _toSingular(label) {
+    const map = { 'Sesiones': 'Sesión', 'Consultas': 'Consulta', 'Visitas': 'Visita', 'Reservas': 'Reserva', 'Citas': 'Cita', 'Turnos': 'Turno' };
+    return map[label] || label.replace(/s$/, '');
+}
+function _newArticle(singular) {
+    if (/[aá]$/i.test(singular)) return 'Nueva';
+    if (/ón$/i.test(singular)) return 'Nueva';
+    return 'Nuevo';
+}
 
 // Utility function to extract error message
 function getErrorMessage(error) {
@@ -18,11 +29,35 @@ function getErrorMessage(error) {
     return 'Error desconocido. Por favor intenta de nuevo.';
 }
 
+function activateDetailTabs(modalEl) {
+    if (!modalEl) return;
+    const tabs = modalEl.querySelectorAll('[data-detail-tab]');
+    const panels = modalEl.querySelectorAll('[data-detail-panel]');
+    if (!tabs.length || !panels.length) return;
+
+    tabs.forEach((tab) => {
+        tab.addEventListener('click', () => {
+            const target = tab.dataset.detailTab;
+            tabs.forEach((item) => item.classList.remove('is-active'));
+            panels.forEach((panel) => panel.classList.remove('is-active'));
+            tab.classList.add('is-active');
+            const panel = modalEl.querySelector(`[data-detail-panel="${target}"]`);
+            if (panel) panel.classList.add('is-active');
+        });
+    });
+}
+
 // Appointments View
 export class AppointmentsView {
     constructor() {
         this.appointments = [];
         this._appointmentsClickHandler = null;
+    }
+
+    _getApptLabels() {
+        const plural = sidebar.businessLabels?.appointment || 'Citas';
+        const singular = _toSingular(plural);
+        return { plural, singular, article: _newArticle(singular) };
     }
 
     formatCurrency(value) {
@@ -39,12 +74,13 @@ export class AppointmentsView {
         const isAdmin = user && user.role === 'admin';
         const features = authService.getFeatures();
         const canCreateAppointments = isAdmin || features.includes('create_appointments');
+        const { plural, singular, article } = this._getApptLabels();
 
         return `
             <div class="card">
                 <div class="card-header">
-                    <h2 class="card-title">Citas</h2>
-                    ${canCreateAppointments ? '<button class="btn btn-success" id="btnNewAppointment">+ 📅 Nueva Cita</button>' : ''}
+                    <h2 class="card-title">${plural}</h2>
+                    ${canCreateAppointments ? `<button class="btn btn-success" id="btnNewAppointment">+ 📅 ${article} ${singular}</button>` : ''}
                 </div>
                 <div class="card-body" id="appointmentsContainer">
                     ${this.renderTable()}
@@ -88,10 +124,11 @@ export class AppointmentsView {
             });
         }
 
+        const { plural: apptPlural } = this._getApptLabels();
         return table.render({
             columns,
             data: this.appointments,
-            emptyMessage: 'No hay citas para mostrar',
+            emptyMessage: `No hay ${apptPlural.toLowerCase()} para mostrar`,
             emptyIcon: '📋',
         });
     }
@@ -125,7 +162,7 @@ export class AppointmentsView {
                     const appointmentId = deleteBtn.dataset.deleteAppointment;
                     const confirmed = await modal.confirm({
                         title: 'Confirmar eliminación',
-                        message: '¿Estás seguro de que quieres eliminar esta cita?',
+                        message: `¿Estás seguro de que quieres eliminar esta ${this._getApptLabels().singular.toLowerCase()}?`,
                         confirmText: 'Eliminar',
                         cancelText: 'Cancelar'
                     });
@@ -134,10 +171,12 @@ export class AppointmentsView {
                         try {
                             await apiService.delete(`/appointments/${appointmentId}`);
                             await this.init();
-                            await modal.alert({ title: 'Éxito', message: 'Cita eliminada correctamente', type: 'success' });
+                            const lbl = this._getApptLabels().singular;
+                            await modal.alert({ title: 'Éxito', message: `${lbl} eliminada correctamente`, type: 'success' });
                         } catch (error) {
                             const errorMsg = getErrorMessage(error);
-                            await modal.alert({ title: 'Error', message: 'Error al eliminar cita: ' + errorMsg, type: 'error' });
+                            const lbl = this._getApptLabels().singular;
+                            await modal.alert({ title: 'Error', message: `Error al eliminar ${lbl.toLowerCase()}: ` + errorMsg, type: 'error' });
                         }
                     }
                     return;
@@ -260,8 +299,9 @@ export class AppointmentsView {
             </form>
         `;
 
+        const { singular, article } = this._getApptLabels();
         const appointmentModal = modal.show({ 
-            title: 'Nueva Cita', 
+            title: `${article} ${singular}`, 
             content: html, 
             size: 'medium' 
         });
@@ -296,8 +336,8 @@ export class AppointmentsView {
 
             if (duplicateExact) {
                 const continueAnyway = await modal.confirm({
-                    title: '⚠️ Posible cita duplicada',
-                    message: 'Este cliente ya tiene una cita en la misma fecha y hora. ¿Desea continuar?',
+                    title: `⚠️ Posible ${singular.toLowerCase()} duplicada`,
+                    message: `Este cliente ya tiene una ${singular.toLowerCase()} en la misma fecha y hora. ¿Desea continuar?`,
                     confirmText: 'Continuar',
                     cancelText: 'Cancelar'
                 });
@@ -308,7 +348,7 @@ export class AppointmentsView {
                 await apiService.post('/appointments/', appointmentData);
                 modal.close(appointmentModal);
                 await this.init();
-                await modal.alert({ title: 'Éxito', message: 'Cita creada correctamente', type: 'success' });
+                await modal.alert({ title: 'Éxito', message: `${singular} creada correctamente`, type: 'success' });
             } catch (error) {
                 console.error('Error creating appointment:', error);
                 let errorMsg = error.message || 'Error desconocido';
@@ -395,8 +435,9 @@ export class AppointmentsView {
             </form>
         `;
 
+        const { singular: apptSingular } = this._getApptLabels();
         const appointmentModal = modal.show({ 
-            title: 'Editar Cita', 
+            title: `Editar ${apptSingular}`, 
             content: html, 
             size: 'medium' 
         });
@@ -427,7 +468,7 @@ export class AppointmentsView {
                 await apiService.put(`/appointments/${appointment.id}`, appointmentData);
                 modal.close(appointmentModal);
                 await this.init();
-                await modal.alert({ title: 'Éxito', message: 'Cita actualizada correctamente', type: 'success' });
+                await modal.alert({ title: 'Éxito', message: `${apptSingular} actualizada correctamente`, type: 'success' });
             } catch (error) {
                 console.error('Error updating appointment:', error);
                 let errorMsg = error.message || 'Error desconocido';
@@ -440,19 +481,39 @@ export class AppointmentsView {
     }
 
     showViewAppointmentModal(appointment) {
+        const { singular } = this._getApptLabels();
+        const serviceLabel = appointment.service_name || appointment.notes || '-';
         const content = `
-            <div class="modal-form">
-                <div class="form-group"><label>Fecha y Hora</label><input type="text" value="${new Date(appointment.scheduled_at).toLocaleString('es-CO')}" disabled></div>
-                <div class="form-group"><label>Cliente</label><input type="text" value="${appointment.customer?.full_name || 'N/A'}" disabled></div>
-                <div class="form-group"><label>Estado</label><input type="text" value="${appointment.status || '-'}" disabled></div>
-                <div class="form-group"><label>Notas</label><textarea rows="3" disabled>${appointment.notes || '-'}</textarea></div>
+            <div class="detail-tabs" role="tablist" aria-label="Detalle ${singular.toLowerCase()}">
+                <button type="button" class="detail-tab is-active" data-detail-tab="general">General</button>
+                <button type="button" class="detail-tab" data-detail-tab="seguimiento">Seguimiento</button>
+            </div>
+
+            <div class="detail-panel is-active" data-detail-panel="general">
+                <div class="modal-form">
+                    <div class="form-row">
+                        <div class="form-group"><label>Fecha y Hora</label><input type="text" value="${appointment.scheduled_at ? new Date(appointment.scheduled_at).toLocaleString('es-CO') : '-'}" disabled></div>
+                        <div class="form-group"><label>Estado</label><input type="text" value="${appointment.status || '-'}" disabled></div>
+                    </div>
+                    <div class="form-group"><label>Cliente</label><input type="text" value="${appointment.customer?.full_name || 'N/A'}" disabled></div>
+                    <div class="form-group"><label>Servicio / Motivo</label><input type="text" value="${serviceLabel}" disabled></div>
+                </div>
+            </div>
+
+            <div class="detail-panel" data-detail-panel="seguimiento">
+                <div class="detail-grid">
+                    <div class="detail-item"><span class="detail-label">ID</span><span class="detail-value">${appointment.id ?? '-'}</span></div>
+                    <div class="detail-item"><span class="detail-label">Creado</span><span class="detail-value">${appointment.created_at ? new Date(appointment.created_at).toLocaleString('es-CO') : '-'}</span></div>
+                    <div class="detail-item"><span class="detail-label">Actualizado</span><span class="detail-value">${appointment.updated_at ? new Date(appointment.updated_at).toLocaleString('es-CO') : '-'}</span></div>
+                    <div class="detail-item"><span class="detail-label">Responsable</span><span class="detail-value">${appointment.assigned_to_name || appointment.user?.email || 'No asignado'}</span></div>
+                </div>
+                <div class="form-group" style="margin-top: 12px;"><label>Notas</label><textarea rows="5" disabled>${appointment.notes || '-'}</textarea></div>
             </div>
         `;
-        modal.show({ title: 'Ver Cita', content, size: 'medium' });
+        const detailModal = modal.show({ title: `Ver ${singular}`, content, size: 'large' });
+        activateDetailTabs(detailModal);
     }
 }
-
-// Payments View
 export class PaymentsView {
     constructor() {
         this.payments = [];
@@ -681,20 +742,43 @@ export class PaymentsView {
 
     showViewPaymentModal(payment) {
         const content = `
-            <div class="modal-form">
-                <div class="form-row">
-                    <div class="form-group"><label>Fecha</label><input type="text" value="${new Date(payment.created_at).toLocaleString('es-CO')}" disabled></div>
-                    <div class="form-group"><label>Estado</label><input type="text" value="${payment.status || '-'}" disabled></div>
+            <div class="detail-tabs" role="tablist" aria-label="Detalle pago">
+                <button type="button" class="detail-tab is-active" data-detail-tab="general">General</button>
+                <button type="button" class="detail-tab" data-detail-tab="relaciones">Relaciones</button>
+                <button type="button" class="detail-tab" data-detail-tab="notas">Notas</button>
+            </div>
+
+            <div class="detail-panel is-active" data-detail-panel="general">
+                <div class="modal-form">
+                    <div class="form-row">
+                        <div class="form-group"><label>Fecha</label><input type="text" value="${payment.created_at ? new Date(payment.created_at).toLocaleString('es-CO') : '-'}" disabled></div>
+                        <div class="form-group"><label>Estado</label><input type="text" value="${payment.status || '-'}" disabled></div>
+                    </div>
+                    <div class="form-group"><label>Cliente</label><input type="text" value="${payment.customer?.full_name || 'N/A'}" disabled></div>
+                    <div class="form-row">
+                        <div class="form-group"><label>Método</label><input type="text" value="${payment.method || '-'}" disabled></div>
+                        <div class="form-group"><label>Monto</label><input type="text" value="${this.formatCurrency(payment.final_amount || payment.amount || 0)}" disabled></div>
+                    </div>
                 </div>
-                <div class="form-group"><label>Cliente</label><input type="text" value="${payment.customer?.full_name || 'N/A'}" disabled></div>
-                <div class="form-row">
-                    <div class="form-group"><label>Método</label><input type="text" value="${payment.method || '-'}" disabled></div>
-                    <div class="form-group"><label>Monto</label><input type="text" value="${this.formatCurrency(payment.final_amount || payment.amount || 0)}" disabled></div>
+            </div>
+
+            <div class="detail-panel" data-detail-panel="relaciones">
+                <div class="detail-grid">
+                    <div class="detail-item"><span class="detail-label">ID pago</span><span class="detail-value">${payment.id ?? '-'}</span></div>
+                    <div class="detail-item"><span class="detail-label">Autorización</span><span class="detail-value">${payment.authorization_id ?? '-'}</span></div>
+                    <div class="detail-item"><span class="detail-label">Factura</span><span class="detail-value">${payment.invoice_id ?? '-'}</span></div>
+                    <div class="detail-item"><span class="detail-label">Referencia</span><span class="detail-value">${payment.reference || payment.transaction_id || '-'}</span></div>
+                    <div class="detail-item"><span class="detail-label">Creado por</span><span class="detail-value">${payment.created_by_name || payment.created_by_email || '-'}</span></div>
+                    <div class="detail-item"><span class="detail-label">Actualizado</span><span class="detail-value">${payment.updated_at ? new Date(payment.updated_at).toLocaleString('es-CO') : '-'}</span></div>
                 </div>
-                <div class="form-group"><label>Notas</label><textarea rows="3" disabled>${payment.notes || '-'}</textarea></div>
+            </div>
+
+            <div class="detail-panel" data-detail-panel="notas">
+                <div class="form-group"><label>Notas</label><textarea rows="6" disabled>${payment.notes || '-'}</textarea></div>
             </div>
         `;
-        modal.show({ title: 'Ver Pago', content, size: 'medium' });
+        const detailModal = modal.show({ title: 'Ver Pago', content, size: 'large' });
+        activateDetailTabs(detailModal);
     }
 
     async showNewPaymentModal() {

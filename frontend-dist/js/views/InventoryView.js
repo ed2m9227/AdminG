@@ -675,24 +675,68 @@ export class InventoryView {
         }
     }
 
+    activateDetailTabs(modalEl) {
+        if (!modalEl) return;
+        const tabs = modalEl.querySelectorAll('[data-detail-tab]');
+        const panels = modalEl.querySelectorAll('[data-detail-panel]');
+        if (!tabs.length || !panels.length) return;
+
+        tabs.forEach((tab) => {
+            tab.addEventListener('click', () => {
+                const target = tab.dataset.detailTab;
+                tabs.forEach((item) => item.classList.remove('is-active'));
+                panels.forEach((panel) => panel.classList.remove('is-active'));
+                tab.classList.add('is-active');
+                const panel = modalEl.querySelector(`[data-detail-panel="${target}"]`);
+                if (panel) panel.classList.add('is-active');
+            });
+        });
+    }
+
     showProductViewModal(itemId) {
         const item = this.items.find(i => i.id == itemId);
         if (!item) return;
 
         const content = `
-            <div class="modal-form">
-                <div class="form-group"><label>SKU</label><input type="text" value="${item.sku || '-'}" disabled></div>
-                <div class="form-group"><label>Nombre</label><input type="text" value="${item.name || '-'}" disabled></div>
-                <div class="form-group"><label>Categoría</label><input type="text" value="${item.category || '-'}" disabled></div>
-                <div class="form-row">
-                    <div class="form-group"><label>Stock</label><input type="text" value="${item.quantity ?? 0}" disabled></div>
-                    <div class="form-group"><label>Precio</label><input type="text" value="${this.formatCurrency(item.unit_price || 0)}" disabled></div>
+            <div class="detail-tabs" role="tablist" aria-label="Detalle producto">
+                <button type="button" class="detail-tab is-active" data-detail-tab="general">General</button>
+                <button type="button" class="detail-tab" data-detail-tab="comercial">Comercial</button>
+                <button type="button" class="detail-tab" data-detail-tab="sistema">Sistema</button>
+            </div>
+
+            <div class="detail-panel is-active" data-detail-panel="general">
+                <div class="modal-form">
+                    <div class="form-row">
+                        <div class="form-group"><label>SKU</label><input type="text" value="${item.sku || '-'}" disabled></div>
+                        <div class="form-group"><label>Nombre</label><input type="text" value="${item.name || '-'}" disabled></div>
+                    </div>
+                    <div class="form-group"><label>Categoría</label><input type="text" value="${item.category || '-'}" disabled></div>
+                    <div class="form-group"><label>Descripción</label><textarea rows="5" disabled>${item.description || '-'}</textarea></div>
                 </div>
-                <div class="form-group"><label>Descripción</label><textarea rows="3" disabled>${item.description || '-'}</textarea></div>
+            </div>
+
+            <div class="detail-panel" data-detail-panel="comercial">
+                <div class="detail-grid">
+                    <div class="detail-item"><span class="detail-label">Stock</span><span class="detail-value">${item.quantity ?? 0}</span></div>
+                    <div class="detail-item"><span class="detail-label">Precio</span><span class="detail-value">${this.formatCurrency(item.unit_price || 0)}</span></div>
+                    <div class="detail-item"><span class="detail-label">Stock mínimo</span><span class="detail-value">${item.min_stock ?? '-'}</span></div>
+                    <div class="detail-item"><span class="detail-label">Unidad</span><span class="detail-value">${item.unit || item.unit_of_measure || '-'}</span></div>
+                    <div class="detail-item"><span class="detail-label">Activo</span><span class="detail-value">${item.is_active === false ? 'No' : 'Sí'}</span></div>
+                </div>
+            </div>
+
+            <div class="detail-panel" data-detail-panel="sistema">
+                <div class="detail-grid">
+                    <div class="detail-item"><span class="detail-label">ID</span><span class="detail-value">${item.id ?? '-'}</span></div>
+                    <div class="detail-item"><span class="detail-label">Tipo</span><span class="detail-value">${item.item_type || 'product'}</span></div>
+                    <div class="detail-item"><span class="detail-label">Creado</span><span class="detail-value">${item.created_at ? new Date(item.created_at).toLocaleString('es-CO') : '-'}</span></div>
+                    <div class="detail-item"><span class="detail-label">Actualizado</span><span class="detail-value">${item.updated_at ? new Date(item.updated_at).toLocaleString('es-CO') : '-'}</span></div>
+                </div>
             </div>
         `;
 
-        modal.show({ title: 'Ver Producto', content, size: 'medium' });
+        const detailModal = modal.show({ title: 'Ver Producto', content, size: 'large' });
+        this.activateDetailTabs(detailModal);
     }
 
     showServiceViewModal(serviceId) {
@@ -700,17 +744,39 @@ export class InventoryView {
         if (!service) return;
 
         const content = `
-            <div class="modal-form">
-                <div class="form-group"><label>Nombre</label><input type="text" value="${service.name || '-'}" disabled></div>
-                <div class="form-row">
-                    <div class="form-group"><label>Precio</label><input type="text" value="${this.formatCurrency(service.unit_price || service.price || 0)}" disabled></div>
-                    <div class="form-group"><label>Duración</label><input type="text" value="${(service.duration_minutes || service.duration_minutes === 0) ? `${service.duration_minutes} min` : 'N/A'}" disabled></div>
+            <div class="detail-tabs" role="tablist" aria-label="Detalle servicio">
+                <button type="button" class="detail-tab is-active" data-detail-tab="general">General</button>
+                <button type="button" class="detail-tab" data-detail-tab="comercial">Comercial</button>
+                <button type="button" class="detail-tab" data-detail-tab="sistema">Sistema</button>
+            </div>
+
+            <div class="detail-panel is-active" data-detail-panel="general">
+                <div class="modal-form">
+                    <div class="form-group"><label>Nombre</label><input type="text" value="${service.name || '-'}" disabled></div>
+                    <div class="form-group"><label>Descripción</label><textarea rows="5" disabled>${service.description || '-'}</textarea></div>
                 </div>
-                <div class="form-group"><label>Descripción</label><textarea rows="3" disabled>${service.description || '-'}</textarea></div>
+            </div>
+
+            <div class="detail-panel" data-detail-panel="comercial">
+                <div class="detail-grid">
+                    <div class="detail-item"><span class="detail-label">Precio</span><span class="detail-value">${this.formatCurrency(service.unit_price || service.price || 0)}</span></div>
+                    <div class="detail-item"><span class="detail-label">Duración</span><span class="detail-value">${(service.duration_minutes || service.duration_minutes === 0) ? `${service.duration_minutes} min` : 'N/A'}</span></div>
+                    <div class="detail-item"><span class="detail-label">Categoría</span><span class="detail-value">${service.category || '-'}</span></div>
+                    <div class="detail-item"><span class="detail-label">Activo</span><span class="detail-value">${service.is_active === false ? 'No' : 'Sí'}</span></div>
+                </div>
+            </div>
+
+            <div class="detail-panel" data-detail-panel="sistema">
+                <div class="detail-grid">
+                    <div class="detail-item"><span class="detail-label">ID</span><span class="detail-value">${service.id ?? '-'}</span></div>
+                    <div class="detail-item"><span class="detail-label">Creado</span><span class="detail-value">${service.created_at ? new Date(service.created_at).toLocaleString('es-CO') : '-'}</span></div>
+                    <div class="detail-item"><span class="detail-label">Actualizado</span><span class="detail-value">${service.updated_at ? new Date(service.updated_at).toLocaleString('es-CO') : '-'}</span></div>
+                </div>
             </div>
         `;
 
-        modal.show({ title: 'Ver Servicio', content, size: 'medium' });
+        const detailModal = modal.show({ title: 'Ver Servicio', content, size: 'large' });
+        this.activateDetailTabs(detailModal);
     }
     
     async deleteService(serviceId) {

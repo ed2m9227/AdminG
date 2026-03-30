@@ -8,6 +8,17 @@ import apiService from '../services/api.service.js';
 import authService from '../services/auth.service.js';
 import table from '../components/Table.js';
 import modal from '../components/Modal.js';
+import sidebar from '../components/Sidebar.js';
+
+function _toSingular(label) {
+    const map = { 'Sesiones': 'Sesión', 'Propietarios': 'Propietario', 'Pacientes': 'Paciente', 'Residentes': 'Residente', 'Clientes': 'Cliente' };
+    return map[label] || label.replace(/s$/, '');
+}
+function _newArticle(singular) {
+    if (/[aá]$/i.test(singular)) return 'Nueva';
+    if (/ón$/i.test(singular)) return 'Nueva';
+    return 'Nuevo';
+}
 
 export class CustomersView {
     constructor() {
@@ -34,17 +45,24 @@ export class CustomersView {
         };
     }
 
+    _getEntityLabels() {
+        const plural = sidebar.businessLabels?.customer || 'Clientes';
+        const singular = _toSingular(plural);
+        return { plural, singular, article: _newArticle(singular) };
+    }
+
     render() {
         const user = authService.getCurrentUser();
         const isAdmin = user && user.role === 'admin';
         const features = authService.getFeatures();
         const canCreateCustomers = isAdmin || features.includes('create_customers');
+        const { plural, singular, article } = this._getEntityLabels();
 
         return `
             <div class="card">
                 <div class="card-header">
-                    <h2 class="card-title">Lista de Clientes</h2>
-                    ${canCreateCustomers ? `<button class="btn btn-success" id="btnNewCustomer">+ Nuevo Cliente</button>` : ''}
+                    <h2 class="card-title">Lista de ${plural}</h2>
+                    ${canCreateCustomers ? `<button class="btn btn-success" id="btnNewCustomer">+ ${article} ${singular}</button>` : ''}
                 </div>
                 <div class="card-body" id="customersTableContainer">
                     ${this.renderTable()}
@@ -94,10 +112,11 @@ export class CustomersView {
             });
         }
 
+        const { plural } = this._getEntityLabels();
         return table.render({
             columns,
             data: this.customers,
-            emptyMessage: 'No hay clientes registrados',
+            emptyMessage: `No hay ${plural.toLowerCase()} registrados`,
             emptyIcon: '👥'
         });
     }
@@ -182,9 +201,28 @@ export class CustomersView {
         tableContainer.addEventListener('click', this._customersClickHandler);
     }
 
+    activateDetailTabs(modalEl) {
+        if (!modalEl) return;
+        const tabs = modalEl.querySelectorAll('[data-detail-tab]');
+        const panels = modalEl.querySelectorAll('[data-detail-panel]');
+        if (!tabs.length || !panels.length) return;
+
+        tabs.forEach((tab) => {
+            tab.addEventListener('click', () => {
+                const target = tab.dataset.detailTab;
+                tabs.forEach((item) => item.classList.remove('is-active'));
+                panels.forEach((panel) => panel.classList.remove('is-active'));
+                tab.classList.add('is-active');
+                const panel = modalEl.querySelector(`[data-detail-panel="${target}"]`);
+                if (panel) panel.classList.add('is-active');
+            });
+        });
+    }
+
     showCustomerModal(customer = null, pet = null) {
         const isEdit = !!customer;
-        const title = isEdit ? 'Editar Cliente' : 'Nuevo Cliente';
+        const { singular, article } = this._getEntityLabels();
+        const title = isEdit ? `Editar ${singular}` : `${article} ${singular}`;
         const petSection = this.renderPetSection(pet);
 
         const content = `
@@ -273,16 +311,18 @@ export class CustomersView {
             modal.close(modalElement);
             await this.loadCustomers();
             
+            const { singular: lbl } = this._getEntityLabels();
             modal.alert({
                 type: 'success',
                 title: 'Éxito',
-                message: `Cliente ${isEdit ? 'actualizado' : 'guardado'} correctamente`
+                message: `${lbl} ${isEdit ? 'actualizado' : 'guardado'} correctamente`
             });
         } catch (error) {
+            const { singular: lbl } = this._getEntityLabels();
             modal.alert({
                 type: 'error',
                 title: 'Error',
-                message: 'Error al guardar cliente: ' + error.message
+                message: `Error al guardar ${lbl.toLowerCase()}: ` + error.message
             });
         }
     }
@@ -320,36 +360,62 @@ export class CustomersView {
             }
         }
 
+        const petRows = pet
+            ? Object.entries(this.petFieldLabels)
+                .filter(([key]) => pet[key] !== null && pet[key] !== undefined && String(pet[key]).trim() !== '')
+                .map(([key, label]) => `<div class="detail-item"><span class="detail-label">${label}</span><span class="detail-value">${pet[key]}</span></div>`)
+                .join('')
+            : '';
+
         const petBlock = pet
-            ? `
-                <div class="form-group"><label>Mascota</label><input type="text" value="${pet.name || '-'}" disabled></div>
-                <div class="form-group"><label>Tipo</label><input type="text" value="${pet.animal_type || '-'}" disabled></div>
-                <div class="form-group"><label>Notas mascota</label><textarea rows="2" disabled>${pet.notes || '-'}</textarea></div>
-              `
-            : `<div class="form-group"><label>Mascota</label><input type="text" value="${petLoadFailed ? 'No disponible (error al cargar)' : 'Sin datos'}" disabled></div>`;
+            ? `<div class="detail-grid">${petRows || '<div class="detail-empty">Sin datos de mascota.</div>'}</div>`
+            : `<div class="detail-empty">${petLoadFailed ? 'No disponible (error al cargar).' : 'Sin datos de mascota.'}</div>`;
 
         const content = `
-            <div class="modal-form">
-                <div class="form-group"><label>Nombre</label><input type="text" value="${customer.full_name || '-'}" disabled></div>
-                <div class="form-row">
-                    <div class="form-group"><label>Email</label><input type="text" value="${customer.email || '-'}" disabled></div>
-                    <div class="form-group"><label>Teléfono</label><input type="text" value="${customer.phone || '-'}" disabled></div>
+            <div class="detail-tabs" role="tablist" aria-label="Detalle cliente">
+                <button type="button" class="detail-tab is-active" data-detail-tab="general">General</button>
+                <button type="button" class="detail-tab" data-detail-tab="mascota">Mascota</button>
+                <button type="button" class="detail-tab" data-detail-tab="sistema">Sistema</button>
+            </div>
+
+            <div class="detail-panel is-active" data-detail-panel="general">
+                <div class="modal-form">
+                    <div class="form-group"><label>Nombre</label><input type="text" value="${customer.full_name || '-'}" disabled></div>
+                    <div class="form-row">
+                        <div class="form-group"><label>Email</label><input type="text" value="${customer.email || '-'}" disabled></div>
+                        <div class="form-group"><label>Teléfono</label><input type="text" value="${customer.phone || '-'}" disabled></div>
+                    </div>
+                    <div class="form-group"><label>Notas</label><textarea rows="4" disabled>${customer.notes || '-'}</textarea></div>
                 </div>
-                <div class="form-group"><label>Notas</label><textarea rows="3" disabled>${customer.notes || '-'}</textarea></div>
+            </div>
+
+            <div class="detail-panel" data-detail-panel="mascota">
                 ${petBlock}
+            </div>
+
+            <div class="detail-panel" data-detail-panel="sistema">
+                <div class="detail-grid">
+                    <div class="detail-item"><span class="detail-label">ID</span><span class="detail-value">${customer.id ?? '-'}</span></div>
+                    <div class="detail-item"><span class="detail-label">Estado</span><span class="detail-value">${customer.is_active === false ? 'Inactivo' : 'Activo'}</span></div>
+                    <div class="detail-item"><span class="detail-label">Creado</span><span class="detail-value">${customer.created_at ? new Date(customer.created_at).toLocaleString('es-CO') : '-'}</span></div>
+                    <div class="detail-item"><span class="detail-label">Actualizado</span><span class="detail-value">${customer.updated_at ? new Date(customer.updated_at).toLocaleString('es-CO') : '-'}</span></div>
+                </div>
             </div>
         `;
 
-        modal.show({ title: 'Ver Cliente', content, size: 'medium' });
+        const { singular } = this._getEntityLabels();
+        const detailModal = modal.show({ title: `Ver ${singular}`, content, size: 'large' });
+        this.activateDetailTabs(detailModal);
     }
     
     async deleteCustomer(customerId) {
         const customer = this.customers.find(c => c.id == customerId);
         if (!customer) return;
         
+        const { singular } = this._getEntityLabels();
         const confirmed = await modal.confirm({
             title: 'Confirmar eliminación',
-            message: `¿Estás seguro de eliminar al cliente "${customer.full_name}"? Esta acción no se puede deshacer.`,
+            message: `¿Estás seguro de eliminar a ${singular.toLowerCase()} "${customer.full_name}"? Esta acción no se puede deshacer.`,
             okText: 'Eliminar',
             cancelText: 'Cancelar'
         });
@@ -362,14 +428,14 @@ export class CustomersView {
                 modal.alert({
                     type: 'success',
                     title: 'Éxito',
-                    message: 'Cliente eliminado correctamente'
+                    message: `${singular} eliminado correctamente`
                 });
             } catch (error) {
                 const errorMsg = typeof error === 'string' ? error : (error.message || error.detail || 'Error desconocido');
                 modal.alert({
                     type: 'error',
                     title: 'Error',
-                    message: 'Error al eliminar cliente: ' + errorMsg
+                    message: `Error al eliminar ${singular.toLowerCase()}: ` + errorMsg
                 });
             }
         }
