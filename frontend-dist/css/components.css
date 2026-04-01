@@ -201,6 +201,7 @@
     border: 2px solid #e0e0e0 !important;
     border-radius: 6px !important;
     font-size: 14px !important;
+
     box-sizing: border-box !important;
     transition: all 0.3s ease !important;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;

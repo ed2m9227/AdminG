@@ -46,8 +46,25 @@ def _filter_features_by_business_type(features: list[str], business_type: str | 
             "view_authorizations",
             "create_authorizations",
             "manage_authorizations",
+            "view_crm",
+            "create_crm",
+            "edit_crm",
+            "delete_crm",
+            "view_crm_analytics",
+            "use_crm_ai_chat",
         }
         return [f for f in features if f not in blocked]
+
+    if normalized_type and normalized_type != "veterinaria":
+        blocked_vet_only = {
+            "view_crm",
+            "create_crm",
+            "edit_crm",
+            "delete_crm",
+            "view_crm_analytics",
+            "use_crm_ai_chat",
+        }
+        return [f for f in features if f not in blocked_vet_only]
 
     return features
 

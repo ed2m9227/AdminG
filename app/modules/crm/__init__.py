@@ -1,0 +1,1 @@
+# CRM veterinary module package

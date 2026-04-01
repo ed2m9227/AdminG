@@ -23,6 +23,7 @@ export class Sidebar {
             { id: 'payments', icon: '💳', label: 'Pagos', route: 'payments', alwaysShow: true },
             { id: 'reports', icon: '📈', label: 'Reportes', route: 'reports', requiredFeature: 'view_reports' },
             { id: 'invoices', icon: '🧾', label: 'Facturas', route: 'invoices', requiredFeature: 'view_reports' },
+            { id: 'crm', icon: '🐾', label: 'CRM Vet', route: 'crm', requiredFeature: 'view_crm' },
 
             // Advanced
             { id: 'cashregister', icon: '💰', label: 'Caja', route: 'cashregister', requiredFeature: 'use_cashregister' },
@@ -149,7 +150,8 @@ export class Sidebar {
                 'view_inventory', 'create_products', 'edit_products', 'delete_products',
                 'view_payments', 'create_payments',
                 'view_team', 'manage_team_users', 'invite_users',
-                'use_cashregister', 'open_register', 'close_register'
+                'use_cashregister', 'open_register', 'close_register',
+                'view_crm', 'create_crm', 'view_crm_analytics', 'use_crm_ai_chat'
             ],
             'pro': [
                 'view_customers', 'create_customers', 'edit_customers', 'delete_customers', 'export_customers',
@@ -160,7 +162,8 @@ export class Sidebar {
                 'use_cashregister', 'open_register', 'close_register',
                 'view_team', 'manage_team_users', 'invite_users',
                 'view_documents', 'create_documents', 'edit_documents', 'delete_documents',
-                'view_authorizations', 'create_authorizations', 'manage_authorizations'
+                'view_authorizations', 'create_authorizations', 'manage_authorizations',
+                'view_crm', 'create_crm', 'edit_crm', 'delete_crm', 'view_crm_analytics', 'use_crm_ai_chat'
             ],
             'max': [
                 'view_customers', 'create_customers', 'edit_customers', 'delete_customers', 'export_customers',
@@ -172,6 +175,7 @@ export class Sidebar {
                 'view_team', 'manage_team_users', 'invite_users',
                 'view_documents', 'create_documents', 'edit_documents', 'delete_documents',
                 'view_authorizations', 'create_authorizations', 'manage_authorizations',
+                'view_crm', 'create_crm', 'edit_crm', 'delete_crm', 'view_crm_analytics', 'use_crm_ai_chat',
                 'admin_panel'
             ]
         };
@@ -191,6 +195,13 @@ export class Sidebar {
             features = features.filter(feature => ![
                 'view_documents', 'create_documents', 'edit_documents', 'delete_documents',
                 'view_authorizations', 'create_authorizations', 'manage_authorizations'
+            ].includes(feature));
+        }
+
+        if (businessType && businessType !== 'veterinaria') {
+            features = features.filter(feature => ![
+                'view_crm', 'create_crm', 'edit_crm', 'delete_crm',
+                'view_crm_analytics', 'use_crm_ai_chat'
             ].includes(feature));
         }
 

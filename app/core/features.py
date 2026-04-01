@@ -57,6 +57,14 @@ class Feature(str, Enum):
     VIEW_AUTHORIZATIONS = "view_authorizations"
     CREATE_AUTHORIZATIONS = "create_authorizations"
     MANAGE_AUTHORIZATIONS = "manage_authorizations"
+
+    # CRM Veterinario
+    VIEW_CRM = "view_crm"
+    CREATE_CRM = "create_crm"
+    EDIT_CRM = "edit_crm"
+    DELETE_CRM = "delete_crm"
+    VIEW_CRM_ANALYTICS = "view_crm_analytics"
+    USE_CRM_AI_CHAT = "use_crm_ai_chat"
     
     # Admin (Master only)
     ADMIN_PANEL = "admin_panel"
@@ -99,6 +107,11 @@ PLAN_FEATURES: Dict[str, Set[Feature]] = {
         Feature.VIEW_TEAM,
         Feature.MANAGE_TEAM_USERS,
         Feature.INVITE_USERS,
+        # CRM veterinario
+        Feature.VIEW_CRM,
+        Feature.CREATE_CRM,
+        Feature.VIEW_CRM_ANALYTICS,
+        Feature.USE_CRM_AI_CHAT,
         # NOTE: reports, documents, and authorizations intentionally excluded for starter
     },
     "pro": {
@@ -136,6 +149,13 @@ PLAN_FEATURES: Dict[str, Set[Feature]] = {
         Feature.VIEW_AUTHORIZATIONS,
         Feature.CREATE_AUTHORIZATIONS,
         Feature.MANAGE_AUTHORIZATIONS,
+        # CRM veterinario
+        Feature.VIEW_CRM,
+        Feature.CREATE_CRM,
+        Feature.EDIT_CRM,
+        Feature.DELETE_CRM,
+        Feature.VIEW_CRM_ANALYTICS,
+        Feature.USE_CRM_AI_CHAT,
     },
     "max": {
         Feature.VIEW_CUSTOMERS,
@@ -173,6 +193,13 @@ PLAN_FEATURES: Dict[str, Set[Feature]] = {
         Feature.VIEW_AUTHORIZATIONS,
         Feature.CREATE_AUTHORIZATIONS,
         Feature.MANAGE_AUTHORIZATIONS,
+        # CRM veterinario
+        Feature.VIEW_CRM,
+        Feature.CREATE_CRM,
+        Feature.EDIT_CRM,
+        Feature.DELETE_CRM,
+        Feature.VIEW_CRM_ANALYTICS,
+        Feature.USE_CRM_AI_CHAT,
     },
     "admin": {
         Feature.ADMIN_PANEL,
@@ -214,6 +241,12 @@ PLAN_FEATURES: Dict[str, Set[Feature]] = {
         Feature.VIEW_AUTHORIZATIONS,
         Feature.CREATE_AUTHORIZATIONS,
         Feature.MANAGE_AUTHORIZATIONS,
+        Feature.VIEW_CRM,
+        Feature.CREATE_CRM,
+        Feature.EDIT_CRM,
+        Feature.DELETE_CRM,
+        Feature.VIEW_CRM_ANALYTICS,
+        Feature.USE_CRM_AI_CHAT,
     },
     # Legacy plan aliases (backward compatibility)
     "basic": set(),
@@ -252,6 +285,8 @@ STARTER_PARENT_ONLY_FEATURES = {
     Feature.DELETE_APPOINTMENTS,
     Feature.EDIT_PRODUCTS,
     Feature.DELETE_PRODUCTS,
+    Feature.EDIT_CRM,
+    Feature.DELETE_CRM,
 }
 
 VIEWER_RESTRICTED_FEATURES = {
@@ -266,6 +301,8 @@ VIEWER_RESTRICTED_FEATURES = {
     Feature.MANAGE_AUTHORIZATIONS,
     Feature.OPEN_REGISTER,
     Feature.CLOSE_REGISTER,
+    Feature.EDIT_CRM,
+    Feature.DELETE_CRM,
 }
 
 def get_available_features(plan: str, role: str = "viewer", is_parent_account: bool = True) -> List[str]:
@@ -346,6 +383,7 @@ def get_plan_limits(plan: str) -> Dict[str, int]:
             "services": 200,
             "documents": 500,
             "authorizations": 500,
+            "crm_consultations": 500,
         },
         "pro": {
             "team_members": 25,
@@ -356,6 +394,7 @@ def get_plan_limits(plan: str) -> Dict[str, int]:
             "services": 200,
             "documents": 5000,
             "authorizations": 5000,
+            "crm_consultations": 5000,
         },
         "max": {
             "team_members": 100,
@@ -366,6 +405,7 @@ def get_plan_limits(plan: str) -> Dict[str, int]:
             "services": 1000,
             "documents": 50000,
             "authorizations": 50000,
+            "crm_consultations": 50000,
         },
         "admin": {
             "team_members": 999999,
@@ -376,6 +416,7 @@ def get_plan_limits(plan: str) -> Dict[str, int]:
             "services": 999999,
             "documents": 999999,
             "authorizations": 999999,
+            "crm_consultations": 999999,
         },
         "basic": {},
         "plus": {},

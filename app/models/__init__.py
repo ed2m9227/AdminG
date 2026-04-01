@@ -18,6 +18,7 @@ from app.models.tax_config import TaxConfig
 from app.models.service_package import ServicePackage, ServicePackageItem
 from app.models.notification import Notification
 from app.models.audit_log import AuditLog, VoidRequest
+from app.models.crm import Consultation, Treatment, Vaccine, MedicalRecord
 
 __all__ = [
     "User", 
@@ -45,5 +46,9 @@ __all__ = [
     "ServicePackageItem",
     "Notification",
     "AuditLog",
-    "VoidRequest"
+    "VoidRequest",
+    "Consultation",
+    "Treatment",
+    "Vaccine",
+    "MedicalRecord",
 ]

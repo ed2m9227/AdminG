@@ -228,6 +228,35 @@ export class ApiService {
         return this.get('/services/');
     }
 
+    // ========== CRM VETERINARIO ==========
+    async createCrmClientWithPet(payload) {
+        return this.post('/crm/clients-with-pet', payload);
+    }
+
+    async getCrmConsultations() {
+        return this.get('/crm/consultations');
+    }
+
+    async createCrmConsultation(payload) {
+        return this.post('/crm/consultations', payload);
+    }
+
+    async updateCrmConsultation(consultationId, payload) {
+        return this.put(`/crm/consultations/${consultationId}`, payload);
+    }
+
+    async getCrmPetHistory(petId) {
+        return this.get(`/crm/pets/${petId}/history`);
+    }
+
+    async getCrmMetrics(days = 30) {
+        return this.get(`/crm/metrics?days=${days}`);
+    }
+
+    async crmChat(question) {
+        return this.post('/crm/ai/chat', { question });
+    }
+
     async createService(service) {
         return this.post('/services/', service);
     }

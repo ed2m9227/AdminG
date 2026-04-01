@@ -29,6 +29,7 @@ import businessConfigView from './views/BusinessConfigView.js';
 import invoicesView from './views/InvoicesView.js';
 import documentsView from './views/DocumentsView.js';
 import authorizationsView from './views/AuthorizationsView.js';
+import crmView from './views/CrmView.js';
 import modal from './components/Modal.js';
 
 if (typeof window !== 'undefined' && typeof window.newUrlFound !== 'function') {
@@ -141,6 +142,18 @@ class App {
                 return;
             }
             await this.renderProtectedView(authorizationsView);
+        });
+
+        router.register('crm', async () => {
+            await authService.loadCurrentUser();
+            const featureData = await authService.loadFeatures();
+            const features = featureData?.features || authService.getFeatures() || [];
+            if (!features.includes('view_crm')) {
+                modal.showError('No tienes acceso al modulo CRM con tu plan/tipo de negocio actual');
+                await router.navigate('dashboard');
+                return;
+            }
+            await this.renderProtectedView(crmView);
         });
 
         // Nuevas rutas de administración
@@ -265,6 +278,7 @@ class App {
                         inventory: 'view_inventory',
                         reports: 'view_reports',
                         cashregister: 'use_cashregister',
+                        crm: 'view_crm',
                         team: 'view_team',
                         'team-movements': 'view_team',
                         admin: 'admin_panel',
@@ -449,6 +463,7 @@ class App {
                         'Citas': features.filter(f => f.includes('appointment')),
                         'Inventario': features.filter(f => f.includes('product') || f.includes('inventory')),
                         'Pagos': features.filter(f => f.includes('payment')),
+                        'CRM': features.filter(f => f.includes('crm')),
                         'Reportes': features.filter(f => f.includes('report')),
                         'Caja': features.filter(f => f.includes('cashregister')),
                         'Equipo': features.filter(f => f.includes('team')),
