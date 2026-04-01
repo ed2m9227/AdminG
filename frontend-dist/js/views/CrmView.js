@@ -96,15 +96,6 @@ export class CrmView {
     async loadReferenceData() {
         try {
             this.customers = await apiService.getCustomers();
-            const petsCalls = this.customers.map(async (c) => {
-                try {
-                    const pets = await apiService.getPets(c.id);
-                    this.petsByCustomer.set(c.id, Array.isArray(pets) ? pets : []);
-                } catch (_e) {
-                    this.petsByCustomer.set(c.id, []);
-                }
-            });
-            await Promise.all(petsCalls);
         } catch (_error) {
             this.customers = [];
             this.petsByCustomer = new Map();
@@ -116,12 +107,10 @@ export class CrmView {
             const rows = await apiService.getCrmConsultations();
             this.consultations = (Array.isArray(rows) ? rows : []).map((item) => {
                 const customer = this.customers.find(c => c.id === item.customer_id);
-                const pets = this.petsByCustomer.get(item.customer_id) || [];
-                const pet = pets.find(p => p.id === item.pet_id);
                 return {
                     ...item,
                     customer_name: customer?.full_name || `#${item.customer_id}`,
-                    pet_name: pet?.name || `#${item.pet_id}`,
+                    pet_name: `#${item.pet_id}`,
                 };
             });
 
@@ -215,15 +204,31 @@ export class CrmView {
         const customerSelect = document.getElementById('crmCustomerSelect');
         const petSelect = document.getElementById('crmPetSelect');
 
-        const syncPets = () => {
+        const syncPets = async () => {
             const customerId = Number(customerSelect.value || 0);
+            if (!customerId) {
+                petSelect.innerHTML = '<option value="">Seleccionar propietario</option>';
+                return;
+            }
+
+            if (!this.petsByCustomer.has(customerId)) {
+                try {
+                    const pets = await apiService.getPets(customerId);
+                    this.petsByCustomer.set(customerId, Array.isArray(pets) ? pets : []);
+                } catch (_error) {
+                    this.petsByCustomer.set(customerId, []);
+                }
+            }
+
             const pets = this.petsByCustomer.get(customerId) || [];
             petSelect.innerHTML = pets.length
                 ? `<option value="">Seleccionar...</option>${pets.map(p => `<option value="${p.id}">${p.name}</option>`).join('')}`
                 : '<option value="">No hay mascotas para este cliente</option>';
         };
 
-        customerSelect?.addEventListener('change', syncPets);
+        customerSelect?.addEventListener('change', () => {
+            syncPets();
+        });
 
         document.getElementById('crmConsultationForm')?.addEventListener('submit', async (e) => {
             e.preventDefault();
