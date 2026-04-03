@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.models.customer import Customer
@@ -132,6 +133,21 @@ def delete_customer(
     if not customer:
         raise HTTPException(status_code=404, detail="Customer not found")
 
+    # Bulk-delete all child rows to avoid ORM cascade load blocking SQLite
+    cid = {"cid": customer_id}
+    db.execute(text("DELETE FROM payment_items WHERE payment_id IN (SELECT id FROM payments WHERE customer_id=:cid)"), cid)
+    db.execute(text("DELETE FROM invoice_items WHERE invoice_id IN (SELECT id FROM invoices WHERE customer_id=:cid)"), cid)
+    db.execute(text("DELETE FROM crm_treatments WHERE consultation_id IN (SELECT id FROM crm_consultations WHERE customer_id=:cid)"), cid)
+    db.execute(text("DELETE FROM crm_vaccines WHERE consultation_id IN (SELECT id FROM crm_consultations WHERE customer_id=:cid)"), cid)
+    db.execute(text("DELETE FROM crm_medical_records WHERE consultation_id IN (SELECT id FROM crm_consultations WHERE customer_id=:cid)"), cid)
+    db.execute(text("DELETE FROM crm_consultations WHERE customer_id=:cid"), cid)
+    db.execute(text("DELETE FROM payments WHERE customer_id=:cid"), cid)
+    db.execute(text("DELETE FROM invoices WHERE customer_id=:cid"), cid)
+    db.execute(text("DELETE FROM appointments WHERE customer_id=:cid"), cid)
+    db.execute(text("DELETE FROM documents WHERE customer_id=:cid"), cid)
+    db.execute(text("DELETE FROM authorizations WHERE customer_id=:cid"), cid)
+    db.execute(text("UPDATE cash_transactions SET customer_id=NULL WHERE customer_id=:cid"), cid)
+    db.execute(text("DELETE FROM pets WHERE customer_id=:cid"), cid)
     db.delete(customer)
     db.commit()
     return None
