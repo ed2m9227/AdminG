@@ -31,6 +31,7 @@ import documentsView from './views/DocumentsView.js';
 import authorizationsView from './views/AuthorizationsView.js';
 import crmView from './views/CrmView.js';
 import modal from './components/Modal.js';
+import aiChatWidget from './components/AiChatWidget.js';
 
 if (typeof window !== 'undefined' && typeof window.newUrlFound !== 'function') {
     // Guard for injected launcher scripts that expect this global.
@@ -83,6 +84,7 @@ class App {
                 await router.navigate('login');
                 return;
             }
+            aiChatWidget.unmount();
             this.appRoot.innerHTML = await onboardingWizard.render();
             onboardingWizard.attachEvents();
         });
@@ -121,38 +123,14 @@ class App {
         });
 
         router.register('documents', async () => {
-            await authService.loadCurrentUser();
-            const featureData = await authService.loadFeatures();
-            const features = featureData?.features || authService.getFeatures() || [];
-            if (!features.includes('view_documents')) {
-                modal.showError('No tienes acceso al módulo Documentos con tu plan/tipo de negocio actual');
-                await router.navigate('dashboard');
-                return;
-            }
             await this.renderProtectedView(documentsView);
         });
 
         router.register('authorizations', async () => {
-            await authService.loadCurrentUser();
-            const featureData = await authService.loadFeatures();
-            const features = featureData?.features || authService.getFeatures() || [];
-            if (!features.includes('view_authorizations')) {
-                modal.showError('No tienes acceso al módulo Autorizaciones con tu plan/tipo de negocio actual');
-                await router.navigate('dashboard');
-                return;
-            }
             await this.renderProtectedView(authorizationsView);
         });
 
         router.register('crm', async () => {
-            await authService.loadCurrentUser();
-            const featureData = await authService.loadFeatures();
-            const features = featureData?.features || authService.getFeatures() || [];
-            if (!features.includes('view_crm')) {
-                modal.showError('No tienes acceso al modulo CRM con tu plan/tipo de negocio actual');
-                await router.navigate('dashboard');
-                return;
-            }
             await this.renderProtectedView(crmView);
         });
 
@@ -278,11 +256,13 @@ class App {
                         inventory: 'view_inventory',
                         reports: 'view_reports',
                         cashregister: 'use_cashregister',
+                        documents: 'view_documents',
+                        authorizations: 'view_authorizations',
                         crm: 'view_crm',
                         team: 'view_team',
                         'team-movements': 'view_team',
                         admin: 'admin_panel',
-                        businesstypes: 'admin_panel'
+                        businesstypes: 'admin_panel',
                     };
 
                     const requiredFeature = routeFeatureMap[path];
@@ -367,6 +347,7 @@ class App {
      * @param {object} view 
      */
     renderAuthView(view) {
+        aiChatWidget.unmount();
         this.appRoot.innerHTML = view.render();
         if (view.init) view.init();
     }
@@ -415,6 +396,8 @@ class App {
         if (view.init) {
             await view.init();
         }
+
+        aiChatWidget.mount();
     }
 
     /**

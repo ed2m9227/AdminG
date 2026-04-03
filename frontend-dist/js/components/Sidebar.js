@@ -5,6 +5,7 @@
  */
 
 import router from '../utils/router.js';
+import businessRegistry from '../core/businessRegistry.js';
 import authService from '../services/auth.service.js';
 import apiService from '../services/api.service.js';
 import modal from './Modal.js';
@@ -47,24 +48,10 @@ export class Sidebar {
     }
 
     getDefaultLabelsByBusinessType(businessType) {
-        const normalized = (businessType || '').toLowerCase();
-        const labelsByType = {
-            veterinaria: { customer: 'Propietarios', appointment: 'Citas' },
-            consultorio: { customer: 'Pacientes', appointment: 'Consultas' },
-            clinica: { customer: 'Pacientes', appointment: 'Consultas' },
-            dentista: { customer: 'Pacientes', appointment: 'Consultas' },
-            dental: { customer: 'Pacientes', appointment: 'Consultas' },
-            fisioterapia: { customer: 'Pacientes', appointment: 'Sesiones' },
-            nutricion: { customer: 'Pacientes', appointment: 'Consultas' },
-            medicina_general: { customer: 'Pacientes', appointment: 'Consultas' },
-            barberia: { customer: 'Clientes', appointment: 'Turnos' },
-            salon: { customer: 'Clientes', appointment: 'Turnos' },
-            spa: { customer: 'Clientes', appointment: 'Reservas' },
-            inmobiliaria: { customer: 'Clientes', appointment: 'Visitas' },
-            propiedad_horizontal: { customer: 'Residentes', appointment: 'Reservas' },
+        return {
+            customer: businessRegistry.getVocabulary(businessType, 'customers', 'Clientes'),
+            appointment: businessRegistry.getVocabulary(businessType, 'appointments', 'Citas'),
         };
-
-        return labelsByType[normalized] || { customer: 'Clientes', appointment: 'Citas' };
     }
 
     async loadBusinessLabels(forceReload = false) {
@@ -151,7 +138,8 @@ export class Sidebar {
                 'view_payments', 'create_payments',
                 'view_team', 'manage_team_users', 'invite_users',
                 'use_cashregister', 'open_register', 'close_register',
-                'view_crm', 'create_crm', 'view_crm_analytics', 'use_crm_ai_chat'
+                'view_crm', 'create_crm', 'view_crm_analytics', 'use_crm_ai_chat',
+                'use_ai_chat',
             ],
             'pro': [
                 'view_customers', 'create_customers', 'edit_customers', 'delete_customers', 'export_customers',
@@ -163,7 +151,8 @@ export class Sidebar {
                 'view_team', 'manage_team_users', 'invite_users',
                 'view_documents', 'create_documents', 'edit_documents', 'delete_documents',
                 'view_authorizations', 'create_authorizations', 'manage_authorizations',
-                'view_crm', 'create_crm', 'edit_crm', 'delete_crm', 'view_crm_analytics', 'use_crm_ai_chat'
+                'view_crm', 'create_crm', 'edit_crm', 'delete_crm', 'view_crm_analytics', 'use_crm_ai_chat',
+                'use_ai_chat',
             ],
             'max': [
                 'view_customers', 'create_customers', 'edit_customers', 'delete_customers', 'export_customers',
@@ -176,8 +165,8 @@ export class Sidebar {
                 'view_documents', 'create_documents', 'edit_documents', 'delete_documents',
                 'view_authorizations', 'create_authorizations', 'manage_authorizations',
                 'view_crm', 'create_crm', 'edit_crm', 'delete_crm', 'view_crm_analytics', 'use_crm_ai_chat',
-                'admin_panel'
-            ]
+                'use_ai_chat', 'admin_panel',
+            ],
         };
         let features = [...(featuresByPlan[plan] || featuresByPlan['free'])];
 
@@ -189,21 +178,7 @@ export class Sidebar {
             ].includes(feature));
         }
 
-        const businessType = (user?.business_type || '').toLowerCase();
-        const healthcareTypes = ['veterinaria', 'consultorio', 'clinica', 'dentista', 'dental', 'fisioterapia', 'nutricion', 'medicina_general'];
-        if (businessType && !healthcareTypes.includes(businessType)) {
-            features = features.filter(feature => ![
-                'view_documents', 'create_documents', 'edit_documents', 'delete_documents',
-                'view_authorizations', 'create_authorizations', 'manage_authorizations'
-            ].includes(feature));
-        }
-
-        if (businessType && businessType !== 'veterinaria') {
-            features = features.filter(feature => ![
-                'view_crm', 'create_crm', 'edit_crm', 'delete_crm',
-                'view_crm_analytics', 'use_crm_ai_chat'
-            ].includes(feature));
-        }
+        features = businessRegistry.filterFeatures(features, user?.business_type);
 
         return features;
     }

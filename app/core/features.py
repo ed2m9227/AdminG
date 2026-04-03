@@ -65,6 +65,9 @@ class Feature(str, Enum):
     DELETE_CRM = "delete_crm"
     VIEW_CRM_ANALYTICS = "view_crm_analytics"
     USE_CRM_AI_CHAT = "use_crm_ai_chat"
+
+    # AI assistant (all business types — intents depend on business_registry)
+    USE_AI_CHAT = "use_ai_chat"
     
     # Admin (Master only)
     ADMIN_PANEL = "admin_panel"
@@ -112,6 +115,8 @@ PLAN_FEATURES: Dict[str, Set[Feature]] = {
         Feature.CREATE_CRM,
         Feature.VIEW_CRM_ANALYTICS,
         Feature.USE_CRM_AI_CHAT,
+        # AI assistant (cross-business)
+        Feature.USE_AI_CHAT,
         # NOTE: reports, documents, and authorizations intentionally excluded for starter
     },
     "pro": {
@@ -156,6 +161,8 @@ PLAN_FEATURES: Dict[str, Set[Feature]] = {
         Feature.DELETE_CRM,
         Feature.VIEW_CRM_ANALYTICS,
         Feature.USE_CRM_AI_CHAT,
+        # AI assistant (cross-business)
+        Feature.USE_AI_CHAT,
     },
     "max": {
         Feature.VIEW_CUSTOMERS,
@@ -200,6 +207,8 @@ PLAN_FEATURES: Dict[str, Set[Feature]] = {
         Feature.DELETE_CRM,
         Feature.VIEW_CRM_ANALYTICS,
         Feature.USE_CRM_AI_CHAT,
+        # AI assistant (cross-business)
+        Feature.USE_AI_CHAT,
     },
     "admin": {
         Feature.ADMIN_PANEL,
@@ -247,6 +256,8 @@ PLAN_FEATURES: Dict[str, Set[Feature]] = {
         Feature.DELETE_CRM,
         Feature.VIEW_CRM_ANALYTICS,
         Feature.USE_CRM_AI_CHAT,
+        # AI assistant (cross-business)
+        Feature.USE_AI_CHAT,
     },
     # Legacy plan aliases (backward compatibility)
     "basic": set(),
@@ -435,3 +446,13 @@ def get_plan_limits(plan: str) -> Dict[str, int]:
     limits["AdminPro_Start"] = limits["pro"]
     limits["AdminPro_Max"] = limits["max"]
     return limits.get(plan, limits["free"])
+
+
+def filter_for_business_type(features: list[str], business_type: str | None) -> list[str]:
+    """Remove features blocked for *business_type* using the central registry.
+
+    This is the single call-site for business-type-based feature filtering;
+    no scattered hardcoded sets elsewhere needed.
+    """
+    from app.core.business_registry import filter_features as _registry_filter
+    return _registry_filter(features, business_type)

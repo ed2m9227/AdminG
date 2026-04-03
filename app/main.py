@@ -26,6 +26,7 @@ from app.modules.admin.routers.business_types import router as business_types_ro
 from app.modules.documents.router import router as documents_router
 from app.modules.authorizations.router import router as authorizations_router
 from app.modules.crm.router import router as crm_router
+from app.modules.ai.router import router as ai_router
 from app.modules.plans.service import seed_plans
 
 # Configurar logging
@@ -164,6 +165,7 @@ app.include_router(business_types_router)
 app.include_router(documents_router)
 app.include_router(authorizations_router)
 app.include_router(crm_router)
+app.include_router(ai_router)
 
 @app.get("/health")
 def health():

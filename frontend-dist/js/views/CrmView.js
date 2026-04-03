@@ -8,6 +8,7 @@ export class CrmView {
         this.consultations = [];
         this.metrics = null;
         this.customers = [];
+        this.services = [];
         this.petsByCustomer = new Map();
         this._handlerAttached = false;
     }
@@ -17,37 +18,17 @@ export class CrmView {
         const canCreate = features.includes('create_crm');
 
         return `
-            <div class="crm-layout">
-                <div class="crm-main">
-                    <div class="card">
-                        <div class="card-header">
-                            <h2 class="card-title">CRM Veterinario</h2>
-                            <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                                ${canCreate ? '<button class="btn btn-success" id="btnCrmNewOwnerPet">+ Propietario + Mascota</button>' : ''}
-                                ${canCreate ? '<button class="btn btn-primary" id="btnCrmNewConsultation">+ Consulta</button>' : ''}
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div id="crmMetrics"></div>
-                            <div id="crmConsultationsTable">${this.renderTable()}</div>
-                        </div>
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">CRM Veterinario</h2>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                        ${canCreate ? '<button class="btn btn-success" id="btnCrmNewOwnerPet">+ Propietario + Mascota</button>' : ''}
+                        ${canCreate ? '<button class="btn btn-primary" id="btnCrmNewConsultation">+ Consulta</button>' : ''}
                     </div>
                 </div>
-
-                <div class="crm-chat card">
-                    <div class="card-header">
-                        <h3 class="card-title">Chat Inteligente CRM</h3>
-                    </div>
-                    <div class="card-body" style="display:flex;flex-direction:column;gap:10px;">
-                        <div id="crmChatFeed" class="crm-chat-feed"></div>
-                        <form id="crmChatForm" style="display:flex;gap:8px;">
-                            <input id="crmChatInput" type="text" placeholder="Ej: Ingresos del mes" style="flex:1;" required>
-                            <button class="btn btn-success" type="submit">Consultar</button>
-                        </form>
-                        <div style="font-size:12px;color:#6b7280;">
-                            Ejemplos: "Cuantas consultas hubo esta semana", "Mascotas sin visita en 6 meses", "Ingresos del mes".
-                        </div>
-                    </div>
+                <div class="card-body">
+                    <div id="crmMetrics"></div>
+                    <div id="crmConsultationsTable">${this.renderTable()}</div>
                 </div>
             </div>
         `;
@@ -63,7 +44,7 @@ export class CrmView {
             {
                 key: 'actions',
                 label: 'Acciones',
-                formatter: (_, row) => `<button class="btn btn-sm" data-crm-history="${row.pet_id}">📋 Historial</button>`
+                formatter: (_, row) => `<button class="btn btn-sm" data-crm-history="${row.pet_id}">Historial</button>`
             }
         ];
 
@@ -95,9 +76,13 @@ export class CrmView {
 
     async loadReferenceData() {
         try {
-            this.customers = await apiService.getCustomers();
+            [this.customers, this.services] = await Promise.all([
+                apiService.getCustomers(),
+                apiService.getServices().catch(() => []),
+            ]);
         } catch (_error) {
             this.customers = [];
+            this.services = [];
             this.petsByCustomer = new Map();
         }
     }
@@ -143,15 +128,6 @@ export class CrmView {
             if (!btn) return;
             await this.showPetHistory(btn.dataset.crmHistory);
         });
-
-        document.getElementById('crmChatForm')?.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const input = document.getElementById('crmChatInput');
-            const question = (input?.value || '').trim();
-            if (!question) return;
-            input.value = '';
-            await this.sendChat(question);
-        });
     }
 
     async showOwnerPetModal() {
@@ -188,60 +164,118 @@ export class CrmView {
     }
 
     async showConsultationModal() {
-        const customerOptions = this.customers.map(c => `<option value="${c.id}">${c.full_name}</option>`).join('');
+        const selectedServices = new Map();
+
+        const renderServicePicker = () => {
+            if (!this.services.length) {
+                return '<p class="crm-svc-empty">Sin servicios registrados</p>';
+            }
+            return this.services.map(s => {
+                const qty = selectedServices.get(s.id)?.qty || 0;
+                return `
+                    <div class="crm-svc-item">
+                        <div class="crm-svc-info">
+                            <span class="crm-svc-name">${s.name}</span>
+                            <span class="crm-svc-price">$${Number(s.price || 0).toLocaleString()}</span>
+                        </div>
+                        <div class="crm-svc-counter">
+                            <button type="button" class="crm-svc-dec" data-svc-id="${s.id}"${qty === 0 ? ' disabled' : ''}>-</button>
+                            <span class="crm-svc-qty${qty > 0 ? ' active' : ''}">${qty}</span>
+                            <button type="button" class="crm-svc-inc" data-svc-id="${s.id}">+</button>
+                        </div>
+                    </div>`;
+            }).join('');
+        };
+
+        const customerOptions = this.customers.map(c =>
+            `<option value="${c.id}">${c.full_name}</option>`
+        ).join('');
+
         const content = `
             <form id="crmConsultationForm" class="modal-form">
-                <div class="form-group"><label>Propietario *</label><select id="crmCustomerSelect" name="customer_id" required><option value="">Seleccionar...</option>${customerOptions}</select></div>
-                <div class="form-group"><label>Mascota *</label><select id="crmPetSelect" name="pet_id" required><option value="">Seleccionar propietario</option></select></div>
+                <div class="form-group">
+                    <label>Propietario *</label>
+                    <select id="crmCustomerSelect" name="customer_id" required>
+                        <option value="">Seleccionar...</option>${customerOptions}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Mascota *</label>
+                    <select id="crmPetSelect" name="pet_id" required>
+                        <option value="">Seleccionar propietario</option>
+                    </select>
+                </div>
                 <div class="form-group"><label>Motivo</label><input name="reason"></div>
-                <div class="form-group"><label>Sintomas</label><textarea name="symptoms" rows="3"></textarea></div>
-                <div class="form-group"><label>Diagnostico</label><textarea name="diagnosis" rows="3"></textarea></div>
-                <div class="modal-actions"><button class="btn btn-success" type="submit">Guardar</button><button class="btn" type="button" data-close>Cancelar</button></div>
+                <div class="form-row">
+                    <div class="form-group"><label>Sintomas</label><textarea name="symptoms" rows="2"></textarea></div>
+                    <div class="form-group"><label>Diagnostico</label><textarea name="diagnosis" rows="2"></textarea></div>
+                </div>
+                <div class="form-group">
+                    <label>Servicios facturados</label>
+                    <div id="crmServicePicker" class="crm-svc-picker">${renderServicePicker()}</div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-success" type="submit">Guardar consulta</button>
+                    <button class="btn" type="button" data-close>Cancelar</button>
+                </div>
             </form>
         `;
         const modalEl = modal.show({ title: 'Nueva Consulta Veterinaria', content, size: 'medium' });
 
         const customerSelect = document.getElementById('crmCustomerSelect');
         const petSelect = document.getElementById('crmPetSelect');
+        const pickerEl = document.getElementById('crmServicePicker');
 
         const syncPets = async () => {
-            const customerId = Number(customerSelect.value || 0);
+            const customerId = Number(customerSelect?.value || 0);
             if (!customerId) {
                 petSelect.innerHTML = '<option value="">Seleccionar propietario</option>';
                 return;
             }
-
             if (!this.petsByCustomer.has(customerId)) {
                 try {
                     const pets = await apiService.getPets(customerId);
                     this.petsByCustomer.set(customerId, Array.isArray(pets) ? pets : []);
-                } catch (_error) {
+                } catch (_) {
                     this.petsByCustomer.set(customerId, []);
                 }
             }
-
             const pets = this.petsByCustomer.get(customerId) || [];
             petSelect.innerHTML = pets.length
                 ? `<option value="">Seleccionar...</option>${pets.map(p => `<option value="${p.id}">${p.name}</option>`).join('')}`
-                : '<option value="">No hay mascotas para este cliente</option>';
+                : '<option value="">Sin mascotas registradas</option>';
         };
 
-        customerSelect?.addEventListener('change', () => {
-            syncPets();
+        customerSelect?.addEventListener('change', syncPets);
+
+        pickerEl?.addEventListener('click', e => {
+            const inc = e.target.closest('.crm-svc-inc');
+            const dec = e.target.closest('.crm-svc-dec');
+            const btn = inc || dec;
+            if (!btn) return;
+            const id = Number(btn.dataset.svcId);
+            const svc = this.services.find(s => s.id === id);
+            if (!svc) return;
+            const current = selectedServices.get(id)?.qty || 0;
+            const next = inc ? current + 1 : Math.max(0, current - 1);
+            if (next === 0) selectedServices.delete(id);
+            else selectedServices.set(id, { service: svc, qty: next });
+            pickerEl.innerHTML = renderServicePicker();
         });
 
         document.getElementById('crmConsultationForm')?.addEventListener('submit', async (e) => {
             e.preventDefault();
             const fd = new FormData(e.target);
+            const primaryEntry = [...selectedServices.values()].sort((a, b) => b.qty - a.qty)[0];
             const payload = {
                 customer_id: Number(fd.get('customer_id')),
                 pet_id: Number(fd.get('pet_id')),
                 reason: fd.get('reason') || null,
                 symptoms: fd.get('symptoms') || null,
                 diagnosis: fd.get('diagnosis') || null,
-                status: 'open'
+                service_id: primaryEntry?.service?.id || null,
+                status: 'open',
             };
-
             try {
                 await apiService.createCrmConsultation(payload);
                 modal.close(modalEl);
@@ -267,26 +301,6 @@ export class CrmView {
             modal.show({ title: 'Historial Clinico', content, size: 'medium' });
         } catch (error) {
             modal.showError('No se pudo cargar historial: ' + error.message);
-        }
-    }
-
-    async sendChat(question) {
-        const feed = document.getElementById('crmChatFeed');
-        if (!feed) return;
-
-        feed.innerHTML += `<div class="crm-chat-msg user"><strong>Tu:</strong> ${question}</div>`;
-
-        try {
-            const response = await apiService.crmChat(question);
-            const table = response?.table || { columns: [], rows: [] };
-            const tableHtml = table.columns.length
-                ? `<div class="crm-chat-table"><table><thead><tr>${table.columns.map(c => `<th>${c}</th>`).join('')}</tr></thead><tbody>${table.rows.map(r => `<tr>${r.map(v => `<td>${v ?? '-'}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`
-                : '';
-
-            feed.innerHTML += `<div class="crm-chat-msg bot"><strong>CRM:</strong> ${response.answer || 'Sin respuesta'}${tableHtml}</div>`;
-            feed.scrollTop = feed.scrollHeight;
-        } catch (error) {
-            feed.innerHTML += `<div class="crm-chat-msg bot"><strong>CRM:</strong> Error: ${error.message}</div>`;
         }
     }
 }

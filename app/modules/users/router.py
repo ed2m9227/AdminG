@@ -8,6 +8,7 @@ from app.core.permissions import require_permission
 from app.modules.auth.service import create_user as create_auth_user
 from app.core.security import get_current_user
 from app.models.user import User
+from app.core.features import filter_for_business_type
 
 
 router = APIRouter(prefix="/users", tags=["Users"])
@@ -19,54 +20,6 @@ PAID_PLAN_ALIASES = {
     "AdminPro_Start", "AdminPro_Max",
 }
 PLAN_DURATION_DAYS = 30
-
-HEALTHCARE_BUSINESS_TYPES = {
-    "veterinaria",
-    "consultorio",
-    "clinica",
-    "dentista",
-    "dental",
-    "fisioterapia",
-    "nutricion",
-    "medicina_general",
-}
-
-
-def _filter_features_by_business_type(features: list[str], business_type: str | None) -> list[str]:
-    """Apply business-type feature filtering on top of plan/role features."""
-    normalized_type = (business_type or "").strip().lower()
-
-    # Non-healthcare businesses do not need medical-document workflows.
-    if normalized_type and normalized_type not in HEALTHCARE_BUSINESS_TYPES:
-        blocked = {
-            "view_documents",
-            "create_documents",
-            "edit_documents",
-            "delete_documents",
-            "view_authorizations",
-            "create_authorizations",
-            "manage_authorizations",
-            "view_crm",
-            "create_crm",
-            "edit_crm",
-            "delete_crm",
-            "view_crm_analytics",
-            "use_crm_ai_chat",
-        }
-        return [f for f in features if f not in blocked]
-
-    if normalized_type and normalized_type != "veterinaria":
-        blocked_vet_only = {
-            "view_crm",
-            "create_crm",
-            "edit_crm",
-            "delete_crm",
-            "view_crm_analytics",
-            "use_crm_ai_chat",
-        }
-        return [f for f in features if f not in blocked_vet_only]
-
-    return features
 
 
 def enforce_plan_expiration(user: User, db: Session) -> tuple[bool, datetime | None]:
@@ -171,7 +124,7 @@ def get_user_features(
         user.role,
         is_parent_account=not bool(user.parent_user_id),
     )
-    features = _filter_features_by_business_type(features, user.business_type)
+    features = filter_for_business_type(features, user.business_type)
     limits = get_plan_limits(user.plan)
 
     return {

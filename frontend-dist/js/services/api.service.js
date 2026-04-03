@@ -257,6 +257,19 @@ export class ApiService {
         return this.post('/crm/ai/chat', { question });
     }
 
+    // ========== AI (CROSS-BUSINESS) ==========
+    async aiChat(question) {
+        return this.post('/ai/chat', { question });
+    }
+
+    async getAiExamples() {
+        return this.get('/ai/examples');
+    }
+
+    async getAiConfig() {
+        return this.get('/ai/config');
+    }
+
     async createService(service) {
         return this.post('/services/', service);
     }

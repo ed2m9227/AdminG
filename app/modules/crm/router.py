@@ -12,9 +12,10 @@ from app.models.crm import Consultation, MedicalRecord, Treatment, Vaccine
 from app.models.customer import Customer
 from app.models.pet import Pet
 from app.models.user import User
-from app.modules.crm.ai.interpreter import detect_intent
-from app.modules.crm.ai.query_builder import run_query_for_intent
-from app.modules.crm.ai.response_formatter import format_answer, to_table
+from app.modules.ai.interpreter import detect_intent
+from app.modules.ai.query_builder import run_query_for_intent
+from app.modules.ai.response_formatter import format_answer, to_table
+from app.core.business_registry import VETERINARY_INTENTS
 from app.modules.crm.analytics.metrics import get_basic_metrics
 from app.modules.crm.schemas import (
     CRMChatRequest,
@@ -363,8 +364,8 @@ def crm_chat(
     require_crm_feature(current_user, Feature.USE_CRM_AI_CHAT)
     user_ids = get_user_ids_for_data_sharing(current_user, db)
 
-    intent = detect_intent(payload.question)
-    query_result = run_query_for_intent(intent, db, user_ids)
+    intent = detect_intent(payload.question, VETERINARY_INTENTS)
+    query_result = run_query_for_intent(intent, db, user_ids, business_type="veterinaria")
     rows = query_result.get("rows", [])
 
     return CRMChatResponse(
