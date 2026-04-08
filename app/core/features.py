@@ -68,7 +68,31 @@ class Feature(str, Enum):
 
     # AI assistant (all business types — intents depend on business_registry)
     USE_AI_CHAT = "use_ai_chat"
-    
+
+    # Operations EOE: Risks and Expenses
+    VIEW_RISKS = "view_risks"
+    CREATE_RISKS = "create_risks"
+    MANAGE_RISKS = "manage_risks"
+    VIEW_INCIDENTS = "view_incidents"
+    CREATE_INCIDENTS = "create_incidents"
+    MANAGE_INCIDENTS = "manage_incidents"
+    VIEW_EXPENSES = "view_expenses"
+    CREATE_EXPENSES = "create_expenses"
+    APPROVE_EXPENSES = "approve_expenses"
+    MANAGE_EXPENSES = "manage_expenses"
+
+    # RRHH — Human Resources
+    VIEW_HR = "view_hr"
+    MANAGE_HR = "manage_hr"
+    VIEW_PAYROLL = "view_payroll"
+    MANAGE_PAYROLL = "manage_payroll"
+    VIEW_HR_REQUESTS = "view_hr_requests"
+    MANAGE_HR_REQUESTS = "manage_hr_requests"
+    VIEW_HR_TRACKING = "view_hr_tracking"
+
+    # AI Studio (visual/chart generation — MAX only)
+    USE_AI_STUDIO = "use_ai_studio"
+
     # Admin (Master only)
     ADMIN_PANEL = "admin_panel"
     MANAGE_ALL_USERS = "manage_all_users"
@@ -110,13 +134,13 @@ PLAN_FEATURES: Dict[str, Set[Feature]] = {
         Feature.VIEW_TEAM,
         Feature.MANAGE_TEAM_USERS,
         Feature.INVITE_USERS,
-        # CRM veterinario
-        Feature.VIEW_CRM,
-        Feature.CREATE_CRM,
-        Feature.VIEW_CRM_ANALYTICS,
-        Feature.USE_CRM_AI_CHAT,
-        # AI assistant (cross-business)
-        Feature.USE_AI_CHAT,
+        # EOE Operations — view only for starter
+        Feature.VIEW_RISKS,
+        Feature.VIEW_INCIDENTS,
+        Feature.VIEW_EXPENSES,
+        # RRHH — view only for starter
+        Feature.VIEW_HR,
+        Feature.VIEW_HR_REQUESTS,
         # NOTE: reports, documents, and authorizations intentionally excluded for starter
     },
     "pro": {
@@ -140,13 +164,33 @@ PLAN_FEATURES: Dict[str, Set[Feature]] = {
         Feature.REFUND_PAYMENTS,
         Feature.VIEW_REPORTS,
         Feature.EXPORT_REPORTS,
+        Feature.ADVANCED_ANALYTICS,
         Feature.USE_CASHREGISTER,
         Feature.OPEN_REGISTER,
         Feature.CLOSE_REGISTER,
         Feature.VIEW_TEAM,
         Feature.MANAGE_TEAM_USERS,
         Feature.INVITE_USERS,
-        # Documents & Authorizations for operational audit flow
+        # EOE Operations — same as max
+        Feature.VIEW_RISKS,
+        Feature.CREATE_RISKS,
+        Feature.MANAGE_RISKS,
+        Feature.VIEW_INCIDENTS,
+        Feature.CREATE_INCIDENTS,
+        Feature.MANAGE_INCIDENTS,
+        Feature.VIEW_EXPENSES,
+        Feature.CREATE_EXPENSES,
+        Feature.APPROVE_EXPENSES,
+        Feature.MANAGE_EXPENSES,
+        # RRHH — same as max
+        Feature.VIEW_HR,
+        Feature.MANAGE_HR,
+        Feature.VIEW_PAYROLL,
+        Feature.MANAGE_PAYROLL,
+        Feature.VIEW_HR_REQUESTS,
+        Feature.MANAGE_HR_REQUESTS,
+        Feature.VIEW_HR_TRACKING,
+        # Documents & Authorizations
         Feature.VIEW_DOCUMENTS,
         Feature.CREATE_DOCUMENTS,
         Feature.EDIT_DOCUMENTS,
@@ -154,15 +198,13 @@ PLAN_FEATURES: Dict[str, Set[Feature]] = {
         Feature.VIEW_AUTHORIZATIONS,
         Feature.CREATE_AUTHORIZATIONS,
         Feature.MANAGE_AUTHORIZATIONS,
-        # CRM veterinario
+        # CRM (without AI operability)
         Feature.VIEW_CRM,
         Feature.CREATE_CRM,
         Feature.EDIT_CRM,
         Feature.DELETE_CRM,
         Feature.VIEW_CRM_ANALYTICS,
-        Feature.USE_CRM_AI_CHAT,
-        # AI assistant (cross-business)
-        Feature.USE_AI_CHAT,
+        # NOTE: IA operability remains MAX-only
     },
     "max": {
         Feature.VIEW_CUSTOMERS,
@@ -192,6 +234,25 @@ PLAN_FEATURES: Dict[str, Set[Feature]] = {
         Feature.VIEW_TEAM,
         Feature.MANAGE_TEAM_USERS,
         Feature.INVITE_USERS,
+        # EOE Operations — full for max
+        Feature.VIEW_RISKS,
+        Feature.CREATE_RISKS,
+        Feature.MANAGE_RISKS,
+        Feature.VIEW_INCIDENTS,
+        Feature.CREATE_INCIDENTS,
+        Feature.MANAGE_INCIDENTS,
+        Feature.VIEW_EXPENSES,
+        Feature.CREATE_EXPENSES,
+        Feature.APPROVE_EXPENSES,
+        Feature.MANAGE_EXPENSES,
+        # RRHH — full for max
+        Feature.VIEW_HR,
+        Feature.MANAGE_HR,
+        Feature.VIEW_PAYROLL,
+        Feature.MANAGE_PAYROLL,
+        Feature.VIEW_HR_REQUESTS,
+        Feature.MANAGE_HR_REQUESTS,
+        Feature.VIEW_HR_TRACKING,
         # Documents & Authorizations
         Feature.VIEW_DOCUMENTS,
         Feature.CREATE_DOCUMENTS,
@@ -207,8 +268,9 @@ PLAN_FEATURES: Dict[str, Set[Feature]] = {
         Feature.DELETE_CRM,
         Feature.VIEW_CRM_ANALYTICS,
         Feature.USE_CRM_AI_CHAT,
-        # AI assistant (cross-business)
+        # AI assistant + AI Studio — MAX only
         Feature.USE_AI_CHAT,
+        Feature.USE_AI_STUDIO,
     },
     "admin": {
         Feature.ADMIN_PANEL,
@@ -243,6 +305,16 @@ PLAN_FEATURES: Dict[str, Set[Feature]] = {
         Feature.VIEW_TEAM,
         Feature.MANAGE_TEAM_USERS,
         Feature.INVITE_USERS,
+        Feature.VIEW_RISKS,
+        Feature.CREATE_RISKS,
+        Feature.MANAGE_RISKS,
+        Feature.VIEW_INCIDENTS,
+        Feature.CREATE_INCIDENTS,
+        Feature.MANAGE_INCIDENTS,
+        Feature.VIEW_EXPENSES,
+        Feature.CREATE_EXPENSES,
+        Feature.APPROVE_EXPENSES,
+        Feature.MANAGE_EXPENSES,
         Feature.VIEW_DOCUMENTS,
         Feature.CREATE_DOCUMENTS,
         Feature.EDIT_DOCUMENTS,
@@ -256,8 +328,17 @@ PLAN_FEATURES: Dict[str, Set[Feature]] = {
         Feature.DELETE_CRM,
         Feature.VIEW_CRM_ANALYTICS,
         Feature.USE_CRM_AI_CHAT,
-        # AI assistant (cross-business)
+        # AI assistant + AI Studio
         Feature.USE_AI_CHAT,
+        Feature.USE_AI_STUDIO,
+        # RRHH — full for admin
+        Feature.VIEW_HR,
+        Feature.MANAGE_HR,
+        Feature.VIEW_PAYROLL,
+        Feature.MANAGE_PAYROLL,
+        Feature.VIEW_HR_REQUESTS,
+        Feature.MANAGE_HR_REQUESTS,
+        Feature.VIEW_HR_TRACKING,
     },
     # Legacy plan aliases (backward compatibility)
     "basic": set(),
@@ -314,6 +395,13 @@ VIEWER_RESTRICTED_FEATURES = {
     Feature.CLOSE_REGISTER,
     Feature.EDIT_CRM,
     Feature.DELETE_CRM,
+    Feature.MANAGE_RISKS,
+    Feature.MANAGE_INCIDENTS,
+    Feature.APPROVE_EXPENSES,
+    Feature.MANAGE_EXPENSES,
+    Feature.MANAGE_HR,
+    Feature.MANAGE_PAYROLL,
+    Feature.MANAGE_HR_REQUESTS,
 }
 
 def get_available_features(plan: str, role: str = "viewer", is_parent_account: bool = True) -> List[str]:
@@ -394,7 +482,10 @@ def get_plan_limits(plan: str) -> Dict[str, int]:
             "services": 200,
             "documents": 500,
             "authorizations": 500,
-            "crm_consultations": 500,
+            "crm_consultations": 0,
+            "risks": 300,
+            "incidents": 300,
+            "expenses": 1000,
         },
         "pro": {
             "team_members": 25,
@@ -406,6 +497,9 @@ def get_plan_limits(plan: str) -> Dict[str, int]:
             "documents": 5000,
             "authorizations": 5000,
             "crm_consultations": 5000,
+            "risks": 5000,
+            "incidents": 5000,
+            "expenses": 20000,
         },
         "max": {
             "team_members": 100,
@@ -417,6 +511,9 @@ def get_plan_limits(plan: str) -> Dict[str, int]:
             "documents": 50000,
             "authorizations": 50000,
             "crm_consultations": 50000,
+            "risks": 50000,
+            "incidents": 50000,
+            "expenses": 200000,
         },
         "admin": {
             "team_members": 999999,
@@ -428,6 +525,9 @@ def get_plan_limits(plan: str) -> Dict[str, int]:
             "documents": 999999,
             "authorizations": 999999,
             "crm_consultations": 999999,
+            "risks": 999999,
+            "incidents": 999999,
+            "expenses": 999999,
         },
         "basic": {},
         "plus": {},

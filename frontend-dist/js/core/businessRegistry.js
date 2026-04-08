@@ -56,6 +56,7 @@ const BUSINESS_REGISTRY = {
         vocabulary: { customer: 'Propietario', customers: 'Propietarios', appointment: 'Cita', appointments: 'Citas', product: 'Medicamento / Producto', service: 'Procedimiento' },
         blockedFeatures: [],
         aiIntents: VETERINARY_INTENTS,
+        crmLabel: 'CRM Veterinario', crmIcon: '🐾',
     },
     consultorio: {
         displayName: 'Consultorio Médico',
@@ -63,6 +64,7 @@ const BUSINESS_REGISTRY = {
         vocabulary: { customer: 'Paciente', customers: 'Pacientes', appointment: 'Consulta', appointments: 'Consultas', product: 'Medicamento / Insumo', service: 'Procedimiento' },
         blockedFeatures: HEALTHCARE_NON_VET_BLOCKED,
         aiIntents: HEALTHCARE_INTENTS,
+        crmLabel: 'CRM Clínico', crmIcon: '🏥',
     },
     clinica: {
         displayName: 'Clínica',
@@ -70,6 +72,7 @@ const BUSINESS_REGISTRY = {
         vocabulary: { customer: 'Paciente', customers: 'Pacientes', appointment: 'Consulta', appointments: 'Consultas', product: 'Medicamento / Insumo', service: 'Procedimiento' },
         blockedFeatures: HEALTHCARE_NON_VET_BLOCKED,
         aiIntents: HEALTHCARE_INTENTS,
+        crmLabel: 'CRM Clínico', crmIcon: '🏥',
     },
     dentista: {
         displayName: 'Dentista',
@@ -77,6 +80,7 @@ const BUSINESS_REGISTRY = {
         vocabulary: { customer: 'Paciente', customers: 'Pacientes', appointment: 'Cita', appointments: 'Citas', product: 'Insumo', service: 'Tratamiento' },
         blockedFeatures: HEALTHCARE_NON_VET_BLOCKED,
         aiIntents: HEALTHCARE_INTENTS,
+        crmLabel: 'CRM Dental', crmIcon: '🦷',
     },
     dental: {
         displayName: 'Clínica Dental',
@@ -84,6 +88,7 @@ const BUSINESS_REGISTRY = {
         vocabulary: { customer: 'Paciente', customers: 'Pacientes', appointment: 'Cita', appointments: 'Citas', product: 'Insumo', service: 'Tratamiento' },
         blockedFeatures: HEALTHCARE_NON_VET_BLOCKED,
         aiIntents: HEALTHCARE_INTENTS,
+        crmLabel: 'CRM Dental', crmIcon: '🦷',
     },
     fisioterapia: {
         displayName: 'Fisioterapia',
@@ -91,6 +96,7 @@ const BUSINESS_REGISTRY = {
         vocabulary: { customer: 'Paciente', customers: 'Pacientes', appointment: 'Sesión', appointments: 'Sesiones', product: 'Insumo', service: 'Sesión de terapia' },
         blockedFeatures: HEALTHCARE_NON_VET_BLOCKED,
         aiIntents: HEALTHCARE_INTENTS,
+        crmLabel: 'CRM Pacientes', crmIcon: '🏥',
     },
     nutricion: {
         displayName: 'Nutrición',
@@ -98,6 +104,7 @@ const BUSINESS_REGISTRY = {
         vocabulary: { customer: 'Paciente', customers: 'Pacientes', appointment: 'Consulta', appointments: 'Consultas', product: 'Suplemento', service: 'Consulta nutricional' },
         blockedFeatures: HEALTHCARE_NON_VET_BLOCKED,
         aiIntents: HEALTHCARE_INTENTS,
+        crmLabel: 'CRM Pacientes', crmIcon: '🥗',
     },
     medicina_general: {
         displayName: 'Medicina General',
@@ -105,6 +112,7 @@ const BUSINESS_REGISTRY = {
         vocabulary: { customer: 'Paciente', customers: 'Pacientes', appointment: 'Consulta', appointments: 'Consultas', product: 'Medicamento', service: 'Consulta' },
         blockedFeatures: HEALTHCARE_NON_VET_BLOCKED,
         aiIntents: HEALTHCARE_INTENTS,
+        crmLabel: 'CRM Pacientes', crmIcon: '🏥',
     },
     barberia: {
         displayName: 'Barbería',
@@ -112,6 +120,7 @@ const BUSINESS_REGISTRY = {
         vocabulary: { customer: 'Cliente', customers: 'Clientes', appointment: 'Turno', appointments: 'Turnos', product: 'Producto', service: 'Servicio' },
         blockedFeatures: NON_HEALTHCARE_BLOCKED,
         aiIntents: SHARED_INTENTS,
+        crmLabel: 'CRM Clientes', crmIcon: '💈',
     },
     salon: {
         displayName: 'Salón de Belleza',
@@ -119,6 +128,7 @@ const BUSINESS_REGISTRY = {
         vocabulary: { customer: 'Cliente', customers: 'Clientes', appointment: 'Turno', appointments: 'Turnos', product: 'Producto', service: 'Servicio' },
         blockedFeatures: NON_HEALTHCARE_BLOCKED,
         aiIntents: SHARED_INTENTS,
+        crmLabel: 'CRM Clientes', crmIcon: '💅',
     },
     spa: {
         displayName: 'Spa',
@@ -126,6 +136,7 @@ const BUSINESS_REGISTRY = {
         vocabulary: { customer: 'Cliente', customers: 'Clientes', appointment: 'Reserva', appointments: 'Reservas', product: 'Producto', service: 'Tratamiento' },
         blockedFeatures: NON_HEALTHCARE_BLOCKED,
         aiIntents: SHARED_INTENTS,
+        crmLabel: 'CRM Clientes', crmIcon: '🧖',
     },
     inmobiliaria: {
         displayName: 'Inmobiliaria',
@@ -133,6 +144,7 @@ const BUSINESS_REGISTRY = {
         vocabulary: { customer: 'Cliente', customers: 'Clientes', appointment: 'Visita', appointments: 'Visitas', product: 'Producto', service: 'Servicio' },
         blockedFeatures: NON_HEALTHCARE_BLOCKED,
         aiIntents: SHARED_INTENTS,
+        crmLabel: 'CRM Inmuebles', crmIcon: '🏠',
     },
     propiedad_horizontal: {
         displayName: 'Propiedad Horizontal',
@@ -140,6 +152,31 @@ const BUSINESS_REGISTRY = {
         vocabulary: { customer: 'Residente', customers: 'Residentes', appointment: 'Reserva', appointments: 'Reservas', product: 'Producto', service: 'Servicio' },
         blockedFeatures: NON_HEALTHCARE_BLOCKED,
         aiIntents: SHARED_INTENTS,
+        crmLabel: 'CRM Residentes', crmIcon: '🏢',
+    },
+    gobernanza_politica: {
+        displayName: 'Gobernanza / Política',
+        category: 'professional',
+        vocabulary: { customer: 'Ciudadano', customers: 'Ciudadanos', appointment: 'Reunión', appointments: 'Reuniones', product: 'Documento', service: 'Gestión' },
+        blockedFeatures: NON_HEALTHCARE_BLOCKED,
+        aiIntents: SHARED_INTENTS,
+        crmLabel: 'Partes Interesadas', crmIcon: '🏛️',
+    },
+    consultoria: {
+        displayName: 'Consultoría',
+        category: 'professional',
+        vocabulary: { customer: 'Cliente', customers: 'Clientes', appointment: 'Sesión', appointments: 'Sesiones', product: 'Entregable', service: 'Consultoría' },
+        blockedFeatures: NON_HEALTHCARE_BLOCKED,
+        aiIntents: SHARED_INTENTS,
+        crmLabel: 'CRM Clientes', crmIcon: '💼',
+    },
+    publicidad: {
+        displayName: 'Publicidad / Marketing',
+        category: 'commercial',
+        vocabulary: { customer: 'Cliente', customers: 'Clientes', appointment: 'Reunión', appointments: 'Reuniones', product: 'Material', service: 'Campaña' },
+        blockedFeatures: NON_HEALTHCARE_BLOCKED,
+        aiIntents: SHARED_INTENTS,
+        crmLabel: 'CRM Clientes', crmIcon: '📢',
     },
     otro: {
         displayName: 'Otro',
@@ -147,6 +184,7 @@ const BUSINESS_REGISTRY = {
         vocabulary: { customer: 'Cliente', customers: 'Clientes', appointment: 'Cita', appointments: 'Citas', product: 'Producto', service: 'Servicio' },
         blockedFeatures: NON_HEALTHCARE_BLOCKED,
         aiIntents: SHARED_INTENTS,
+        crmLabel: 'CRM', crmIcon: '🤝',
     },
 };
 
@@ -185,6 +223,12 @@ class BusinessRegistry {
     /** Return true when businessType is specifically 'veterinaria'. */
     isVeterinary(businessType) {
         return (businessType || '').toLowerCase().trim() === 'veterinaria';
+    }
+
+    /** Return { label, icon } for the CRM sidebar item based on business type. */
+    getCrmConfig(businessType) {
+        const cfg = this.getConfig(businessType);
+        return { label: cfg.crmLabel || 'CRM', icon: cfg.crmIcon || '🤝' };
     }
 
     /** Return all registered business type IDs. */

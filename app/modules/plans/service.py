@@ -1,5 +1,7 @@
 from sqlalchemy.orm import Session
 from app.models.plan import Plan, PlanLimit, PlanFeature
+from app.models.business_type import BusinessType
+from app.core.business_registry import BUSINESS_REGISTRY
 
 PLAN_DEFINITIONS = {
     "free": {
@@ -131,5 +133,66 @@ def seed_plans(db: Session):
                 is_enabled=is_enabled
             )
             db.add(feature)
+
+    db.commit()
+
+
+# Icon mapping for each registry entry
+_BUSINESS_ICONS = {
+    "veterinaria": "🐾",
+    "consultorio": "🏥",
+    "clinica": "⚕️",
+    "dentista": "🦷",
+    "dental": "🦷",
+    "fisioterapia": "🏃",
+    "nutricion": "🥗",
+    "medicina_general": "🩺",
+    "barberia": "💈",
+    "salon": "💅",
+    "spa": "🧖",
+    "inmobiliaria": "🏠",
+    "propiedad_horizontal": "🏢",
+    "gobernanza_politica": "🏛️",
+    "consultoria": "💼",
+    "publicidad": "📢",
+    "otro": "📋",
+}
+
+
+def seed_business_types(db: Session) -> None:
+    """Upsert all entries from BUSINESS_REGISTRY into the business_types table.
+
+    New types are inserted; existing types have label/description/icon refreshed
+    so the table always mirrors the registry.
+    """
+    for order, (code, cfg) in enumerate(BUSINESS_REGISTRY.items()):
+        existing = db.query(BusinessType).filter(BusinessType.code == code).first()
+        label_customers = cfg.vocabulary.get("customers", "Clientes")
+        label_appointments = cfg.vocabulary.get("appointments", "Citas")
+        icon = _BUSINESS_ICONS.get(code, "🏪")
+        supports_pets = code == "veterinaria"
+
+        if existing:
+            existing.label = cfg.display_name
+            existing.description = f"{cfg.display_name} — {cfg.category}"
+            existing.icon = icon
+            existing.default_label_customers = label_customers
+            existing.default_label_appointments = label_appointments
+            existing.supports_pets = supports_pets
+            existing.is_active = True
+            existing.order = order
+        else:
+            db.add(BusinessType(
+                code=code,
+                label=cfg.display_name,
+                description=f"{cfg.display_name} — {cfg.category}",
+                icon=icon,
+                is_active=True,
+                default_label_customers=label_customers,
+                default_label_appointments=label_appointments,
+                default_label_pets="Mascota",
+                supports_pets=supports_pets,
+                order=order,
+            ))
 
     db.commit()

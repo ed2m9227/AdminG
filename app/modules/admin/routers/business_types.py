@@ -23,7 +23,13 @@ router = APIRouter(prefix="/api/admin/business-types", tags=["admin_business_typ
 
 def check_admin_access(current_user: User = Depends(get_current_user)):
     """Verify that user has admin privileges"""
-    if current_user.role != "admin":
+    is_master = (
+        current_user.role == "admin"
+        or current_user.plan == "admin"
+        or current_user.business_type == "master"
+    )
+
+    if not is_master:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only administrators can access this resource"

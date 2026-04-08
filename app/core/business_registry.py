@@ -290,6 +290,51 @@ BUSINESS_REGISTRY: Dict[str, BusinessTypeConfig] = {
         blocked_features=_NON_HEALTHCARE_BLOCKED,
         ai_intents=SHARED_INTENTS,
     ),
+    "gobernanza_politica": BusinessTypeConfig(
+        id="gobernanza_politica",
+        display_name="Gobernanza / Política",
+        category="professional",
+        vocabulary={
+            "customer": "Ciudadano",
+            "customers": "Ciudadanos",
+            "appointment": "Reunión",
+            "appointments": "Reuniones",
+            "product": "Documento",
+            "service": "Gestión",
+        },
+        blocked_features=_NON_HEALTHCARE_BLOCKED,
+        ai_intents=SHARED_INTENTS,
+    ),
+    "consultoria": BusinessTypeConfig(
+        id="consultoria",
+        display_name="Consultoría",
+        category="professional",
+        vocabulary={
+            "customer": "Cliente",
+            "customers": "Clientes",
+            "appointment": "Sesión",
+            "appointments": "Sesiones",
+            "product": "Entregable",
+            "service": "Consultoría",
+        },
+        blocked_features=_NON_HEALTHCARE_BLOCKED,
+        ai_intents=SHARED_INTENTS,
+    ),
+    "publicidad": BusinessTypeConfig(
+        id="publicidad",
+        display_name="Publicidad / Marketing",
+        category="commercial",
+        vocabulary={
+            "customer": "Cliente",
+            "customers": "Clientes",
+            "appointment": "Reunión",
+            "appointments": "Reuniones",
+            "product": "Material",
+            "service": "Campaña",
+        },
+        blocked_features=_NON_HEALTHCARE_BLOCKED,
+        ai_intents=SHARED_INTENTS,
+    ),
 }
 
 _DEFAULT_CONFIG = BusinessTypeConfig(

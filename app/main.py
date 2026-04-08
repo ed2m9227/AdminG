@@ -27,7 +27,9 @@ from app.modules.documents.router import router as documents_router
 from app.modules.authorizations.router import router as authorizations_router
 from app.modules.crm.router import router as crm_router
 from app.modules.ai.router import router as ai_router
-from app.modules.plans.service import seed_plans
+from app.modules.operations.router import router as operations_router
+from app.modules.eoe.router import router as eoe_router
+from app.modules.plans.service import seed_plans, seed_business_types
 
 # Configurar logging
 logging.basicConfig(
@@ -105,6 +107,15 @@ def startup_event():
         finally:
             db.close()
 
+        # Seed / sync business types from registry
+        db = SessionLocal()
+        try:
+            logger.info("Seeding business types...")
+            seed_business_types(db)
+            logger.info("Business types seeded successfully")
+        finally:
+            db.close()
+
         # Ensure default admin user exists
         try:
             from app.models.user import User
@@ -166,6 +177,8 @@ app.include_router(documents_router)
 app.include_router(authorizations_router)
 app.include_router(crm_router)
 app.include_router(ai_router)
+app.include_router(operations_router)
+app.include_router(eoe_router)
 
 @app.get("/health")
 def health():
@@ -272,6 +285,7 @@ if frontend_dist.exists():
             "business",
             "admin",
             "notifications",
+            "operations",
             "docs",
             "openapi.json",
             "health",
