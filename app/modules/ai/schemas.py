@@ -24,3 +24,4 @@ class ChatResponse(BaseModel):
     table: Optional[dict[str, Any]] = None
     chart: Optional[ChartData] = None
     available_intents: list[str] = []
+    action_result: Optional[dict[str, Any]] = None

@@ -27,6 +27,7 @@ from app.core.security import get_current_user
 from app.core.collaboration import resolve_collaboration_owner_id, get_scope_user_ids
 from app.db.session import get_db
 from app.models.user import User
+from app.modules.ai.action_executor import execute_action
 from app.modules.ai.interpreter import detect_intent
 from app.modules.ai.query_builder import run_query_for_intent
 from app.modules.ai.response_formatter import format_answer, to_table
@@ -78,15 +79,37 @@ def ai_chat(
     )
     user_ids = get_scope_user_ids(owner_id, db)
 
-    result = run_query_for_intent(intent, db, user_ids, business_type)
-    rows = result.get("rows", [])
+    action_result = execute_action(payload.question, db, current_user)
+    if action_result is not None:
+        return ChatResponse(
+            intent=action_result.action_type,
+            answer=action_result.message,
+            table={"columns": [], "rows": []},
+            chart={"type": "none", "labels": [], "datasets": []},
+            available_intents=list(available_intents),
+            action_result=action_result.to_dict(),
+        )
+
+    if intent == "unknown":
+        rows = []
+        result = {"chart": {"type": "none", "labels": [], "datasets": []}}
+    else:
+        result = run_query_for_intent(intent, db, user_ids, business_type)
+        rows = result.get("rows", [])
 
     return ChatResponse(
         intent=intent,
-        answer=format_answer(intent, rows),
+        answer=format_answer(
+            intent,
+            rows,
+            question=payload.question,
+            business_type=business_type,
+            available_intents=list(available_intents),
+        ),
         table=to_table(rows),
         chart=result.get("chart"),
         available_intents=list(available_intents),
+        action_result=None,
     )
 
 
