@@ -6,6 +6,7 @@
 
 import authService from '../services/auth.service.js';
 import router from '../utils/router.js';
+import { t } from '../utils/i18n.js';
 
 export class LoginView {
     render() {
@@ -13,13 +14,13 @@ export class LoginView {
             <div class="auth-container">
                 <div class="auth-box">
                     <h1 class="auth-title">AdminG</h1>
-                    <p class="auth-subtitle">Sistema de administracion general para pequeñas y medianas empresas</p>
+                    <p class="auth-subtitle">${t('login.subtitle', 'Sistema de administracion general para pequeñas y medianas empresas')}</p>
                     
                     <div id="loginError" class="error hidden"></div>
                     
                     <form id="loginForm" class="auth-form">
                         <div class="form-group">
-                            <label for="loginEmail">Email</label>
+                            <label for="loginEmail">${t('login.email', 'Email')}</label>
                             <input 
                                 type="email" 
                                 id="loginEmail" 
@@ -31,7 +32,7 @@ export class LoginView {
                         </div>
                         
                         <div class="form-group">
-                            <label for="loginPassword">Contraseña</label>
+                            <label for="loginPassword">${t('login.password', 'Contraseña')}</label>
                             <input 
                                 type="password" 
                                 id="loginPassword" 
@@ -43,13 +44,13 @@ export class LoginView {
                         </div>
                         
                         <button type="submit" class="btn btn-primary btn-full" id="loginBtn">
-                            Iniciar Sesión
+                            ${t('login.submit', 'Iniciar Sesión')}
                         </button>
                     </form>
                     
                     <p class="link">
-                        ¿No tienes cuenta? 
-                        <a href="#" data-navigate="register">Regístrate aquí</a>
+                        ${t('login.no_account', '¿No tienes cuenta?')} 
+                        <a href="#" data-navigate="register">${t('login.signup', 'Regístrate aquí')}</a>
                     </p>
                 </div>
             </div>
@@ -141,7 +142,13 @@ export class LoginView {
                 router.navigate('onboarding');
             } else {
                 console.log('🎯 Onboarding already completed, going to dashboard...');
-                router.navigate('dashboard');
+                // Gate: paid plan not yet confirmed → go to payment-pending
+                if (user && user.plan && user.plan !== 'free' && user.plan_paid === false) {
+                    console.log('💳 Plan not paid, redirecting to payment-pending...');
+                    router.navigate('payment-pending');
+                } else {
+                    router.navigate('dashboard');
+                }
             }
         } catch (error) {
             console.error('❌ Login error:', error);

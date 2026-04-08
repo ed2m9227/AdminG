@@ -525,7 +525,12 @@ class OnboardingWizard {
             }
 
             modal.closeModal();
-            modal.showSuccess('¡Configuración guardada! Redirigiendo al dashboard...');
+            const isPaid = this.formData.plan && this.formData.plan !== 'free';
+            modal.showSuccess(
+                isPaid
+                    ? '¡Configuración guardada! Ahora completa el pago de tu plan.'
+                    : '¡Configuración guardada! Redirigiendo al dashboard...'
+            );
 
             // Save plan and role to user preferences
             localStorage.setItem('user_plan', this.formData.plan);
@@ -545,10 +550,10 @@ class OnboardingWizard {
                 // Continue anyway, localStorage will work for now
             }
             
-            // Navigate to dashboard without reloading
+            // Navigate: paid plan → payment-pending; free → dashboard
             setTimeout(async () => {
                 const router = (await import('../utils/router.js')).default;
-                await router.navigate('dashboard');
+                await router.navigate(isPaid ? 'payment-pending' : 'dashboard');
             }, 1500);
 
         } catch (error) {

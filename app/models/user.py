@@ -8,6 +8,7 @@ class User(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String(120), unique=True, nullable=False, index=True)
+    full_name = Column(String(160), nullable=True)
     hashed_password = Column(String(255), nullable=False)
     role = Column(String(30), default="viewer", nullable=False)
     plan = Column(String(30), default="free", nullable=False)
@@ -18,6 +19,8 @@ class User(Base):
     business_type = Column(String(50), default="general", nullable=False)
     parent_user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     onboarding_completed = Column(Boolean, default=False, nullable=False)
+    # Plan payment verification: True = paid/free, False = awaiting payment
+    plan_paid = Column(Boolean, default=True, nullable=False)
     
     # Relationships
     sub_users = relationship("User", remote_side=[id], backref="parent_user")

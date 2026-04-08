@@ -15,7 +15,8 @@ export const PLAN_CATALOG = [
         color: 'blue',
         features: ['Hasta 5 usuarios', 'Hasta 100 clientes', 'Hasta 200 citas', 'CRUD completo', 'Reportes basicos'],
         limits: '5 usuarios, 100 clientes',
-        nequiLink: 'https://buy.nequi.com.co/AdminG-Starter',
+        // ── REEMPLAZA esta URL con el enlace real de tu botón de cobro Nequi ──
+        nequiLink: 'https://cobros.nequi.com/boton-de-cobro?d=STARTER_LINK_AQUI',
     },
     {
         code: 'pro',
@@ -24,7 +25,8 @@ export const PLAN_CATALOG = [
         color: 'purple',
         features: ['Hasta 25 usuarios', 'Hasta 1000 clientes', 'Citas ilimitadas', 'Reportes avanzados', 'Exportar datos', 'API acceso'],
         limits: '25 usuarios, 1000 clientes',
-        nequiLink: 'https://buy.nequi.com.co/AdminG-Pro',
+        // ── REEMPLAZA esta URL con el enlace real de tu botón de cobro Nequi ──
+        nequiLink: 'https://cobros.nequi.com/boton-de-cobro?d=PRO_LINK_AQUI',
         lockedFeatures: ['Documentos', 'Autorizaciones'],
     },
     {
@@ -34,7 +36,8 @@ export const PLAN_CATALOG = [
         color: 'indigo',
         features: ['Hasta 100 usuarios', 'Clientes ilimitados', 'Citas ilimitadas', 'Analytics avanzado', 'API completa', 'IA integrada', 'Documentos y autorizaciones', 'Soporte prioritario'],
         limits: 'Ilimitado',
-        nequiLink: 'https://buy.nequi.com.co/AdminG-Max',
+        // ── REEMPLAZA esta URL con el enlace real de tu botón de cobro Nequi ──
+        nequiLink: 'https://cobros.nequi.com/boton-de-cobro?d=MAX_LINK_AQUI',
     },
 ];
 

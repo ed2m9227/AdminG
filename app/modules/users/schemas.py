@@ -32,6 +32,7 @@ class UserOut(UserBase):
     plan_expires_at: datetime | None = None
     plan_expired: bool = False
     onboarding_completed: bool
+    plan_paid: bool = True
     parent_user_id: int | None = None
     created_at: datetime
     updated_at: datetime

@@ -196,6 +196,11 @@ def create_business_config(
     # Si viene plan en el payload, actualizar el usuario
     if hasattr(payload, 'plan') and payload.plan:
         current_user.plan = payload.plan
+        # New paid plan chosen during onboarding → requires payment verification
+        if payload.plan not in ("free", "admin", ""):
+            setattr(current_user, "plan_paid", False)
+        else:
+            setattr(current_user, "plan_paid", True)
     current_user.business_type = payload.business_type
     db.add(current_user)
     

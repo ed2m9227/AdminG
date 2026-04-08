@@ -109,7 +109,13 @@ def run_sqlite_startup_migrations(db_path: str = "app.db") -> list[str]:
             _ensure_columns(
                 cursor,
                 "users",
-                [("plan_start_date", "DATETIME DEFAULT (datetime('now'))")],
+                [
+                    ("plan_start_date", "DATETIME DEFAULT (datetime('now'))"),
+                    ("full_name", "TEXT"),
+                    # plan_paid: DEFAULT 1 so existing accounts are grandfathered as paid
+                    ("plan_paid", "INTEGER NOT NULL DEFAULT 1"),
+                    ("plan_payment_reference", "TEXT"),
+                ],
             )
         )
         applied.extend(_sync_user_business_type_from_config(cursor))

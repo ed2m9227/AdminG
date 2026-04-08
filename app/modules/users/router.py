@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from pydantic import BaseModel
 from app.db.session import get_db
 from app.modules.users.schemas import UserCreate, UserOut
 from app.core.permissions import require_permission
@@ -66,6 +67,7 @@ def get_current_user_info(
         "plan_expires_at": plan_expires_at,
         "plan_expired": plan_expired,
         "onboarding_completed": user.onboarding_completed,
+        "plan_paid": getattr(user, "plan_paid", True),
         "parent_user_id": user.parent_user_id,
         "created_at": user.created_at,
         "updated_at": user.updated_at,
@@ -104,6 +106,58 @@ def complete_onboarding(
     db.refresh(user)
     
     return {"success": True, "message": "Onboarding marked as completed"}
+
+
+class PaymentReferencePayload(BaseModel):  # noqa: F811 – re-declared locally prevented
+    reference: str
+    plan: str
+
+
+@router.post("/me/submit-payment-reference")
+def submit_payment_reference(
+    payload: PaymentReferencePayload,
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Store Nequi/PSE payment reference for admin review."""
+    user = db.query(User).filter(User.id == int(current_user["id"])).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if not payload.reference or len(payload.reference.strip()) < 4:
+        raise HTTPException(status_code=400, detail="Referencia de pago inválida")
+
+    setattr(user, "plan_payment_reference", payload.reference.strip())
+    db.add(user)
+    db.commit()
+    return {
+        "success": True,
+        "message": "Referencia recibida. Un administrador activará tu cuenta pronto.",
+        "reference": payload.reference.strip(),
+    }
+
+
+@router.patch("/admin/activate-plan/{user_id}")
+def admin_activate_plan(
+    user_id: int,
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Admin-only: mark a user's plan as paid and activate dashboard access."""
+    admin = db.query(User).filter(User.id == int(current_user["id"])).first()
+    if not admin or admin.role != "admin":
+        raise HTTPException(status_code=403, detail="Solo administradores pueden activar planes")
+
+    target = db.query(User).filter(User.id == user_id).first()
+    if not target:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    setattr(target, "plan_paid", True)
+    target.plan_start_date = datetime.utcnow()
+    db.add(target)
+    db.commit()
+    db.refresh(target)
+    return {"success": True, "user_id": target.id, "plan": target.plan, "plan_paid": True}
 
 @router.get("/me/features")
 def get_user_features(
