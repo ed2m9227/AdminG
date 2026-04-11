@@ -4,9 +4,10 @@ export const PLAN_CATALOG = [
         name: 'GRATUITO',
         priceCOP: 0,
         color: 'gray',
-        features: ['1 usuario', 'Funciones basicas', 'Solo lectura', 'Ideal para pruebas'],
+        features: ['1 usuario', 'Funciones basicas', 'Solo lectura', 'Trial completo 15 dias'],
         limits: '1 usuario, solo lectura',
         nequiLink: null,
+        nequiQrUrl: null,
     },
     {
         code: 'starter',
@@ -15,8 +16,8 @@ export const PLAN_CATALOG = [
         color: 'blue',
         features: ['Hasta 5 usuarios', 'Hasta 100 clientes', 'Hasta 200 citas', 'CRUD completo', 'Reportes basicos'],
         limits: '5 usuarios, 100 clientes',
-        // ── REEMPLAZA esta URL con el enlace real de tu botón de cobro Nequi ──
-        nequiLink: 'https://cobros.nequi.com/boton-de-cobro?d=STARTER_LINK_AQUI',
+        nequiLink: 'https://checkout.nequi.wompi.co/l/f1pHUn',
+        nequiQrUrl: null,
     },
     {
         code: 'pro',
@@ -25,8 +26,8 @@ export const PLAN_CATALOG = [
         color: 'purple',
         features: ['Hasta 25 usuarios', 'Hasta 1000 clientes', 'Citas ilimitadas', 'Reportes avanzados', 'Exportar datos', 'API acceso'],
         limits: '25 usuarios, 1000 clientes',
-        // ── REEMPLAZA esta URL con el enlace real de tu botón de cobro Nequi ──
-        nequiLink: 'https://cobros.nequi.com/boton-de-cobro?d=PRO_LINK_AQUI',
+        nequiLink: 'https://checkout.nequi.wompi.co/l/dsZT5H',
+        nequiQrUrl: null,
         lockedFeatures: ['Documentos', 'Autorizaciones'],
     },
     {
@@ -36,8 +37,8 @@ export const PLAN_CATALOG = [
         color: 'indigo',
         features: ['Hasta 100 usuarios', 'Clientes ilimitados', 'Citas ilimitadas', 'Analytics avanzado', 'API completa', 'IA integrada', 'Documentos y autorizaciones', 'Soporte prioritario'],
         limits: 'Ilimitado',
-        // ── REEMPLAZA esta URL con el enlace real de tu botón de cobro Nequi ──
-        nequiLink: 'https://cobros.nequi.com/boton-de-cobro?d=MAX_LINK_AQUI',
+        nequiLink: 'https://checkout.nequi.wompi.co/l/Ki8sWT',
+        nequiQrUrl: null,
     },
 ];
 

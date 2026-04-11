@@ -33,6 +33,10 @@ class UserOut(UserBase):
     plan_expired: bool = False
     onboarding_completed: bool
     plan_paid: bool = True
+    effective_plan: str | None = None
+    free_trial_active: bool = False
+    free_trial_ends_at: datetime | None = None
+    free_trial_days_left: int = 0
     parent_user_id: int | None = None
     created_at: datetime
     updated_at: datetime

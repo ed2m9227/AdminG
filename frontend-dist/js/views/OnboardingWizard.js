@@ -6,6 +6,7 @@
 import apiService from '../services/api.service.js';
 import authService from '../services/auth.service.js';
 import modal from '../components/Modal.js';
+import router from '../utils/router.js';
 import { PLAN_CATALOG } from '../utils/plans.js';
 
 class OnboardingWizard {
@@ -58,6 +59,12 @@ class OnboardingWizard {
         // Get current user role (already loaded by authService)
         const user = authService.getCurrentUser();
         this.formData.role = user?.role || 'admin';
+
+        const forcedStep = Number.parseInt(localStorage.getItem('onboarding_return_step') || '', 10);
+        if (this.formData.role !== 'team' && Number.isInteger(forcedStep) && forcedStep >= 1 && forcedStep <= 3) {
+            this.currentStep = forcedStep;
+            localStorage.removeItem('onboarding_return_step');
+        }
 
         // Si es Team, ajustar total de pasos
         if (this.formData.role === 'team') {
@@ -253,7 +260,7 @@ class OnboardingWizard {
                 </div>
 
                 <div class="info-box info-box-blue">
-                    <p>ℹ️ <strong>Nota:</strong> Al seleccionar un plan de pago, serás redirigido a Nequi para completar la compra. Puedes cambiar de plan en cualquier momento.</p>
+                    <p>ℹ️ <strong>Nota:</strong> El plan gratuito incluye trial completo de 15 días. Al seleccionar un plan de pago, puedes pagar por enlace o QR de Nequi y luego continuar.</p>
                 </div>
             </div>
         `;
@@ -430,11 +437,6 @@ class OnboardingWizard {
     }
 
     handleLogout() {
-        // Confirm logout
-        if (!confirm('¿Deseas cerrar sesión y volver a login?')) {
-            return;
-        }
-
         // Clear auth data and localStorage completely
         authService.logout();
         // Remove ALL onboarding-related flags to ensure fresh start
@@ -446,7 +448,7 @@ class OnboardingWizard {
         
         console.log('✓ Session cleared, redirecting to login...');
         // Navigate to login
-        window.location.hash = '#login';
+        router.navigate('login');
     }
 
     validateStep1() {
@@ -552,7 +554,6 @@ class OnboardingWizard {
             
             // Navigate: paid plan → payment-pending; free → dashboard
             setTimeout(async () => {
-                const router = (await import('../utils/router.js')).default;
                 await router.navigate(isPaid ? 'payment-pending' : 'dashboard');
             }, 1500);
 

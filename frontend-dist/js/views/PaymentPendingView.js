@@ -8,6 +8,7 @@
 import apiService from '../services/api.service.js';
 import authService from '../services/auth.service.js';
 import { PLAN_CATALOG } from '../utils/plans.js';
+import router from '../utils/router.js';
 
 const POLL_INTERVAL_MS = 8000;
 
@@ -61,10 +62,26 @@ class PaymentPendingView {
         document.getElementById('pendingSubtitle').textContent =
             `Plan seleccionado: ${plan.name} — $${(plan.priceCOP || 0).toLocaleString('es-CO')} COP / mes`;
 
+        const qrUrl = plan.nequiQrUrl
+            || (plan.nequiLink
+                ? `https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=${encodeURIComponent(plan.nequiLink)}`
+                : null);
+
         const nequiHtml = plan.nequiLink
-            ? `<a href="${plan.nequiLink}" target="_blank" rel="noopener noreferrer" class="btn-payment-nequi">
-                   💳 Pagar con Nequi — ${plan.name}
-               </a>`
+            ? `
+                <div class="payment-methods-wrap">
+                    <a href="${plan.nequiLink}" target="_blank" rel="noopener noreferrer" class="btn-payment-nequi">
+                        💳 Pagar con Nequi — ${plan.name}
+                    </a>
+                    <button type="button" class="btn-payment-qr" id="toggleQrBtn">
+                        📱 Pagar con QR
+                    </button>
+                </div>
+                <div id="qrPaymentBox" class="qr-payment-box hidden">
+                    <p>Escanea este QR desde Nequi para pagar tu plan:</p>
+                    ${qrUrl ? `<img src="${qrUrl}" alt="QR de pago ${plan.name}" loading="lazy" />` : '<p>No hay QR disponible para este plan.</p>'}
+                </div>
+              `
             : `<p style="color:#6b7280;font-size:13px;">
                    Contacta a soporte para recibir el link de pago de tu plan.
                </p>`;
@@ -116,8 +133,11 @@ class PaymentPendingView {
             </div>
 
             <div class="payment-pending-footer">
-                <button id="logoutPendingBtn" class="btn btn-prev" style="font-size:12px;">
-                    ← Cerrar sesión
+                <button id="backToPlansBtn" class="btn btn-prev" style="font-size:12px;">
+                    ← Volver a planes
+                </button>
+                <button id="logoutPendingBtn" class="btn btn-prev" style="font-size:12px; margin-left: 8px;">
+                    Cerrar sesión
                 </button>
             </div>
         `;
@@ -127,9 +147,20 @@ class PaymentPendingView {
             this._submitReference(user.plan);
         });
 
+        document.getElementById('toggleQrBtn')?.addEventListener('click', () => {
+            const box = document.getElementById('qrPaymentBox');
+            if (!box) return;
+            box.classList.toggle('hidden');
+        });
+
+        document.getElementById('backToPlansBtn')?.addEventListener('click', async () => {
+            localStorage.setItem('onboarding_return_step', '2');
+            await router.navigate('onboarding');
+        });
+
         document.getElementById('logoutPendingBtn')?.addEventListener('click', () => {
             authService.logout();
-            window.location.hash = '#login';
+            router.navigate('login');
         });
     }
 
@@ -146,7 +177,7 @@ class PaymentPendingView {
 
         if (btn) { btn.disabled = true; btn.textContent = 'Enviando…'; }
         try {
-            await apiService.post('/users/me/submit-payment-reference', { reference: ref, plan });
+            await apiService.submitPaymentReference(ref, plan);
             this._submitted = true;
             if (statusEl) {
                 statusEl.textContent = '✅ ¡Referencia enviada! El administrador activará tu cuenta a la brevedad.';

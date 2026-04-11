@@ -1,3 +1,4 @@
+import math
 from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -21,6 +22,8 @@ PAID_PLAN_ALIASES = {
     "AdminPro_Start", "AdminPro_Max",
 }
 PLAN_DURATION_DAYS = 30
+FREE_TRIAL_DAYS = 15
+FREE_TRIAL_EFFECTIVE_PLAN = "max"
 
 
 def enforce_plan_expiration(user: User, db: Session) -> tuple[bool, datetime | None]:
@@ -45,6 +48,55 @@ def enforce_plan_expiration(user: User, db: Session) -> tuple[bool, datetime | N
     db.refresh(user)
     return True, expires_at
 
+
+def _is_free_trial_eligible(user: User) -> bool:
+    if user.plan != "free":
+        return False
+    if user.role == "admin":
+        return False
+    if user.parent_user_id:
+        return False
+    return True
+
+
+def resolve_free_trial_state(user: User, db: Session) -> tuple[bool, datetime | None, int]:
+    """Ensure free-trial lifecycle and return (active, ends_at, days_left)."""
+    if not _is_free_trial_eligible(user):
+        return False, None, 0
+
+    if getattr(user, "free_trial_used", False):
+        started_at = getattr(user, "free_trial_started_at", None)
+        ends_at = started_at + timedelta(days=FREE_TRIAL_DAYS) if started_at else None
+        return False, ends_at, 0
+
+    trial_started_at = getattr(user, "free_trial_started_at", None)
+    if trial_started_at is None:
+        trial_started_at = datetime.utcnow()
+        setattr(user, "free_trial_started_at", trial_started_at)
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+
+    ends_at = trial_started_at + timedelta(days=FREE_TRIAL_DAYS)
+    now = datetime.utcnow()
+    if now <= ends_at:
+        remaining_days = max(1, math.ceil((ends_at - now).total_seconds() / 86400))
+        return True, ends_at, remaining_days
+
+    setattr(user, "free_trial_used", True)
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return False, ends_at, 0
+
+
+def resolve_effective_plan_for_features(user: User, free_trial_active: bool) -> str:
+    if user.role == "admin" or user.plan == "admin":
+        return "admin"
+    if free_trial_active and user.plan == "free":
+        return FREE_TRIAL_EFFECTIVE_PLAN
+    return user.plan
+
 @router.get("/me", response_model=UserOut)
 def get_current_user_info(
     current_user=Depends(get_current_user),
@@ -56,11 +108,14 @@ def get_current_user_info(
         raise HTTPException(status_code=404, detail="User not found")
 
     plan_expired, plan_expires_at = enforce_plan_expiration(user, db)
+    free_trial_active, free_trial_ends_at, free_trial_days_left = resolve_free_trial_state(user, db)
+    effective_plan = resolve_effective_plan_for_features(user, free_trial_active)
     return {
         "id": user.id,
         "email": user.email,
         "role": user.role,
         "plan": user.plan,
+        "effective_plan": effective_plan,
         "is_active": user.is_active,
         "business_type": user.business_type,
         "plan_start_date": user.plan_start_date,
@@ -68,6 +123,9 @@ def get_current_user_info(
         "plan_expired": plan_expired,
         "onboarding_completed": user.onboarding_completed,
         "plan_paid": getattr(user, "plan_paid", True),
+        "free_trial_active": free_trial_active,
+        "free_trial_ends_at": free_trial_ends_at,
+        "free_trial_days_left": free_trial_days_left,
         "parent_user_id": user.parent_user_id,
         "created_at": user.created_at,
         "updated_at": user.updated_at,
@@ -172,22 +230,28 @@ def get_user_features(
         raise HTTPException(status_code=404, detail="User not found")
 
     plan_expired, plan_expires_at = enforce_plan_expiration(user, db)
+    free_trial_active, free_trial_ends_at, free_trial_days_left = resolve_free_trial_state(user, db)
+    effective_plan = resolve_effective_plan_for_features(user, free_trial_active)
 
     features = get_available_features(
-        user.plan,
+        effective_plan,
         user.role,
         is_parent_account=not bool(user.parent_user_id),
     )
     features = filter_for_business_type(features, user.business_type)
-    limits = get_plan_limits(user.plan)
+    limits = get_plan_limits(effective_plan)
 
     return {
         "plan": user.plan,
+        "effective_plan": effective_plan,
         "role": user.role,
         "business_type": user.business_type,
         "features": features,
         "limits": limits,
         "plan_expired": plan_expired,
         "plan_expires_at": plan_expires_at,
+        "free_trial_active": free_trial_active,
+        "free_trial_ends_at": free_trial_ends_at,
+        "free_trial_days_left": free_trial_days_left,
         "available_plans": ["free", "starter", "pro", "max"],
     }

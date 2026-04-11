@@ -3,14 +3,18 @@ Admin Router - Master Admin Panel y Team Management
 Endpoint para administradores globales y gestión de equipos
 """
 
+from decimal import Decimal
+from typing import List, Optional
+
 from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
-from typing import List
+
 from app.db.session import get_db
-from app.core.collaboration import normalize_plan
+from app.core.collaboration import get_scope_user_ids, normalize_plan, resolve_collaboration_owner_id
 from app.core.security import get_current_user, hash_password
-from app.core.features import get_available_features, get_plan_limits, Feature
+from app.core.features import get_available_features, get_plan_limits, has_feature, Feature
 from app.models.user import User
 from app.models.team_user import TeamUser
 from app.models.customer import Customer
@@ -30,12 +34,27 @@ from app.models.cash_transaction import CashTransaction
 from app.models.service_package import ServicePackage, ServicePackageItem
 from app.models.inventory_package import InventoryPackage, InventoryPackageItem
 from app.models.audit_log import AuditLog, VoidRequest
-from datetime import datetime
+from app.models.payroll_payment import PayrollPayment
+from datetime import datetime, timedelta
 
 router = APIRouter(
     prefix="/admin",
     tags=["Admin"]
 )
+
+
+class PayrollPaymentCreate(BaseModel):
+    employee_id: int
+    period: str
+    base_salary: Decimal
+    bonus: Decimal = Decimal("0")
+    deductions: Decimal = Decimal("0")
+    notes: Optional[str] = None
+    status: str = "paid"
+
+
+class TeamMemberUpdate(BaseModel):
+    full_name: str
 
 
 def require_admin(
@@ -69,6 +88,49 @@ def is_team_owner(
     return user
 
 
+def _serialize_user_name(user: User | None) -> str | None:
+    if not user:
+        return None
+    return user.full_name or user.email.split("@")[0]
+
+
+def _ensure_feature_access(user: User, feature: Feature):
+    if has_feature(user.plan, feature, user.role, is_parent_account=user.parent_user_id is None):
+        return
+    raise HTTPException(status_code=403, detail="No tienes permisos para esta función")
+
+
+def _resolve_payroll_owner_id(user: User, db: Session) -> int:
+    return resolve_collaboration_owner_id(
+        user,
+        db,
+        allow_external=False,
+        allowed_owner_plans={"pro", "max", "admin"},
+    )
+
+
+def _serialize_payroll_payment(record: PayrollPayment):
+    return {
+        "id": record.id,
+        "owner_user_id": record.owner_user_id,
+        "employee_id": record.employee_user_id,
+        "employee_name": _serialize_user_name(record.employee),
+        "employee_email": record.employee.email if record.employee else None,
+        "created_by_user_id": record.created_by_user_id,
+        "created_by_name": _serialize_user_name(record.created_by),
+        "period": record.period,
+        "base_salary": float(record.base_salary or 0),
+        "bonus": float(record.bonus or 0),
+        "deductions": float(record.deductions or 0),
+        "net_amount": float(record.net_amount or 0),
+        "status": record.status,
+        "notes": record.notes,
+        "paid_at": record.paid_at.isoformat() if record.paid_at else None,
+        "created_at": record.created_at.isoformat() if record.created_at else None,
+        "updated_at": record.updated_at.isoformat() if record.updated_at else None,
+    }
+
+
 # ============== MASTER ADMIN ENDPOINTS ==============
 
 @router.get("/master/dashboard")
@@ -98,6 +160,34 @@ def master_dashboard(admin: User = Depends(require_admin), db: Session = Depends
         for role in ["viewer", "manager", "admin"]:
             count = db.query(func.count(User.id)).filter(User.role == role).scalar() or 0
             users_by_role[role] = count
+
+        now = datetime.utcnow()
+        free_trial_active = 0
+        free_trial_consumed = 0
+        free_trial_not_started = 0
+
+        free_owners = db.query(User).filter(User.plan == "free").all()
+        for u in free_owners:
+            if u.role == "admin" or u.parent_user_id:
+                continue
+            trial_used = bool(getattr(u, "free_trial_used", False))
+            trial_started_at = getattr(u, "free_trial_started_at", None)
+            if trial_used:
+                free_trial_consumed += 1
+                continue
+            if not trial_started_at:
+                free_trial_not_started += 1
+                continue
+            if now <= trial_started_at + timedelta(days=15):
+                free_trial_active += 1
+            else:
+                free_trial_consumed += 1
+
+        pending_payment_accounts = db.query(func.count(User.id)).filter(
+            User.plan != "free",
+            User.plan != "admin",
+            User.plan_paid == False,
+        ).scalar() or 0
         
         return {
             "status": "ok",
@@ -107,6 +197,12 @@ def master_dashboard(admin: User = Depends(require_admin), db: Session = Depends
                 "active_users": active_users,
                 "by_plan": users_by_plan,
                 "by_role": users_by_role,
+                "plan_lifecycle": {
+                    "free_trial_active": free_trial_active,
+                    "free_trial_consumed": free_trial_consumed,
+                    "free_trial_not_started": free_trial_not_started,
+                    "pending_payment_accounts": pending_payment_accounts,
+                },
             },
             "features_available": get_available_features("admin", "admin")
         }
@@ -139,6 +235,7 @@ def list_all_users(
                 {
                     "id": u.id,
                     "email": u.email,
+                    "full_name": u.full_name,
                     "role": u.role,
                     "plan": u.plan,
                     "is_active": u.is_active,
@@ -185,6 +282,49 @@ def change_user_role(
                 "role": user.role
             }
         }
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.put("/team/members/{member_id}")
+def update_team_member(
+    member_id: int,
+    payload: TeamMemberUpdate,
+    user: User = Depends(is_team_owner),
+    db: Session = Depends(get_db)
+):
+    try:
+        team_user = db.query(TeamUser).filter(
+            TeamUser.team_owner_id == user.id,
+            TeamUser.member_user_id == member_id,
+            TeamUser.is_active == True
+        ).first()
+
+        if not team_user or not team_user.member:
+            raise HTTPException(status_code=404, detail="Miembro del equipo no encontrado")
+
+        cleaned_name = (payload.full_name or "").strip()
+        if len(cleaned_name) < 2:
+            raise HTTPException(status_code=400, detail="El nombre completo es obligatorio")
+
+        team_user.member.full_name = cleaned_name
+        team_user.member.updated_at = datetime.utcnow()
+        db.add(team_user.member)
+        db.commit()
+        db.refresh(team_user.member)
+
+        return {
+            "success": True,
+            "member": {
+                "id": team_user.member.id,
+                "email": team_user.member.email,
+                "full_name": team_user.member.full_name,
+            }
+        }
+    except HTTPException:
+        db.rollback()
+        raise
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
@@ -254,6 +394,7 @@ def list_sub_users(
                 {
                     "id": u.id,
                     "email": u.email,
+                    "full_name": u.full_name,
                     "role": u.role,
                     "is_active": u.is_active,
                     "created_at": u.created_at.isoformat(),
@@ -423,6 +564,7 @@ def get_team_members(
                 {
                     "id": m.member.id,
                     "email": m.member.email,
+                    "full_name": m.member.full_name,
                     "role_in_team": m.role_in_team,
                     "relationship_type": "internal_user" if m.member.parent_user_id == user.id else "external_partner_owner",
                     "relationship_label": "Usuario Interno" if m.member.parent_user_id == user.id else "Socio Externo",
@@ -570,6 +712,7 @@ def invite_team_member(
 
 @router.post("/team/create")
 def create_team_user(
+    full_name: str,
     email: str,
     password: str,
     role: str = "viewer",
@@ -596,9 +739,14 @@ def create_team_user(
         if role not in ["viewer", "editor", "manager"]:
             raise HTTPException(status_code=400, detail="Rol inválido para usuario interno")
 
+        cleaned_name = full_name.strip()
+        if len(cleaned_name) < 2:
+            raise HTTPException(status_code=400, detail="El nombre completo es obligatorio")
+
         # Crear usuario hijo con onboarding ya completado
         new_user = User(
             email=email,
+            full_name=cleaned_name,
             hashed_password=hash_password(password),
             role=role,
             plan=user.plan,
@@ -650,6 +798,7 @@ def create_team_user(
             "user": {
                 "id": new_user.id,
                 "email": new_user.email,
+                "full_name": new_user.full_name,
                 "role": new_user.role,
                 "plan": new_user.plan
             }
@@ -657,6 +806,85 @@ def create_team_user(
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/team/payroll")
+def list_team_payroll(
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    user = db.query(User).filter(User.id == int(current_user["id"])).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    _ensure_feature_access(user, Feature.VIEW_PAYROLL)
+    owner_id = _resolve_payroll_owner_id(user, db)
+
+    records = (
+        db.query(PayrollPayment)
+        .filter(PayrollPayment.owner_user_id == owner_id)
+        .order_by(PayrollPayment.created_at.desc())
+        .limit(200)
+        .all()
+    )
+    return [_serialize_payroll_payment(record) for record in records]
+
+
+@router.post("/team/payroll")
+def create_team_payroll_payment(
+    payload: PayrollPaymentCreate,
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    user = db.query(User).filter(User.id == int(current_user["id"])).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    _ensure_feature_access(user, Feature.MANAGE_PAYROLL)
+    owner_id = _resolve_payroll_owner_id(user, db)
+    scope_user_ids = get_scope_user_ids(owner_id, db)
+
+    employee = db.query(User).filter(User.id == payload.employee_id).first()
+    if not employee or employee.parent_user_id != owner_id or employee.id not in scope_user_ids:
+        raise HTTPException(status_code=404, detail="Empleado no encontrado en tu equipo")
+
+    cleaned_period = (payload.period or "").strip()
+    if len(cleaned_period) != 7 or cleaned_period[4] != "-":
+        raise HTTPException(status_code=400, detail="El periodo debe tener formato YYYY-MM")
+
+    base_salary = Decimal(payload.base_salary or 0)
+    bonus = Decimal(payload.bonus or 0)
+    deductions = Decimal(payload.deductions or 0)
+    if base_salary <= 0:
+        raise HTTPException(status_code=400, detail="El salario base debe ser mayor que cero")
+    if bonus < 0 or deductions < 0:
+        raise HTTPException(status_code=400, detail="Bonificaciones y deducciones no pueden ser negativas")
+
+    net_amount = base_salary + bonus - deductions
+    if net_amount < 0:
+        raise HTTPException(status_code=400, detail="El neto no puede quedar negativo")
+
+    status_value = (payload.status or "paid").strip().lower()
+    if status_value not in {"paid", "pending"}:
+        raise HTTPException(status_code=400, detail="Estado de nómina inválido")
+
+    record = PayrollPayment(
+        owner_user_id=owner_id,
+        employee_user_id=employee.id,
+        created_by_user_id=user.id,
+        period=cleaned_period,
+        base_salary=base_salary,
+        bonus=bonus,
+        deductions=deductions,
+        net_amount=net_amount,
+        status=status_value,
+        notes=(payload.notes or "").strip() or None,
+        paid_at=datetime.utcnow() if status_value == "paid" else None,
+    )
+    db.add(record)
+    db.commit()
+    db.refresh(record)
+    return _serialize_payroll_payment(record)
 
 
 @router.post("/team/accept-invite/{invitation_id}")

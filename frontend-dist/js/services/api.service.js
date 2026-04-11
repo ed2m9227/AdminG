@@ -25,7 +25,7 @@ export class ApiService {
      * @param {boolean} requiresAuth - Si requiere autenticación
      * @returns {Promise<any>}
      */
-    async request(endpoint, method = 'GET', body = null, requiresAuth = true) {
+    async request(endpoint, method = 'GET', body = null, requiresAuth = true, timeoutMs = REQUEST_TIMEOUT_MS) {
         const headers = {
             'Content-Type': 'application/json',
         };
@@ -48,7 +48,7 @@ export class ApiService {
 
         try {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+            const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
             let response;
             try {
@@ -112,8 +112,8 @@ export class ApiService {
         return this.request(endpoint, 'GET', null, requiresAuth);
     }
 
-    post(endpoint, body, requiresAuth = true) {
-        return this.request(endpoint, 'POST', body, requiresAuth);
+    post(endpoint, body, requiresAuth = true, timeoutMs = REQUEST_TIMEOUT_MS) {
+        return this.request(endpoint, 'POST', body, requiresAuth, timeoutMs);
     }
 
     put(endpoint, body, requiresAuth = true) {
@@ -217,6 +217,14 @@ export class ApiService {
 
     async getUserFeatures() {
         return this.get('/users/me/features');
+    }
+
+    async submitPaymentReference(reference, plan) {
+        return this.post('/users/me/submit-payment-reference', { reference, plan });
+    }
+
+    async activatePlanAsAdmin(userId) {
+        return this.request(`/users/admin/activate-plan/${userId}`, 'PATCH');
     }
 
     async getVersion() {

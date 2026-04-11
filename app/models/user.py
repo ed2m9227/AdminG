@@ -21,6 +21,9 @@ class User(Base):
     onboarding_completed = Column(Boolean, default=False, nullable=False)
     # Plan payment verification: True = paid/free, False = awaiting payment
     plan_paid = Column(Boolean, default=True, nullable=False)
+    # Free trial lifecycle for owner accounts in plan free
+    free_trial_used = Column(Boolean, default=False, nullable=False)
+    free_trial_started_at = Column(DateTime, nullable=True)
     
     # Relationships
     sub_users = relationship("User", remote_side=[id], backref="parent_user")
