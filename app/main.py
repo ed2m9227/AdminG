@@ -30,6 +30,7 @@ from app.modules.ai.router import router as ai_router
 from app.modules.operations.router import router as operations_router
 from app.modules.eoe.router import router as eoe_router
 from app.modules.plans.service import seed_plans, seed_business_types
+from app.core.config import CORS_ALLOW_ALL_ORIGINS, CORS_ALLOW_ORIGINS
 
 # Configurar logging
 logging.basicConfig(
@@ -40,21 +41,19 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="AdminG / AdminPro created by Eduardo")
 
-# Configuración CORS mejorada
+allowed_origins = ["*"] if CORS_ALLOW_ALL_ORIGINS else CORS_ALLOW_ORIGINS
+
+# CORS estricto por allowlist (solo usar * cuando CORS_ALLOW_ALL_ORIGINS=true en entorno controlado)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://localhost:5173",
-        "http://127.0.0.1:8000",
-        "http://localhost:8000",
-        "*"
-    ],
-    allow_credentials=True,
+    allow_origins=allowed_origins,
+    allow_credentials=not CORS_ALLOW_ALL_ORIGINS,
     allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["*"],
 )
+
+logger.info("SECURITY cors_config allow_all=%s origins=%s", CORS_ALLOW_ALL_ORIGINS, allowed_origins)
 
 # Middleware para deshabilitar caché en desarrollo (archivos JS/CSS)
 @app.middleware("http")

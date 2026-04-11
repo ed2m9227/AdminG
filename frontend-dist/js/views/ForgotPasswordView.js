@@ -61,6 +61,20 @@ class ForgotPasswordView {
                 router.navigate('login');
             }
         });
+
+        // Support links like #forgot-password?token=XYZ
+        try {
+            const hash = window.location.hash || '';
+            const query = hash.includes('?') ? hash.split('?')[1] : '';
+            const params = new URLSearchParams(query);
+            const token = params.get('token');
+            if (token) {
+                const tokenInput = document.getElementById('resetToken');
+                if (tokenInput) tokenInput.value = token;
+            }
+        } catch (_) {
+            // ignore malformed hash query
+        }
     }
 
     async handleForgot(e) {
