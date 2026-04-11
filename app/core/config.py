@@ -42,3 +42,37 @@ SMTP_USE_TLS = _as_bool(os.getenv("SMTP_USE_TLS"), True)
 
 # Dev-only fallback switch. Keep FALSE in production.
 AUTH_EXPOSE_RESET_TOKEN = _as_bool(os.getenv("AUTH_EXPOSE_RESET_TOKEN"), False)
+
+APP_ENV = os.getenv("APP_ENV", os.getenv("ENVIRONMENT", "development")).strip().lower()
+
+
+def is_production() -> bool:
+    return APP_ENV in {"prod", "production"}
+
+
+def validate_runtime_config() -> None:
+    errors: list[str] = []
+
+    if not is_production():
+        return
+
+    if not os.getenv("SECRET_KEY") or SECRET_KEY.startswith("cambia_esto"):
+        errors.append("SECRET_KEY must be explicitly set in production")
+
+    if CORS_ALLOW_ALL_ORIGINS:
+        errors.append("CORS_ALLOW_ALL_ORIGINS must be false in production")
+
+    if not CORS_ALLOW_ORIGINS:
+        errors.append("CORS_ALLOW_ORIGINS must include at least one trusted origin in production")
+
+    if FRONTEND_BASE_URL.startswith("http://127.0.0.1") or FRONTEND_BASE_URL.startswith("http://localhost"):
+        errors.append("FRONTEND_BASE_URL must point to the real public frontend in production")
+
+    if AUTH_EXPOSE_RESET_TOKEN:
+        errors.append("AUTH_EXPOSE_RESET_TOKEN must be false in production")
+
+    if not SMTP_HOST or not SMTP_FROM_EMAIL:
+        errors.append("SMTP_HOST and SMTP_FROM_EMAIL are required in production")
+
+    if errors:
+        raise RuntimeError("Invalid production configuration: " + "; ".join(errors))

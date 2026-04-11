@@ -30,7 +30,7 @@ from app.modules.ai.router import router as ai_router
 from app.modules.operations.router import router as operations_router
 from app.modules.eoe.router import router as eoe_router
 from app.modules.plans.service import seed_plans, seed_business_types
-from app.core.config import CORS_ALLOW_ALL_ORIGINS, CORS_ALLOW_ORIGINS
+from app.core.config import CORS_ALLOW_ALL_ORIGINS, CORS_ALLOW_ORIGINS, validate_runtime_config
 
 # Configurar logging
 logging.basicConfig(
@@ -82,6 +82,8 @@ async def global_exception_handler(request: Request, exc: Exception):
 @app.on_event("startup")
 def startup_event():
     """Seed initial data on startup"""
+    validate_runtime_config()
+
     try:
         from app.db.base import Base
         from app.db.session import engine

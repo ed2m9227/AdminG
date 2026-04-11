@@ -71,6 +71,9 @@ pip install -r requirements.txt
 cp .env.example .env
 # Editar .env con tus valores
 
+# Producción
+# Usa .env.production.example como plantilla de secrets reales
+
 # 4. Ejecutar migraciones
 alembic upgrade head
 
@@ -80,6 +83,23 @@ uvicorn app.main:app --reload
 
 El servidor estará en `http://127.0.0.1:8000`  
 Documentación API: `http://127.0.0.1:8000/docs`
+
+### Configuración segura de producción
+
+Variables mínimas obligatorias en producción:
+
+```env
+APP_ENV=production
+SECRET_KEY=valor_hex_largo
+CORS_ALLOW_ALL_ORIGINS=false
+CORS_ALLOW_ORIGINS=https://tu-dominio.com
+FRONTEND_BASE_URL=https://tu-dominio.com
+AUTH_EXPOSE_RESET_TOKEN=false
+SMTP_HOST=smtp.tu-proveedor.com
+SMTP_FROM_EMAIL=no-reply@tu-dominio.com
+```
+
+La app ahora falla al iniciar en producción si faltan secretos críticos, si CORS está abierto con comodín o si el reset token queda expuesto.
 
 ### Frontend Setup (Próximamente)
 
