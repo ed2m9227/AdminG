@@ -217,6 +217,42 @@ def admin_activate_plan(
     db.refresh(target)
     return {"success": True, "user_id": target.id, "plan": target.plan, "plan_paid": True}
 
+
+@router.get("/admin/pending-plan-payments")
+def admin_list_pending_plan_payments(
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Admin-only list of users pending payment verification."""
+    admin = db.query(User).filter(User.id == int(current_user["id"])).first()
+    if not admin or admin.role != "admin":
+        raise HTTPException(status_code=403, detail="Solo administradores pueden consultar pagos pendientes")
+
+    rows = (
+        db.query(User)
+        .filter(
+            User.plan != "free",
+            User.plan != "admin",
+            User.plan_paid == False,
+        )
+        .order_by(User.updated_at.desc())
+        .all()
+    )
+
+    return {
+        "pending": [
+            {
+                "id": u.id,
+                "email": u.email,
+                "plan": u.plan,
+                "reference": getattr(u, "plan_payment_reference", None),
+                "updated_at": u.updated_at.isoformat() if u.updated_at else None,
+                "created_at": u.created_at.isoformat() if u.created_at else None,
+            }
+            for u in rows
+        ]
+    }
+
 @router.get("/me/features")
 def get_user_features(
     current_user=Depends(get_current_user),

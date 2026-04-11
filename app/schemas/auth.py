@@ -9,3 +9,12 @@ class RegisterSchema(BaseModel):
     password: str
     role: str = "viewer"
     plan: str = "free"
+
+
+class ForgotPasswordSchema(BaseModel):
+    email: str
+
+
+class ResetPasswordSchema(BaseModel):
+    token: str
+    new_password: str

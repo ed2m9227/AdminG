@@ -44,6 +44,21 @@ export class MasterAdminView {
                     </div>
                 </div>
 
+                <div class="stats-grid" id="planLifecycleContainer">
+                    <div class="stat-card">
+                        <div class="stat-label">Trial activo (free)</div>
+                        <div class="stat-value" id="trialActiveCount">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Trial consumido</div>
+                        <div class="stat-value" id="trialUsedCount">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Pagos por validar</div>
+                        <div class="stat-value" id="pendingPaymentsCount">0</div>
+                    </div>
+                </div>
+
                 <!-- Distribución por Plan -->
                 <div class="card">
                     <div class="card-header">
@@ -65,6 +80,15 @@ export class MasterAdminView {
                         <!-- Se llena con tabla de usuarios -->
                     </div>
                 </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Activación de Planes Pendientes</h3>
+                    </div>
+                    <div class="card-body" id="pendingPlanPaymentsContainer">
+                        <div style="color:#64748b;">Cargando pagos pendientes...</div>
+                    </div>
+                </div>
             </div>
         `;
     }
@@ -75,6 +99,10 @@ export class MasterAdminView {
             const response = await apiService.request('/admin/master/dashboard', 'GET');
             this.statistics = response.statistics;
             this.updateStatistics();
+
+            const pendingRes = await apiService.getPendingPlanPayments();
+            this.pendingPlanPayments = pendingRes.pending || [];
+            this.renderPendingPlanPayments();
 
             // Cargar usuarios
             const usersRes = await apiService.request('/admin/master/users', 'GET');
@@ -98,6 +126,9 @@ export class MasterAdminView {
         document.getElementById('totalUsers').textContent = this.statistics.total_users || 0;
         document.getElementById('activeUsers').textContent = this.statistics.active_users || 0;
         document.getElementById('adminCount').textContent = this.statistics.by_role?.admin || 0;
+        document.getElementById('trialActiveCount').textContent = this.statistics.plan_lifecycle?.free_trial_active || 0;
+        document.getElementById('trialUsedCount').textContent = this.statistics.plan_lifecycle?.free_trial_consumed || 0;
+        document.getElementById('pendingPaymentsCount').textContent = this.statistics.plan_lifecycle?.pending_payment_accounts || 0;
 
         const byPlan = this.statistics.by_plan || {};
         const planCount = Object.values(byPlan).reduce((a, b) => a + b, 0);
@@ -124,6 +155,30 @@ export class MasterAdminView {
                 </div>
             `;
         }
+    }
+
+    renderPendingPlanPayments() {
+        const container = document.getElementById('pendingPlanPaymentsContainer');
+        if (!container) return;
+
+        if (!this.pendingPlanPayments || this.pendingPlanPayments.length === 0) {
+            container.innerHTML = '<div style="color:#64748b;">No hay planes pendientes por activar.</div>';
+            return;
+        }
+
+        container.innerHTML = `
+            <div style="display:flex; flex-direction:column; gap:10px;">
+                ${this.pendingPlanPayments.map((row) => `
+                    <div style="border:1px solid #e2e8f0; border-radius:10px; padding:12px; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+                        <div>
+                            <div style="font-weight:700; color:#0f172a;">${row.email}</div>
+                            <div style="font-size:12px; color:#64748b;">Plan: ${String(row.plan || '').toUpperCase()} | Ref: ${row.reference || 'Sin referencia'}</div>
+                        </div>
+                        <button class="btn btn-success btn-sm" data-action="activate-plan" data-user-id="${row.id}">Activar plan</button>
+                    </div>
+                `).join('')}
+            </div>
+        `;
     }
 
     renderUsersTable() {
@@ -243,6 +298,21 @@ export class MasterAdminView {
                     } catch (error) {
                         modal.alert({ title: 'Error', message: error.message, type: 'error' });
                     }
+                }
+            }
+
+            if (e.target.dataset.action === 'activate-plan') {
+                const userId = e.target.dataset.userId;
+                try {
+                    await apiService.activatePlanAsAdmin(userId);
+                    modal.alert({
+                        title: 'Éxito',
+                        message: 'Plan activado correctamente',
+                        type: 'success'
+                    });
+                    this.init();
+                } catch (error) {
+                    modal.alert({ title: 'Error', message: error.message, type: 'error' });
                 }
             }
         };
@@ -522,6 +592,18 @@ export class TeamManagementView {
             <div style="padding: 10px 0;">
                 <div style="margin-bottom: 20px;">
                     <label style="display: block; font-weight: 500; margin-bottom: 8px; color: #333;">
+                        👤 Nombre completo
+                    </label>
+                    <input type="text" id="createFullName" placeholder="Nombre del usuario interno"
+                           style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 6px;
+                                  font-size: 14px; box-sizing: border-box; transition: border-color 0.3s;
+                                  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;"
+                           onFocus="this.style.borderColor='#667eea'"
+                           onBlur="this.style.borderColor='#e0e0e0'">
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-weight: 500; margin-bottom: 8px; color: #333;">
                         📧 Email del Usuario Interno
                     </label>
                     <input type="email" id="createEmail" placeholder="usuario@ejemplo.com" 
@@ -609,9 +691,15 @@ export class TeamManagementView {
         });
 
         document.getElementById('confirmCreateBtn').addEventListener('click', async () => {
+            const fullName = document.getElementById('createFullName').value.trim();
             const email = document.getElementById('createEmail').value.trim();
             const password = document.getElementById('createPassword').value;
             const role = document.getElementById('createRole').value;
+
+            if (!fullName || fullName.length < 2) {
+                modal.alert({ title: 'Validación', message: 'Por favor ingresa el nombre completo', type: 'warning' });
+                return;
+            }
 
             if (!email) {
                 modal.alert({ title: 'Validación', message: 'Por favor ingresa un email válido', type: 'warning' });
@@ -634,7 +722,7 @@ export class TeamManagementView {
                 document.getElementById('confirmCreateBtn').textContent = 'Creando...';
 
                 await apiService.request(
-                    `/admin/team/create?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}&role=${role}`,
+                    `/admin/team/create?full_name=${encodeURIComponent(fullName)}&email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}&role=${role}`,
                     'POST'
                 );
 
@@ -655,7 +743,7 @@ export class TeamManagementView {
 
         // Enfoque automático en el email
         setTimeout(() => {
-            document.getElementById('createEmail').focus();
+            document.getElementById('createFullName').focus();
         }, 100);
     }
 

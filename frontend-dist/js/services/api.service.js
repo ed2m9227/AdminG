@@ -227,6 +227,18 @@ export class ApiService {
         return this.request(`/users/admin/activate-plan/${userId}`, 'PATCH');
     }
 
+    async getPendingPlanPayments() {
+        return this.get('/users/admin/pending-plan-payments');
+    }
+
+    async forgotPassword(email) {
+        return this.post('/auth/forgot-password', { email }, false);
+    }
+
+    async resetPassword(token, newPassword) {
+        return this.post('/auth/reset-password', { token, new_password: newPassword }, false);
+    }
+
     async getVersion() {
         return this.get('/api/version', false);
     }

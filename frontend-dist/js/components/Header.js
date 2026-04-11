@@ -8,27 +8,60 @@ import authService from '../services/auth.service.js';
 import router from '../utils/router.js';
 import apiService from '../services/api.service.js';
 import modal from './Modal.js';
+import sidebar from './Sidebar.js';
+import { t, setCurrentLanguage } from '../utils/i18n.js';
+
+const STORAGE_KEYS = {
+    theme: 'adming.quick.theme',
+    sidebarCompact: 'adming.quick.sidebar_compact',
+    notificationsMuted: 'adming.quick.notifications_muted',
+    language: 'adming.quick.language',
+};
 
 export class Header {
     constructor() {
         this._notifCount = 0;
         this._notifList = [];
         this._pollTimer = null;
+        this._fetchInFlight = null;
+        this._lastFetchAt = 0;
+        this._documentClickHandler = null;
+        this._documentKeyHandler = null;
+        this.preferences = {
+            theme: this._readStoredValue(STORAGE_KEYS.theme, 'day'),
+            sidebarCompact: this._readStoredBoolean(STORAGE_KEYS.sidebarCompact, false),
+            notificationsMuted: this._readStoredBoolean(STORAGE_KEYS.notificationsMuted, false),
+            language: this._readStoredValue(STORAGE_KEYS.language, 'ES'),
+        };
 
         this.titles = {
-            dashboard: 'Dashboard',
-            customers: 'Clientes',
-            appointments: 'Citas',
-            inventory: 'Inventario',
-            payments: 'Pagos',
-            cashregister: 'Caja Registradora',
-            reports: 'Reportes',
-            team: 'Mi Equipo',
-            'team-movements': 'Movimientos del Equipo',
-            admin: 'Administración',
-            businessconfig: 'Configuracion de negocio',
-            businesstypes: 'Tipos de Negocio',
+            dashboard: t('menu.dashboard', 'Dashboard'),
+            customers: t('menu.customers', 'Clientes'),
+            appointments: t('menu.appointments', 'Citas'),
+            inventory: t('menu.inventory', 'Inventario'),
+            payments: t('menu.payments', 'Pagos'),
+            cashregister: t('menu.cashregister', 'Caja Registradora'),
+            reports: t('menu.reports', 'Reportes'),
+            invoices: t('menu.invoices', 'Facturas'),
+            documents: t('menu.documents', 'Documentos'),
+            authorizations: t('menu.authorizations', 'Autorizaciones'),
+            crm: t('menu.crm', 'CRM'),
+            team: t('menu.team', 'Mi Equipo'),
+            'team-risks': t('menu.team_risks', 'Riesgos Laborales'),
+            'team-expenses': t('menu.team_expenses', 'Gastos / Expense Management'),
+            'team-movements': t('menu.team_movements', 'Movimientos del Equipo'),
+            'team-hr': t('menu.team_hr', 'RRHH'),
+            'team-payroll': t('menu.team_payroll', 'Nómina'),
+            'team-requests': t('menu.team_requests', 'Solicitudes RRHH'),
+            'team-tracking': t('menu.team_tracking', 'Seguimiento RRHH'),
+            'admin-ia': `🤖 ${t('menu.admin_ia', 'Admin IA')}`,
+            admin: t('menu.admin', 'Administración'),
+            businessconfig: t('menu.business_config', 'Configuración de Negocio'),
+            businesstypes: t('menu.business_types', 'Tipos de Negocio'),
         };
+
+        this._applyThemePreference();
+        this._applyLanguagePreference();
     }
 
     /**
@@ -39,9 +72,13 @@ export class Header {
         const user = authService.getCurrentUser();
         const currentRoute = router.getCurrentRoute() || 'dashboard';
         const title = this.titles[currentRoute] || 'AdminG';
+        const quickActions = this._getQuickActions();
         const badgeHtml = this._notifCount > 0
-            ? `<span id="notifBadge" style="position:absolute;top:-4px;right:-4px;background:#ef4444;color:#fff;border-radius:50%;width:18px;height:18px;font-size:11px;display:flex;align-items:center;justify-content:center;font-weight:700;">${this._notifCount > 9 ? '9+' : this._notifCount}</span>`
-            : `<span id="notifBadge" style="display:none;position:absolute;top:-4px;right:-4px;background:#ef4444;color:#fff;border-radius:50%;width:18px;height:18px;font-size:11px;align-items:center;justify-content:center;font-weight:700;"></span>`;
+            ? `<span id="notifBadge" class="notif-badge">${this._notifCount > 9 ? '9+' : this._notifCount}</span>`
+            : `<span id="notifBadge" class="notif-badge" style="display:none;"></span>`;
+        const trialBadge = user?.free_trial_active
+            ? `<span class="user-badge user-trial-badge">TRIAL ${user?.free_trial_days_left || 0}d</span>`
+            : '';
 
         return `
             <div class="topbar">
@@ -53,24 +90,46 @@ export class Header {
                 </div>
                 <div class="user-info">
                     <span class="user-email">${user?.email || ''}</span>
+                    ${trialBadge}
                     <span class="user-badge">${user?.plan?.toUpperCase() || ''}</span>
-                    <!-- Notification bell -->
-                    <div style="position:relative;display:inline-block;" id="notifWrapper">
-                        <button id="notifBell" style="background:none;border:none;cursor:pointer;font-size:20px;padding:4px 8px;position:relative;" title="Notificaciones">
+                    <div class="header-action-group" id="notifWrapper">
+                        <button id="notifBell" class="header-icon-btn" title="${t('header.notifications', 'Notificaciones')}" aria-haspopup="true" aria-expanded="false">
                             &#128276;
                             ${badgeHtml}
                         </button>
-                        <div id="notifDropdown" style="display:none;position:absolute;right:0;top:36px;width:340px;max-height:420px;overflow-y:auto;background:#fff;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:9999;">
-                            <div style="padding:12px 16px;border-bottom:1px solid #f0f0f0;display:flex;justify-content:space-between;align-items:center;">
-                                <strong>Notificaciones</strong>
-                                <button id="notifMarkAll" style="font-size:12px;background:none;border:none;color:#6366f1;cursor:pointer;">Marcar todo leído</button>
+                        <div id="notifDropdown" class="header-dropdown notification-dropdown" style="display:none;">
+                            <div class="header-dropdown-header">
+                                <strong>${t('header.notifications', 'Notificaciones')}</strong>
+                                <button id="notifMarkAll" class="header-dropdown-action">${t('header.mark_all', 'Marcar todo leído')}</button>
                             </div>
-                            <div id="notifList" style="padding:4px 0;"></div>
+                            <div id="notifList" class="notif-list"></div>
                         </div>
                     </div>
-                    <button class="btn btn-danger btn-sm" id="logoutBtn">
-                        Salir
-                    </button>
+                    <div class="header-action-group" id="quickSettingsWrapper">
+                        <button id="quickSettingsBtn" class="header-icon-btn quick-settings-trigger" title="Quick settings" aria-haspopup="true" aria-expanded="false">
+                            &#9881;
+                        </button>
+                        <div id="quickSettingsDropdown" class="header-dropdown quick-settings-dropdown" style="display:none;">
+                            <div class="header-dropdown-header">
+                                <div>
+                                    <strong>${t('header.quick_title', 'Ajustes rápidos')}</strong>
+                                    <p class="quick-settings-subtitle">${t('header.quick_subtitle', 'Operación inmediata del panel')}</p>
+                                </div>
+                            </div>
+                            <div id="quickSettingsList" class="quick-settings-list">
+                                ${quickActions.map(action => `
+                                    <button class="quick-settings-item${action.danger ? ' danger' : ''}" data-quick-action="${action.id}">
+                                        <span class="quick-settings-icon">${action.icon}</span>
+                                        <span class="quick-settings-copy">
+                                            <span class="quick-settings-label">${action.label}</span>
+                                            <span class="quick-settings-hint">${action.hint}</span>
+                                        </span>
+                                        ${action.status ? `<span class="quick-settings-status">${action.status}</span>` : ''}
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         `;
@@ -91,16 +150,6 @@ export class Header {
      * Inicializar event listeners
      */
     init() {
-        // Click en logout
-        const logoutBtn = document.getElementById('logoutBtn');
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.handleLogout();
-            });
-        }
-
-        // Notification bell
         const bell = document.getElementById('notifBell');
         if (bell) {
             bell.addEventListener('click', (e) => {
@@ -120,18 +169,43 @@ export class Header {
             });
         }
 
-        // Close dropdown on outside click
-        document.addEventListener('click', (e) => {
-            if (e.target.id === 'logoutBtn') {
-                this.handleLogout();
-            }
-            if (!e.target.closest('#notifWrapper')) {
-                const dd = document.getElementById('notifDropdown');
-                if (dd) dd.style.display = 'none';
-            }
-        });
+        const quickSettingsBtn = document.getElementById('quickSettingsBtn');
+        if (quickSettingsBtn) {
+            quickSettingsBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this._toggleQuickSettings();
+            });
+        }
 
-        // Event delegation for per-notification read
+        const quickSettingsList = document.getElementById('quickSettingsList');
+        if (quickSettingsList) {
+            quickSettingsList.addEventListener('click', async (e) => {
+                const actionBtn = e.target.closest('[data-quick-action]');
+                if (!actionBtn) return;
+                e.preventDefault();
+                await this._handleQuickAction(actionBtn.getAttribute('data-quick-action'));
+            });
+        }
+
+        this._detachGlobalHandlers();
+        this._documentClickHandler = (e) => {
+            if (!e.target.closest('#notifWrapper')) {
+                this._closeNotifications();
+            }
+            if (!e.target.closest('#quickSettingsWrapper')) {
+                this._closeQuickSettings();
+            }
+        };
+        document.addEventListener('click', this._documentClickHandler);
+
+        this._documentKeyHandler = (e) => {
+            if (e.key === 'Escape') {
+                this._closeNotifications();
+                this._closeQuickSettings();
+            }
+        };
+        document.addEventListener('keydown', this._documentKeyHandler);
+
         const notifList = document.getElementById('notifList');
         if (notifList) {
             notifList.addEventListener('click', async (e) => {
@@ -172,21 +246,50 @@ export class Header {
             });
         }
 
-        // Start polling every 60 s
+        this._applySidebarPreference();
+        this._renderQuickSettingsActions();
+
+        if (this._appointmentsChangedHandler) {
+            window.removeEventListener('appointments:changed', this._appointmentsChangedHandler);
+        }
+        this._appointmentsChangedHandler = () => this._fetchNotifications(true);
+        window.addEventListener('appointments:changed', this._appointmentsChangedHandler);
+
         this._startPolling();
     }
 
     async _toggleDropdown() {
         const dd = document.getElementById('notifDropdown');
+        const bell = document.getElementById('notifBell');
         if (!dd) return;
         const isVisible = dd.style.display !== 'none';
         if (isVisible) {
             dd.style.display = 'none';
+            if (bell) bell.setAttribute('aria-expanded', 'false');
         } else {
-            await this._fetchNotifications();
+            this._closeQuickSettings();
+            await this._fetchNotifications(true);
             this._renderDropdown();
             dd.style.display = 'block';
+            if (bell) bell.setAttribute('aria-expanded', 'true');
         }
+    }
+
+    _toggleQuickSettings() {
+        const dd = document.getElementById('quickSettingsDropdown');
+        const btn = document.getElementById('quickSettingsBtn');
+        if (!dd || !btn) return;
+
+        const isVisible = dd.style.display !== 'none';
+        if (isVisible) {
+            this._closeQuickSettings();
+            return;
+        }
+
+        this._closeNotifications();
+        this._renderQuickSettingsActions();
+        dd.style.display = 'block';
+        btn.setAttribute('aria-expanded', 'true');
     }
 
     _renderDropdown() {
@@ -264,28 +367,42 @@ export class Header {
         }
     }
 
-    async _fetchNotifications() {
+    async _fetchNotifications(force = false) {
         try {
-            if (!authService.isAuthenticated()) return;
-            const list = await apiService.get('/notifications/');
-            if (Array.isArray(list)) {
-                this._notifList = this._prepareNotificationsForView(list);
-                this._notifCount = this._notifList.filter(n => !n.is_read).length;
-                this._updateBadge();
-                const dd = document.getElementById('notifDropdown');
-                if (dd && dd.style.display !== 'none') {
-                    this._renderDropdown();
+            if (!authService.isAuthenticated() || this.preferences.notificationsMuted) return;
+            if (!force && document.visibilityState === 'hidden') return;
+
+            const now = Date.now();
+            if (!force && now - this._lastFetchAt < 15000) return;
+            if (this._fetchInFlight) return this._fetchInFlight;
+
+            this._fetchInFlight = (async () => {
+                const list = await apiService.get('/notifications/');
+                if (Array.isArray(list)) {
+                    this._notifList = this._prepareNotificationsForView(list);
+                    this._notifCount = this._notifList.filter(n => !n.is_read).length;
+                    this._updateBadge();
+                    const dd = document.getElementById('notifDropdown');
+                    if (dd && dd.style.display !== 'none') {
+                        this._renderDropdown();
+                    }
                 }
-            }
+                this._lastFetchAt = Date.now();
+            })();
+
+            await this._fetchInFlight;
         } catch {
             // silent — notifications are non-critical
+        } finally {
+            this._fetchInFlight = null;
         }
     }
 
     _startPolling() {
         if (this._pollTimer) clearInterval(this._pollTimer);
-        this._fetchNotifications();
-        this._pollTimer = setInterval(() => this._fetchNotifications(), 60_000);
+        if (this.preferences.notificationsMuted) return;
+        this._fetchNotifications(true);
+        this._pollTimer = setInterval(() => this._fetchNotifications(false), 60000);
     }
 
     stopPolling() {
@@ -293,6 +410,222 @@ export class Header {
             clearInterval(this._pollTimer);
             this._pollTimer = null;
         }
+    }
+
+    _closeNotifications() {
+        const dd = document.getElementById('notifDropdown');
+        const bell = document.getElementById('notifBell');
+        if (dd) dd.style.display = 'none';
+        if (bell) bell.setAttribute('aria-expanded', 'false');
+    }
+
+    _closeQuickSettings() {
+        const dd = document.getElementById('quickSettingsDropdown');
+        const btn = document.getElementById('quickSettingsBtn');
+        if (dd) dd.style.display = 'none';
+        if (btn) btn.setAttribute('aria-expanded', 'false');
+    }
+
+    _detachGlobalHandlers() {
+        if (this._documentClickHandler) {
+            document.removeEventListener('click', this._documentClickHandler);
+            this._documentClickHandler = null;
+        }
+        if (this._documentKeyHandler) {
+            document.removeEventListener('keydown', this._documentKeyHandler);
+            this._documentKeyHandler = null;
+        }
+    }
+
+    _getQuickActions() {
+        return [
+            {
+                id: 'toggle-theme',
+                icon: this.preferences.theme === 'night' ? '☀' : '☾',
+                label: this.preferences.theme === 'night' ? t('quick.theme_day', 'Modo día') : t('quick.theme_night', 'Modo noche'),
+                hint: t('quick.theme_hint', 'Cambia la interfaz entre claro y oscuro'),
+                status: this.preferences.theme === 'night' ? 'Oscuro' : 'Claro',
+            },
+            {
+                id: 'change-language',
+                icon: '🌐',
+                label: t('quick.change_language', 'Cambiar idioma'),
+                hint: t('quick.change_language_hint', 'Alterna entre ES / EN / DE / RU'),
+                status: (this.preferences.language || 'ES').toUpperCase(),
+            },
+            {
+                id: 'toggle-fullscreen',
+                icon: document.fullscreenElement ? '⊡' : '⛶',
+                label: document.fullscreenElement ? t('quick.fullscreen_off', 'Salir de pantalla completa') : t('quick.fullscreen_on', 'Pantalla completa'),
+                hint: t('quick.fullscreen_hint', 'Usa más espacio para operar'),
+            },
+            {
+                id: 'logout',
+                icon: '⇦',
+                label: t('quick.logout', 'Cerrar sesión'),
+                hint: t('quick.logout_hint', 'Salir de la cuenta actual'),
+                danger: true,
+            },
+        ];
+    }
+
+    _renderQuickSettingsActions() {
+        const quickSettingsList = document.getElementById('quickSettingsList');
+        if (!quickSettingsList) return;
+
+        quickSettingsList.innerHTML = this._getQuickActions().map(action => `
+            <button class="quick-settings-item${action.danger ? ' danger' : ''}" data-quick-action="${action.id}">
+                <span class="quick-settings-icon">${action.icon}</span>
+                <span class="quick-settings-copy">
+                    <span class="quick-settings-label">${action.label}</span>
+                    <span class="quick-settings-hint">${action.hint}</span>
+                </span>
+                ${action.status ? `<span class="quick-settings-status">${action.status}</span>` : ''}
+            </button>
+        `).join('');
+    }
+
+    async _handleQuickAction(action) {
+        switch (action) {
+            case 'toggle-theme':
+                this.preferences.theme = this.preferences.theme === 'night' ? 'day' : 'night';
+                this._persistPreference(STORAGE_KEYS.theme, this.preferences.theme);
+                this._applyThemePreference();
+                break;
+            case 'toggle-sidebar':
+                this._toggleSidebarCompact();
+                break;
+            case 'change-language':
+                this.preferences.language = this._nextLanguageCode(this.preferences.language);
+                this._persistPreference(STORAGE_KEYS.language, this.preferences.language);
+                setCurrentLanguage(this.preferences.language);
+                this._applyLanguagePreference();
+                window.location.reload();
+                break;
+            case 'toggle-fullscreen':
+                await this._toggleFullscreen();
+                break;
+            case 'toggle-notifications':
+                this.preferences.notificationsMuted = !this.preferences.notificationsMuted;
+                this._persistPreference(STORAGE_KEYS.notificationsMuted, this.preferences.notificationsMuted);
+                if (this.preferences.notificationsMuted) {
+                    this.stopPolling();
+                } else {
+                    this._startPolling();
+                }
+                break;
+            case 'logout':
+                this._closeQuickSettings();
+                this.handleLogout();
+                return;
+            default:
+                return;
+        }
+
+        this._renderQuickSettingsActions();
+    }
+
+    async _markAllNotificationsRead() {
+        try {
+            await apiService.post('/notifications/read-all', {});
+            this._notifCount = 0;
+            this._notifList = this._notifList.map(n => ({ ...n, is_read: true }));
+            this._renderDropdown();
+            this._updateBadge();
+        } catch {
+            // non-critical action
+        }
+    }
+
+    _toggleSidebarCompact() {
+        const dashboardLayout = document.querySelector('.dashboard-layout');
+        const mobileBreakpoint = sidebar.mobileBreakpoint || 768;
+
+        if (window.innerWidth <= mobileBreakpoint) {
+            sidebar.toggleSidebar();
+            return;
+        }
+
+        const nextCompact = !dashboardLayout?.classList.contains('sidebar-collapsed');
+        if (nextCompact) {
+            dashboardLayout?.classList.add('sidebar-collapsed');
+        } else {
+            dashboardLayout?.classList.remove('sidebar-collapsed');
+        }
+
+        this.preferences.sidebarCompact = nextCompact;
+        this._persistPreference(STORAGE_KEYS.sidebarCompact, nextCompact);
+    }
+
+    _applySidebarPreference() {
+        const dashboardLayout = document.querySelector('.dashboard-layout');
+        const mobileBreakpoint = sidebar.mobileBreakpoint || 768;
+        if (!dashboardLayout || window.innerWidth <= mobileBreakpoint) return;
+
+        dashboardLayout.classList.toggle('sidebar-collapsed', this.preferences.sidebarCompact);
+    }
+
+    _isSidebarCompact() {
+        const dashboardLayout = document.querySelector('.dashboard-layout');
+        if (dashboardLayout) {
+            return dashboardLayout.classList.contains('sidebar-collapsed');
+        }
+        return this.preferences.sidebarCompact;
+    }
+
+    async _toggleFullscreen() {
+        try {
+            if (document.fullscreenElement) {
+                await document.exitFullscreen();
+            } else {
+                await document.documentElement.requestFullscreen();
+            }
+        } catch {
+            // fullscreen can be blocked by browser policy
+        }
+    }
+
+    _applyThemePreference() {
+        if (typeof document === 'undefined') return;
+        document.documentElement.setAttribute('data-theme', this.preferences.theme === 'night' ? 'night' : 'day');
+    }
+
+    _nextLanguageCode(current) {
+        const langs = ['ES', 'EN', 'DE', 'RU'];
+        const currentCode = (current || 'ES').toUpperCase();
+        const index = langs.indexOf(currentCode);
+        return langs[(index + 1) % langs.length];
+    }
+
+    _applyLanguagePreference() {
+        if (typeof document === 'undefined') return;
+        const code = (this.preferences.language || 'ES').toUpperCase();
+        const htmlLang = {
+            ES: 'es',
+            EN: 'en',
+            DE: 'de',
+            RU: 'ru',
+        }[code] || 'es';
+
+        document.documentElement.setAttribute('lang', htmlLang);
+        document.documentElement.setAttribute('data-lang', code);
+    }
+
+    _readStoredValue(key, fallback) {
+        if (typeof window === 'undefined') return fallback;
+        return localStorage.getItem(key) || fallback;
+    }
+
+    _readStoredBoolean(key, fallback) {
+        if (typeof window === 'undefined') return fallback;
+        const value = localStorage.getItem(key);
+        if (value === null) return fallback;
+        return value === 'true';
+    }
+
+    _persistPreference(key, value) {
+        if (typeof window === 'undefined') return;
+        localStorage.setItem(key, String(value));
     }
 
     _openNotificationTarget(notification) {
@@ -315,6 +648,7 @@ export class Header {
      * Manejar logout
      */
     handleLogout() {
+        this.stopPolling();
         authService.logout();
         router.navigate('login');
     }

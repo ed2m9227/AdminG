@@ -117,6 +117,8 @@ def run_sqlite_startup_migrations(db_path: str = "app.db") -> list[str]:
                     ("plan_payment_reference", "TEXT"),
                     ("free_trial_used", "INTEGER NOT NULL DEFAULT 0"),
                     ("free_trial_started_at", "DATETIME"),
+                    ("password_reset_token_hash", "TEXT"),
+                    ("password_reset_expires_at", "DATETIME"),
                 ],
             )
         )

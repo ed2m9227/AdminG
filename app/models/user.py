@@ -24,6 +24,8 @@ class User(Base):
     # Free trial lifecycle for owner accounts in plan free
     free_trial_used = Column(Boolean, default=False, nullable=False)
     free_trial_started_at = Column(DateTime, nullable=True)
+    password_reset_token_hash = Column(String(128), nullable=True)
+    password_reset_expires_at = Column(DateTime, nullable=True)
     
     # Relationships
     sub_users = relationship("User", remote_side=[id], backref="parent_user")

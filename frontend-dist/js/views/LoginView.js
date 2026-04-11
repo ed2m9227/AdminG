@@ -52,6 +52,9 @@ export class LoginView {
                         ${t('login.no_account', '¿No tienes cuenta?')} 
                         <a href="#" data-navigate="register">${t('login.signup', 'Regístrate aquí')}</a>
                     </p>
+                    <p class="link" style="margin-top: 8px;">
+                        <a href="#" data-navigate="forgot-password">¿Olvidaste tu contraseña?</a>
+                    </p>
                 </div>
             </div>
         `;
@@ -71,6 +74,10 @@ export class LoginView {
             if (e.target.closest('[data-navigate="register"]')) {
                 e.preventDefault();
                 router.navigate('register');
+            }
+            if (e.target.closest('[data-navigate="forgot-password"]')) {
+                e.preventDefault();
+                router.navigate('forgot-password');
             }
         });
     }

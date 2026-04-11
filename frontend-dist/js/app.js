@@ -12,6 +12,7 @@ import header from './components/Header.js';
 // Vistas
 import loginView from './views/LoginView.js';
 import registerView from './views/RegisterView.js';
+import forgotPasswordView from './views/ForgotPasswordView.js';
 import onboardingWizard from './views/OnboardingWizard.js';
 import dashboardView from './views/DashboardView.js';
 import customersView from './views/CustomersView.js';
@@ -93,6 +94,10 @@ class App {
 
         router.register('register', async () => {
             this.renderAuthView(registerView);
+        });
+
+        router.register('forgot-password', async () => {
+            this.renderAuthView(forgotPasswordView);
         });
 
         // Ruta de onboarding (requiere autenticación pero no requiere onboarding completado)
@@ -300,7 +305,7 @@ class App {
         router.beforeNavigate(async (path) => {
             console.log(`🔄 beforeNavigate: ${path}`);
             
-            const publicRoutes = ['login', 'register'];
+            const publicRoutes = ['login', 'register', 'forgot-password'];
             const isPublicRoute = publicRoutes.includes(path);
 
             if (!isPublicRoute && !authService.isAuthenticated()) {
