@@ -29,6 +29,7 @@ from app.modules.crm.router import router as crm_router
 from app.modules.ai.router import router as ai_router
 from app.modules.operations.router import router as operations_router
 from app.modules.eoe.router import router as eoe_router
+from app.modules.onboarding.router import router as onboarding_router
 from app.modules.plans.service import seed_plans, seed_business_types
 from app.core.config import CORS_ALLOW_ALL_ORIGINS, CORS_ALLOW_ORIGINS, validate_runtime_config
 # Side-effect import: ensure RefreshToken table is registered with SQLAlchemy metadata
@@ -182,6 +183,7 @@ app.include_router(crm_router)
 app.include_router(ai_router)
 app.include_router(operations_router)
 app.include_router(eoe_router)
+app.include_router(onboarding_router)
 
 @app.get("/health")
 def health():

@@ -122,6 +122,12 @@ def run_sqlite_startup_migrations(db_path: str = "app.db") -> list[str]:
                     ("totp_secret", "TEXT"),
                     ("totp_enabled", "INTEGER NOT NULL DEFAULT 0"),
                     ("totp_backup_codes_json", "TEXT"),
+                    ("governance_mode", "TEXT"),
+                    ("operation_level", "TEXT"),
+                    ("primary_objective", "TEXT"),
+                    ("jurisdiction_code", "TEXT"),
+                    ("territory_code", "TEXT"),
+                    ("onboarding_profile_json", "TEXT"),
                 ],
             )
         )
@@ -179,6 +185,125 @@ def run_sqlite_startup_migrations(db_path: str = "app.db") -> list[str]:
         """)
         cursor.execute("CREATE INDEX IF NOT EXISTS ix_refresh_tokens_token_hash ON refresh_tokens(token_hash)")
         cursor.execute("CREATE INDEX IF NOT EXISTS ix_refresh_tokens_user_id ON refresh_tokens(user_id)")
+
+        # Governance entities
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS governance_entities (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                owner_user_id INTEGER NOT NULL REFERENCES users(id),
+                name TEXT NOT NULL,
+                governance_mode TEXT NOT NULL,
+                entity_type TEXT NOT NULL,
+                jurisdiction_code TEXT,
+                territory_code TEXT,
+                hierarchy_path TEXT,
+                metadata_json TEXT,
+                created_at DATETIME NOT NULL DEFAULT (datetime('now')),
+                updated_at DATETIME NOT NULL DEFAULT (datetime('now'))
+            )
+        """)
+        cursor.execute("CREATE INDEX IF NOT EXISTS ix_governance_entities_owner_user_id ON governance_entities(owner_user_id)")
+
+        # Policy and consent catalog
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS policy_versions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                policy_type TEXT NOT NULL,
+                version_label TEXT NOT NULL,
+                jurisdiction_code TEXT NOT NULL DEFAULT '*',
+                language TEXT NOT NULL DEFAULT 'es',
+                content_hash TEXT NOT NULL,
+                content_summary TEXT,
+                is_mandatory INTEGER NOT NULL DEFAULT 1,
+                is_active INTEGER NOT NULL DEFAULT 1,
+                effective_from DATETIME NOT NULL DEFAULT (datetime('now')),
+                effective_to DATETIME,
+                created_at DATETIME NOT NULL DEFAULT (datetime('now'))
+            )
+        """)
+        cursor.execute("CREATE INDEX IF NOT EXISTS ix_policy_versions_type_jurisdiction ON policy_versions(policy_type, jurisdiction_code)")
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS consent_types (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                code TEXT NOT NULL UNIQUE,
+                layer TEXT NOT NULL,
+                purpose TEXT NOT NULL,
+                legal_basis_type TEXT,
+                module_scope TEXT,
+                is_mandatory INTEGER NOT NULL DEFAULT 0,
+                is_active INTEGER NOT NULL DEFAULT 1,
+                created_at DATETIME NOT NULL DEFAULT (datetime('now'))
+            )
+        """)
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS user_consents (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL REFERENCES users(id),
+                tenant_id INTEGER REFERENCES users(id),
+                consent_type_id INTEGER NOT NULL REFERENCES consent_types(id),
+                policy_version_id INTEGER NOT NULL REFERENCES policy_versions(id),
+                status TEXT NOT NULL DEFAULT 'active',
+                source TEXT NOT NULL DEFAULT 'onboarding',
+                accepted_at DATETIME,
+                revoked_at DATETIME,
+                evidence_hash TEXT,
+                ip_address TEXT,
+                device_fingerprint_hash TEXT,
+                created_at DATETIME NOT NULL DEFAULT (datetime('now'))
+            )
+        """)
+        cursor.execute("CREATE INDEX IF NOT EXISTS ix_user_consents_user_id ON user_consents(user_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS ix_user_consents_status ON user_consents(status)")
+
+        # Trial governance
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS trial_policies (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                code TEXT NOT NULL UNIQUE,
+                governance_mode TEXT,
+                role_scope TEXT,
+                operation_level TEXT,
+                primary_objective TEXT,
+                duration_days INTEGER NOT NULL DEFAULT 15,
+                approval_mode TEXT NOT NULL DEFAULT 'auto',
+                module_caps_json TEXT,
+                is_active INTEGER NOT NULL DEFAULT 1,
+                created_at DATETIME NOT NULL DEFAULT (datetime('now'))
+            )
+        """)
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS user_trials (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL REFERENCES users(id),
+                tenant_id INTEGER REFERENCES users(id),
+                trial_policy_id INTEGER NOT NULL REFERENCES trial_policies(id),
+                status TEXT NOT NULL DEFAULT 'active',
+                starts_at DATETIME NOT NULL DEFAULT (datetime('now')),
+                ends_at DATETIME NOT NULL,
+                extension_count INTEGER NOT NULL DEFAULT 0,
+                approved_by_user_id INTEGER REFERENCES users(id),
+                closure_reason TEXT,
+                created_at DATETIME NOT NULL DEFAULT (datetime('now'))
+            )
+        """)
+        cursor.execute("CREATE INDEX IF NOT EXISTS ix_user_trials_user_id ON user_trials(user_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS ix_user_trials_status ON user_trials(status)")
+
+        # Key rotation events
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS key_rotation_events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                key_name TEXT NOT NULL,
+                key_version TEXT NOT NULL,
+                rotated_by_user_id INTEGER NOT NULL REFERENCES users(id),
+                reason TEXT,
+                created_at DATETIME NOT NULL DEFAULT (datetime('now'))
+            )
+        """)
+        cursor.execute("CREATE INDEX IF NOT EXISTS ix_key_rotation_events_key_name ON key_rotation_events(key_name)")
 
         conn.commit()
         return applied

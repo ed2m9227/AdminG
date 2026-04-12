@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import Column, DateTime, Integer, String, Boolean, ForeignKey
+from sqlalchemy import Column, DateTime, Integer, String, Boolean, ForeignKey, Text
 from sqlalchemy.orm import relationship
 from app.db.base import Base
 from app.core.encryption import EncryptedText
@@ -20,6 +20,12 @@ class User(Base):
     business_type = Column(String(50), default="general", nullable=False)
     parent_user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     onboarding_completed = Column(Boolean, default=False, nullable=False)
+    governance_mode = Column(String(40), nullable=True, index=True)
+    operation_level = Column(String(40), nullable=True, index=True)
+    primary_objective = Column(String(80), nullable=True, index=True)
+    jurisdiction_code = Column(String(20), nullable=True, index=True)
+    territory_code = Column(String(60), nullable=True, index=True)
+    onboarding_profile_json = Column(Text, nullable=True)
     # Plan payment verification: True = paid/free, False = awaiting payment
     plan_paid = Column(Boolean, default=True, nullable=False)
     plan_payment_reference = Column(EncryptedText(), nullable=True)
@@ -36,6 +42,9 @@ class User(Base):
     # Relationships
     sub_users = relationship("User", remote_side=[id], backref="parent_user")
     refresh_tokens = relationship("RefreshToken", back_populates="user", cascade="all, delete-orphan")
+    governance_entities = relationship("GovernanceEntity", back_populates="owner_user", cascade="all, delete-orphan")
+    user_consents = relationship("UserConsent", back_populates="user", cascade="all, delete-orphan")
+    user_trials = relationship("UserTrial", back_populates="user", cascade="all, delete-orphan")
     
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)

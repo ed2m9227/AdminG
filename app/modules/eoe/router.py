@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.core.collaboration import get_scope_user_ids, resolve_collaboration_owner_id
+from app.core.consent_guard import require_consent
 from app.core.features import Feature, has_feature, get_plan_limits, get_available_features, filter_for_business_type
 from app.core.security import get_current_user
 from app.db.session import get_db
@@ -614,7 +615,14 @@ def list_audit_logs(
 def evaluate_risk_placeholder(
     payload: RiskEvaluatePayload,
     current_user: User = Depends(_resolve_user),
+    db: Session = Depends(get_db),
 ):
+    require_consent(
+        db,
+        current_user.id,
+        "ai_automated_scoring",
+        "Debes otorgar consentimiento de scoring automatizado para usar OmniRisk.",
+    )
     return {
         "status": "placeholder",
         "active": False,

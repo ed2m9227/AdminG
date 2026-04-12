@@ -19,6 +19,15 @@ from app.models.service_package import ServicePackage, ServicePackageItem
 from app.models.notification import Notification
 from app.models.audit_log import AuditLog, VoidRequest
 from app.models.refresh_token import RefreshToken
+from app.models.governance import (
+    GovernanceEntity,
+    PolicyVersion,
+    ConsentType,
+    UserConsent,
+    TrialPolicy,
+    UserTrial,
+    KeyRotationEvent,
+)
 from app.models.payroll_payment import PayrollPayment
 from app.models.crm import Consultation, Treatment, Vaccine, MedicalRecord
 from app.models.operations import (
@@ -61,6 +70,13 @@ __all__ = [
     "AuditLog",
     "VoidRequest",
     "RefreshToken",
+    "GovernanceEntity",
+    "PolicyVersion",
+    "ConsentType",
+    "UserConsent",
+    "TrialPolicy",
+    "UserTrial",
+    "KeyRotationEvent",
     "PayrollPayment",
     "Consultation",
     "Treatment",
