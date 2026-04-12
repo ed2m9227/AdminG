@@ -2,6 +2,7 @@ from datetime import datetime
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, Numeric, String, Boolean
 from sqlalchemy.orm import relationship
 from app.db.base import Base
+from app.core.encryption import EncryptedText
 
 class Payment(Base):
     __tablename__ = "payments"
@@ -20,8 +21,8 @@ class Payment(Base):
     concept = Column(String(200), nullable=True)  # DEPRECATED: Usar payment_items[] en su lugar
     method = Column(String(30), nullable=True)  # cash, card, transfer, montelibano_gen
     status = Column(String(30), default="pending", nullable=False)
-    reference = Column(String(100), nullable=True)
-    notes = Column(String(500), nullable=True)
+    reference = Column(EncryptedText(), nullable=True)
+    notes = Column(EncryptedText(), nullable=True)
     paid_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)

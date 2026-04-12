@@ -41,6 +41,7 @@ SMTP_USERNAME = os.getenv("SMTP_USERNAME")
 SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
 SMTP_FROM_EMAIL = os.getenv("SMTP_FROM_EMAIL")
 SMTP_USE_TLS = _as_bool(os.getenv("SMTP_USE_TLS"), True)
+FIELD_ENCRYPTION_KEY = os.getenv("FIELD_ENCRYPTION_KEY")
 
 # Dev-only fallback switch. Keep FALSE in production.
 AUTH_EXPOSE_RESET_TOKEN = _as_bool(os.getenv("AUTH_EXPOSE_RESET_TOKEN"), False)
@@ -75,6 +76,9 @@ def validate_runtime_config() -> None:
 
     if not SMTP_HOST or not SMTP_FROM_EMAIL:
         errors.append("SMTP_HOST and SMTP_FROM_EMAIL are required in production")
+
+    if not FIELD_ENCRYPTION_KEY:
+        errors.append("FIELD_ENCRYPTION_KEY must be explicitly set in production")
 
     if errors:
         raise RuntimeError("Invalid production configuration: " + "; ".join(errors))

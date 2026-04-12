@@ -1,0 +1,36 @@
+name: Security Pipeline
+
+on:
+  push:
+    branches: [main, develop, payments-trial-qr]
+  pull_request:
+
+jobs:
+  backend-security:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r app/requirements.txt pytest bandit pip-audit
+
+      - name: Compile backend
+        run: python -m compileall app
+
+      - name: Run authorization and security tests
+        run: pytest tests -q
+
+      - name: Static security scan
+        run: bandit -r app -ll
+
+      - name: Dependency audit
+        run: pip-audit -r app/requirements.txt

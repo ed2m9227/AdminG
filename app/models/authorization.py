@@ -2,6 +2,7 @@ from datetime import datetime
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
 from app.db.base import Base
+from app.core.encryption import EncryptedText
 
 
 class Authorization(Base):
@@ -20,8 +21,8 @@ class Authorization(Base):
     authorization_number = Column(String(80), nullable=True)
     status = Column(String(30), nullable=False, default="pending")
     valid_until = Column(DateTime, nullable=True)
-    notes = Column(Text, nullable=True)
-    decision_reason = Column(Text, nullable=True)
+    notes = Column(EncryptedText(), nullable=True)
+    decision_reason = Column(EncryptedText(), nullable=True)
     resolved_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)

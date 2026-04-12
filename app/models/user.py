@@ -2,6 +2,7 @@ from datetime import datetime
 from sqlalchemy import Column, DateTime, Integer, String, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
 from app.db.base import Base
+from app.core.encryption import EncryptedText
 
 class User(Base):
     __tablename__ = "users"
@@ -21,6 +22,7 @@ class User(Base):
     onboarding_completed = Column(Boolean, default=False, nullable=False)
     # Plan payment verification: True = paid/free, False = awaiting payment
     plan_paid = Column(Boolean, default=True, nullable=False)
+    plan_payment_reference = Column(EncryptedText(), nullable=True)
     # Free trial lifecycle for owner accounts in plan free
     free_trial_used = Column(Boolean, default=False, nullable=False)
     free_trial_started_at = Column(DateTime, nullable=True)

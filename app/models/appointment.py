@@ -2,6 +2,7 @@ from datetime import datetime
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
 from app.db.base import Base
+from app.core.encryption import EncryptedText
 
 class Appointment(Base):
     __tablename__ = "appointments"
@@ -13,7 +14,7 @@ class Appointment(Base):
     scheduled_at = Column(DateTime, nullable=False)
     duration_minutes = Column(Integer, nullable=True)
     status = Column(String(30), default="scheduled", nullable=False)
-    notes = Column(Text, nullable=True)
+    notes = Column(EncryptedText(), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
