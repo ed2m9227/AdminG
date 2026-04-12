@@ -31,6 +31,8 @@ from app.modules.operations.router import router as operations_router
 from app.modules.eoe.router import router as eoe_router
 from app.modules.plans.service import seed_plans, seed_business_types
 from app.core.config import CORS_ALLOW_ALL_ORIGINS, CORS_ALLOW_ORIGINS, validate_runtime_config
+# Side-effect import: ensure RefreshToken table is registered with SQLAlchemy metadata
+from app.models import refresh_token as _refresh_token_model  # noqa: F401
 
 # Configurar logging
 logging.basicConfig(

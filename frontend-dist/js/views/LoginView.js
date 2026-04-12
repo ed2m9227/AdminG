@@ -7,6 +7,7 @@
 import authService from '../services/auth.service.js';
 import router from '../utils/router.js';
 import { t } from '../utils/i18n.js';
+import apiService from '../services/api.service.js';
 
 export class LoginView {
     render() {
@@ -55,6 +56,18 @@ export class LoginView {
                     <p class="link" style="margin-top: 8px;">
                         <a href="#" data-navigate="forgot-password">¿Olvidaste tu contraseña?</a>
                     </p>
+                    <div id="totpStep" class="hidden" style="margin-top: 16px;">
+                        <hr style="margin-bottom: 16px;">
+                        <p style="font-size: 0.9em; margin-bottom: 10px; color: var(--text-secondary, #666);">
+                            Ingresa el código de tu aplicación de autenticación (o un código de respaldo).
+                        </p>
+                        <div class="form-group">
+                            <label for="totpCode">Código 2FA</label>
+                            <input type="text" id="totpCode" placeholder="000000" maxlength="8"
+                                autocomplete="one-time-code" inputmode="numeric" style="letter-spacing:4px; text-align:center;">
+                        </div>
+                        <button type="button" class="btn btn-primary btn-full" id="totpBtn">Verificar</button>
+                    </div>
                 </div>
             </div>
         `;
@@ -67,6 +80,12 @@ export class LoginView {
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             await this.handleLogin(e);
+        });
+
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('#totpBtn')) {
+                this.handleTotpVerify();
+            }
         });
 
         // Navegación a registro
@@ -86,7 +105,7 @@ export class LoginView {
         const form = e.target;
         const btn = document.getElementById('loginBtn');
         const errorDiv = document.getElementById('loginError');
-        
+
         const email = form.email.value.trim();
         const password = form.password.value;
 
@@ -95,12 +114,19 @@ export class LoginView {
 
         try {
             console.log('🔐 Attempting login...');
-            await authService.login(email, password);
+            const response = await authService.login(email, password);
+
+            // 2FA required — show inline code input
+            if (response?.requires_2fa) {
+                this._challengeToken = response.challenge_token;
+                document.getElementById('totpStep').classList.remove('hidden');
+                document.getElementById('loginBtn').classList.add('hidden');
+                document.getElementById('totpCode').focus();
+                return;
+            }
+
             console.log('✅ Login successful, token saved');
-            
-            // Pequeña pausa para asegurar que el token esté guardado
             await new Promise(resolve => setTimeout(resolve, 100));
-            
             const user = await authService.loadCurrentUser();
             const userEmail = user?.email || '';
 
@@ -159,6 +185,45 @@ export class LoginView {
             }
         } catch (error) {
             console.error('❌ Login error:', error);
+            errorDiv.textContent = error.message;
+            errorDiv.classList.remove('hidden');
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    async handleTotpVerify() {
+        const code = (document.getElementById('totpCode')?.value || '').trim();
+        const btn = document.getElementById('totpBtn');
+        const errorDiv = document.getElementById('loginError');
+
+        if (!code || !this._challengeToken) return;
+
+        btn.disabled = true;
+        errorDiv.classList.add('hidden');
+
+        try {
+            const data = await apiService.verify2faLogin(this._challengeToken, code);
+            localStorage.setItem('token', data.access_token);
+            if (data.refresh_token) localStorage.setItem('refresh_token', data.refresh_token);
+
+            await authService.loadCurrentUser();
+            await new Promise(resolve => setTimeout(resolve, 100));
+            const user = authService.currentUser;
+
+            if (user?.role === 'admin') {
+                localStorage.setItem('onboarding_completed', 'true');
+                router.navigate('dashboard');
+                return;
+            }
+            if (user?.parent_user_id || user?.onboarding_completed) {
+                localStorage.setItem('onboarding_completed', 'true');
+                router.navigate('dashboard');
+                return;
+            }
+            const onboardingDone = localStorage.getItem('onboarding_completed') === 'true';
+            router.navigate(onboardingDone ? 'dashboard' : 'onboarding');
+        } catch (error) {
             errorDiv.textContent = error.message;
             errorDiv.classList.remove('hidden');
         } finally {

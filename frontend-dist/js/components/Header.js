@@ -460,6 +460,12 @@ export class Header {
                 hint: t('quick.fullscreen_hint', 'Usa más espacio para operar'),
             },
             {
+                id: '2fa-settings',
+                icon: '🔐',
+                label: t('quick.2fa', 'Verificación en 2 pasos'),
+                hint: t('quick.2fa_hint', 'Configura Google Authenticator / Authy'),
+            },
+            {
                 id: 'logout',
                 icon: '⇦',
                 label: t('quick.logout', 'Cerrar sesión'),
@@ -468,6 +474,8 @@ export class Header {
             },
         ];
     }
+
+
 
     _renderQuickSettingsActions() {
         const quickSettingsList = document.getElementById('quickSettingsList');
@@ -514,6 +522,10 @@ export class Header {
                     this._startPolling();
                 }
                 break;
+            case '2fa-settings':
+                this._closeQuickSettings();
+                router.navigate('totp-setup');
+                return;
             case 'logout':
                 this._closeQuickSettings();
                 this.handleLogout();

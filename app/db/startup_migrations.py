@@ -119,6 +119,9 @@ def run_sqlite_startup_migrations(db_path: str = "app.db") -> list[str]:
                     ("free_trial_started_at", "DATETIME"),
                     ("password_reset_token_hash", "TEXT"),
                     ("password_reset_expires_at", "DATETIME"),
+                    ("totp_secret", "TEXT"),
+                    ("totp_enabled", "INTEGER NOT NULL DEFAULT 0"),
+                    ("totp_backup_codes_json", "TEXT"),
                 ],
             )
         )
@@ -162,6 +165,20 @@ def run_sqlite_startup_migrations(db_path: str = "app.db") -> list[str]:
                     [("authorization_id", "INTEGER REFERENCES authorizations(id)")],
                 )
             )
+
+        # Refresh token table (Entrega B)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS refresh_tokens (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL REFERENCES users(id),
+                token_hash TEXT NOT NULL UNIQUE,
+                expires_at DATETIME NOT NULL,
+                revoked_at DATETIME,
+                created_at DATETIME NOT NULL DEFAULT (datetime('now'))
+            )
+        """)
+        cursor.execute("CREATE INDEX IF NOT EXISTS ix_refresh_tokens_token_hash ON refresh_tokens(token_hash)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS ix_refresh_tokens_user_id ON refresh_tokens(user_id)")
 
         conn.commit()
         return applied

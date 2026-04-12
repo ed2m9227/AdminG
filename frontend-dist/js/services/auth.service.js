@@ -22,15 +22,25 @@ export class AuthService {
      */
     async login(email, password) {
         try {
-            const response = await apiService.post('/auth/login', 
-                { email, password }, 
-                false
+            const response = await apiService.post(
+                '/auth/login',
+                { email, password },
+                false,
+                25000
             );
-            
+
+            // If 2FA is required, return early so caller can handle the challenge
+            if (response.requires_2fa) {
+                return response;
+            }
+
             localStorage.setItem('token', response.access_token);
+            if (response.refresh_token) {
+                localStorage.setItem('refresh_token', response.refresh_token);
+            }
             await this.loadCurrentUser();
             this.notifyListeners();
-            
+
             return response;
         } catch (error) {
             throw new Error(error.message || 'Error al iniciar sesión');
@@ -54,8 +64,14 @@ export class AuthService {
     /**
      * Cerrar sesión
      */
-    logout() {
+    logout(callApi = true) {
+        const refreshToken = localStorage.getItem('refresh_token');
+        if (callApi && refreshToken) {
+            // Fire-and-forget server-side revocation
+            try { apiService.logoutToken(refreshToken); } catch (_) {}
+        }
         localStorage.removeItem('token');
+        localStorage.removeItem('refresh_token');
         this.currentUser = null;
         this.notifyListeners();
     }

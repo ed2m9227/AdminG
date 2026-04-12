@@ -26,9 +26,14 @@ class User(Base):
     free_trial_started_at = Column(DateTime, nullable=True)
     password_reset_token_hash = Column(String(128), nullable=True)
     password_reset_expires_at = Column(DateTime, nullable=True)
-    
+    # TOTP / 2FA fields
+    totp_secret = Column(String(64), nullable=True)
+    totp_enabled = Column(Boolean, default=False, nullable=False)
+    totp_backup_codes_json = Column(String(1024), nullable=True)  # JSON array of hashed backup codes
+
     # Relationships
     sub_users = relationship("User", remote_side=[id], backref="parent_user")
+    refresh_tokens = relationship("RefreshToken", back_populates="user", cascade="all, delete-orphan")
     
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)

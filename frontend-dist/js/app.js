@@ -36,6 +36,7 @@ import invoicesView from './views/InvoicesView.js';
 import documentsView from './views/DocumentsView.js';
 import authorizationsView from './views/AuthorizationsView.js';
 import crmView from './views/CrmView.js';
+import totpSetupView from './views/TotpSetupView.js';
 import modal from './components/Modal.js';
 import aiChatWidget from './components/AiChatWidget.js';
 
@@ -98,6 +99,16 @@ class App {
 
         router.register('forgot-password', async () => {
             this.renderAuthView(forgotPasswordView);
+        });
+
+        router.register('totp-setup', async () => {
+            if (!authService.isAuthenticated()) {
+                await router.navigate('login');
+                return;
+            }
+            aiChatWidget.unmount();
+            this.appRoot.innerHTML = totpSetupView.render();
+            await totpSetupView.init();
         });
 
         // Ruta de onboarding (requiere autenticación pero no requiere onboarding completado)

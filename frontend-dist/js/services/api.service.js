@@ -15,6 +15,7 @@ const REQUEST_TIMEOUT_MS = 10000;
 export class ApiService {
     constructor() {
         this.baseUrl = API_BASE_URL;
+        this._isRefreshing = false;
     }
 
     /**
@@ -59,8 +60,31 @@ export class ApiService {
             } finally {
                 clearTimeout(timeoutId);
             }
-            
+
             if (!response.ok) {
+                // Auto-refresh on 401 (once) when we have a refresh token
+                if (response.status === 401 && requiresAuth && !this._isRefreshing) {
+                    const refreshed = await this._tryRefreshToken();
+                    if (refreshed) {
+                        // Retry original request with new access token
+                        headers['Authorization'] = `Bearer ${localStorage.getItem('token')}`;
+                        options.headers = headers;
+                        const retryCtrl = new AbortController();
+                        const retryTimeout = setTimeout(() => retryCtrl.abort(), timeoutMs);
+                        try {
+                            const retryResp = await fetch(`${this.baseUrl}${endpoint}`, {
+                                ...options,
+                                signal: retryCtrl.signal,
+                            });
+                            if (retryResp.ok) {
+                                if (retryResp.status === 204) return null;
+                                return await retryResp.json();
+                            }
+                        } finally {
+                            clearTimeout(retryTimeout);
+                        }
+                    }
+                }
                 let errorMessage = `HTTP Error: ${response.status}`;
                 try {
                     const error = await response.json();
@@ -241,6 +265,58 @@ export class ApiService {
 
     async getVersion() {
         return this.get('/api/version', false);
+    }
+
+    // ========== AUTH 2FA / REFRESH ==========
+
+    async verify2faLogin(challengeToken, code) {
+        return this.post('/auth/2fa/verify-login', { challenge_token: challengeToken, code }, false);
+    }
+
+    async refreshToken(refreshToken) {
+        return this.post('/auth/refresh', { refresh_token: refreshToken }, false);
+    }
+
+    async logoutToken(refreshToken) {
+        return this.post('/auth/logout', { refresh_token: refreshToken }, false);
+    }
+
+    async get2faStatus() {
+        return this.get('/auth/2fa/status');
+    }
+
+    async setup2fa() {
+        return this.post('/auth/2fa/setup', {});
+    }
+
+    async confirm2fa(code) {
+        return this.post('/auth/2fa/confirm', { code });
+    }
+
+    async disable2fa(password) {
+        return this.post('/auth/2fa/disable', { password });
+    }
+
+    /** Silent token refresh. Returns true if a new access token was stored. */
+    async _tryRefreshToken() {
+        const stored = localStorage.getItem('refresh_token');
+        if (!stored) return false;
+        this._isRefreshing = true;
+        try {
+            const data = await this.refreshToken(stored);
+            if (data?.access_token) {
+                localStorage.setItem('token', data.access_token);
+                if (data.refresh_token) localStorage.setItem('refresh_token', data.refresh_token);
+                return true;
+            }
+        } catch (_) {
+            // Refresh failed — clear session
+            localStorage.removeItem('token');
+            localStorage.removeItem('refresh_token');
+        } finally {
+            this._isRefreshing = false;
+        }
+        return false;
     }
 
     // ========== SERVICES ==========
