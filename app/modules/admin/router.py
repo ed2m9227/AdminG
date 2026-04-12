@@ -14,7 +14,9 @@ from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.core.collaboration import get_scope_user_ids, normalize_plan, resolve_collaboration_owner_id
 from app.core.security import get_current_user, hash_password
+from app.core.email_service import send_role_changed_alert
 from app.core.features import get_available_features, get_plan_limits, has_feature, Feature
+from app.models.refresh_token import RefreshToken
 from app.models.user import User
 from app.models.team_user import TeamUser
 from app.models.customer import Customer
@@ -267,11 +269,31 @@ def change_user_role(
         
         if new_role not in ["viewer", "manager", "admin"]:
             raise HTTPException(status_code=400, detail="Rol inválido")
+
+        old_role = user.role
+        if old_role == new_role:
+            return {
+                "success": True,
+                "message": f"El usuario ya tiene el rol {new_role}",
+                "user": {
+                    "id": user.id,
+                    "email": user.email,
+                    "role": user.role
+                }
+            }
         
         user.role = new_role
         user.updated_at = datetime.utcnow()
+
+        # Invalidate all sessions because access JWTs embed the role claim.
+        db.query(RefreshToken).filter(
+            RefreshToken.user_id == user.id,
+            RefreshToken.revoked_at.is_(None),
+        ).update({"revoked_at": datetime.utcnow()})
+
         db.commit()
         db.refresh(user)
+        send_role_changed_alert(user.email, old_role, new_role)
         
         return {
             "success": True,

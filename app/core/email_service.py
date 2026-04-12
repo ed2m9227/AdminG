@@ -125,3 +125,26 @@ def send_2fa_change_alert(to_email: str, action: str) -> bool:
     if ok:
         logger.info("SECURITY 2fa_change_alert_sent email=%s action=%s", to_email, action)
     return ok
+
+
+def send_role_changed_alert(to_email: str, old_role: str, new_role: str) -> bool:
+    """Alert user when an administrator changes their role."""
+    if not can_send_mail():
+        return False
+
+    msg = EmailMessage()
+    msg["Subject"] = "AdminG - Tu rol fue actualizado"
+    msg["From"] = SMTP_FROM_EMAIL
+    msg["To"] = to_email
+    msg.set_content(
+        "Un administrador actualizó los permisos de tu cuenta en AdminG.\n\n"
+        f"Rol anterior: {old_role}\n"
+        f"Rol nuevo: {new_role}\n\n"
+        "Por seguridad, tus sesiones activas fueron invalidadas y debes iniciar sesión nuevamente.\n"
+        "Si no reconoces este cambio, contacta soporte de inmediato."
+    )
+
+    ok = _send(msg)
+    if ok:
+        logger.info("SECURITY role_change_alert_sent email=%s old_role=%s new_role=%s", to_email, old_role, new_role)
+    return ok

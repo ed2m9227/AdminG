@@ -18,7 +18,20 @@ from app.models.tax_config import TaxConfig
 from app.models.service_package import ServicePackage, ServicePackageItem
 from app.models.notification import Notification
 from app.models.audit_log import AuditLog, VoidRequest
+from app.models.refresh_token import RefreshToken
+from app.models.payroll_payment import PayrollPayment
 from app.models.crm import Consultation, Treatment, Vaccine, MedicalRecord
+from app.models.operations import (
+    OperationalUnitType,
+    OperationalUnit,
+    OperationalContext,
+    OperationalEvent,
+    RiskRegistry,
+    RiskAssessment,
+    Incident,
+    ActionPlan,
+    Expense,
+)
 
 __all__ = [
     "User", 
@@ -47,8 +60,19 @@ __all__ = [
     "Notification",
     "AuditLog",
     "VoidRequest",
+    "RefreshToken",
+    "PayrollPayment",
     "Consultation",
     "Treatment",
     "Vaccine",
     "MedicalRecord",
+    "OperationalUnitType",
+    "OperationalUnit",
+    "OperationalContext",
+    "OperationalEvent",
+    "RiskRegistry",
+    "RiskAssessment",
+    "Incident",
+    "ActionPlan",
+    "Expense",
 ]
