@@ -43,8 +43,18 @@ class User(Base):
     sub_users = relationship("User", remote_side=[id], backref="parent_user")
     refresh_tokens = relationship("RefreshToken", back_populates="user", cascade="all, delete-orphan")
     governance_entities = relationship("GovernanceEntity", back_populates="owner_user", cascade="all, delete-orphan")
-    user_consents = relationship("UserConsent", back_populates="user", cascade="all, delete-orphan")
-    user_trials = relationship("UserTrial", back_populates="user", cascade="all, delete-orphan")
-    
+    user_consents = relationship(
+        "UserConsent",
+        back_populates="user",
+        foreign_keys="UserConsent.user_id",
+        cascade="all, delete-orphan",
+    )
+    user_trials = relationship(
+        "UserTrial",
+        back_populates="user",
+        foreign_keys="UserTrial.user_id",
+        cascade="all, delete-orphan",
+    )
+
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)

@@ -75,7 +75,8 @@ class UserConsent(Base):
     device_fingerprint_hash = Column(String(128), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
-    user = relationship("User", back_populates="user_consents")
+    user = relationship("User", back_populates="user_consents", foreign_keys=[user_id])
+    tenant = relationship("User", foreign_keys=[tenant_id])
     consent_type = relationship("ConsentType", back_populates="user_consents")
     policy_version = relationship("PolicyVersion", back_populates="user_consents")
 
@@ -114,6 +115,8 @@ class UserTrial(Base):
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
     user = relationship("User", back_populates="user_trials", foreign_keys=[user_id])
+    tenant = relationship("User", foreign_keys=[tenant_id])
+    approved_by = relationship("User", foreign_keys=[approved_by_user_id])
     trial_policy = relationship("TrialPolicy", back_populates="user_trials")
 
 
