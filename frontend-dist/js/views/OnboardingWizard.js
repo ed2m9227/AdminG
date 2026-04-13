@@ -1,6 +1,6 @@
 /**
- * Onboarding Wizard View
- * Initial business configuration before dashboard access
+ * Onboarding Wizard View (Fases 1-4)
+ * Frontend activo servido por FastAPI desde frontend-dist
  */
 
 import apiService from '../services/api.service.js';
@@ -12,85 +12,101 @@ import { PLAN_CATALOG } from '../utils/plans.js';
 class OnboardingWizard {
     constructor() {
         this.currentStep = 1;
-        this.totalSteps = 3;
+        this.totalSteps = 4;
         this.businessTypes = [];
         this.plans = PLAN_CATALOG;
+
+        this.governanceModes = [
+            { code: 'comunitario', label: 'Comunitario', description: 'Juntas de accion comunal y organizaciones de base.' },
+            { code: 'organizacional_civil', label: 'Organizacional Civil', description: 'Fundaciones, asociaciones y colectivos.' },
+            { code: 'territorial_publico', label: 'Territorial Publico', description: 'Alcaldias, gobernaciones y entidades territoriales.' },
+            { code: 'institucional_estatal', label: 'Institucional Estatal', description: 'Instituciones estatales y organismos de control.' },
+        ];
+
+        this.operationLevels = [
+            { code: 'operativo', label: 'Operativo' },
+            { code: 'administrativo', label: 'Administrativo' },
+            { code: 'estrategico', label: 'Estrategico' },
+            { code: 'control_auditoria', label: 'Control y Auditoria' },
+        ];
+
+        this.objectives = [
+            { code: 'gestion_proyectos_casos', label: 'Gestion de Proyectos y Casos' },
+            { code: 'control_recursos', label: 'Control de Recursos' },
+            { code: 'seguimiento_ciudadano', label: 'Seguimiento Ciudadano' },
+            { code: 'transparencia_auditoria', label: 'Transparencia y Auditoria' },
+            { code: 'prevencion_riesgos', label: 'Prevencion de Riesgos' },
+            { code: 'inteligencia_territorial', label: 'Inteligencia Territorial' },
+        ];
+
         this.formData = {
             business_type: '',
             business_name: '',
-            plan: 'starter',
-            role: 'admin'
+            plan: 'free',
+            role: 'admin',
+            governance_mode: 'comunitario',
+            operation_level: 'operativo',
+            primary_objective: 'gestion_proyectos_casos',
+            jurisdiction_code: 'CO',
+            territory_code: '',
+            entity_name: '',
+        };
+
+        this.phaseContext = {
+            activation: null,
+            trial_preview: null,
+            policies: [],
+            consents: [],
+            accepted: {},
+            trial: null,
         };
     }
 
     async render() {
-        // Load business types BEFORE rendering - don't render without them
         try {
             await this.loadBusinessTypes();
             if (!this.businessTypes || this.businessTypes.length === 0) {
-                console.warn('⚠️ No business types available');
-                // Show fallback types if API fails
                 this.businessTypes = [
                     { code: 'veterinaria', label: 'Veterinaria', icon: '🐾', supports_pets: true },
-                    { code: 'barberia', label: 'Barbería', icon: '✂️', supports_pets: false },
-                    { code: 'nutricion', label: 'Nutrición', icon: '🥗', supports_pets: false },
-                    { code: 'medicina_general', label: 'Medicina General', icon: '🩺', supports_pets: false },
-                    { code: 'spa', label: 'Spa / Estética', icon: '💆', supports_pets: false },
-                    { code: 'propiedad_horizontal', label: 'Propiedad Horizontal', icon: '🏢', supports_pets: false },
-                    { code: 'clinica', label: 'Clínica', icon: '⚕️', supports_pets: false },
-                    { code: 'otro', label: 'Otro', icon: '📋', supports_pets: false }
+                    { code: 'barberia', label: 'Barberia', icon: '✂️', supports_pets: false },
+                    { code: 'nutricion', label: 'Nutricion', icon: '🥗', supports_pets: false },
+                    { code: 'otro', label: 'Otro', icon: '📋', supports_pets: false },
                 ];
             }
-        } catch (error) {
-            console.error('❌ Error loading business types:', error);
-            // Use fallback types
+        } catch (_error) {
             this.businessTypes = [
                 { code: 'veterinaria', label: 'Veterinaria', icon: '🐾', supports_pets: true },
-                { code: 'barberia', label: 'Barbería', icon: '✂️', supports_pets: false },
-                { code: 'nutricion', label: 'Nutrición', icon: '🥗', supports_pets: false },
-                { code: 'medicina_general', label: 'Medicina General', icon: '🩺', supports_pets: false },
-                { code: 'spa', label: 'Spa / Estética', icon: '💆', supports_pets: false },
-                { code: 'propiedad_horizontal', label: 'Propiedad Horizontal', icon: '🏢', supports_pets: false },
-                { code: 'clinica', label: 'Clínica', icon: '⚕️', supports_pets: false },
-                { code: 'otro', label: 'Otro', icon: '📋', supports_pets: false }
+                { code: 'barberia', label: 'Barberia', icon: '✂️', supports_pets: false },
+                { code: 'nutricion', label: 'Nutricion', icon: '🥗', supports_pets: false },
+                { code: 'otro', label: 'Otro', icon: '📋', supports_pets: false },
             ];
         }
-        
-        // Get current user role (already loaded by authService)
+
         const user = authService.getCurrentUser();
         this.formData.role = user?.role || 'admin';
 
-        const forcedStep = Number.parseInt(localStorage.getItem('onboarding_return_step') || '', 10);
-        if (this.formData.role !== 'team' && Number.isInteger(forcedStep) && forcedStep >= 1 && forcedStep <= 3) {
-            this.currentStep = forcedStep;
-            localStorage.removeItem('onboarding_return_step');
-        }
-
-        // Si es Team, ajustar total de pasos
         if (this.formData.role === 'team') {
             this.totalSteps = 1;
         }
 
+        const nextLabel = this.getNextLabel();
+
         return `
             <div class="onboarding-wrapper">
                 <div class="onboarding-card">
-                    <!-- Header -->
                     <div class="onboarding-header">
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
                             <div style="flex: 1;">
-                                <h1 class="onboarding-title">¡Bienvenido a AdminG!</h1>
-                                <p class="onboarding-subtitle">${this.formData.role === 'team' ? 'Cuasi-configuración de tu cuenta de equipo' : 'Configuremos tu negocio en 3 pasos simples'}</p>
+                                <h1 class="onboarding-title">Onboarding Gobernanza</h1>
+                                <p class="onboarding-subtitle">${this.formData.role === 'team' ? 'Cuenta de equipo lista para usar' : 'Fases 1 a 4: negocio, gobernanza, politicas y activacion'}</p>
                                 <small style="color: #666; font-size: 12px;">
                                     Tu rol: <strong>${this.getRoleLabel(this.formData.role)}</strong>
                                 </small>
                             </div>
-                            <button id="btn-logout" title="Volver a Login (Cerrar Sesión)" style="background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 4px; padding: 8px 12px; cursor: pointer; color: #6b7280; font-size: 16px; transition: all 0.2s; display: flex; align-items: center; justify-content: center;">
-                                ✕
-                            </button>
+                            <button id="btn-logout" title="Cerrar Sesion" style="background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 4px; padding: 8px 12px; cursor: pointer; color: #6b7280; font-size: 16px;">✕</button>
                         </div>
                     </div>
 
-                    <!-- Progress Bar -->
                     <div class="progress-container">
                         <div class="progress-info">
                             <span class="progress-step">Paso ${this.currentStep} de ${this.totalSteps}</span>
@@ -101,18 +117,16 @@ class OnboardingWizard {
                         </div>
                     </div>
 
-                    <!-- Step Content -->
                     <div id="onboarding-content">
                         ${this.renderStepContent()}
                     </div>
 
-                    <!-- Navigation Buttons -->
                     <div class="nav-buttons">
                         <button id="btn-prev" class="btn btn-prev" ${this.currentStep === 1 ? 'disabled' : ''}>
                             ← Anterior
                         </button>
                         <button id="btn-next" class="btn btn-next">
-                            ${this.currentStep === this.totalSteps ? '✓ Finalizar' : 'Siguiente →'}
+                            ${nextLabel}
                         </button>
                     </div>
                 </div>
@@ -120,58 +134,33 @@ class OnboardingWizard {
         `;
     }
 
-    renderStepContent() {
-        // Si es Team, mostrar solo confirmación simplificada
-        if (this.formData.role === 'team') {
-            return this.renderTeamOnboarding();
+    getNextLabel() {
+        if (this.formData.role === 'team') return '✓ Finalizar';
+        if (this.currentStep === 4) {
+            const isPaid = this.formData.plan && this.formData.plan !== 'free';
+            return isPaid ? 'Ir a pago pendiente →' : 'Entrar al dashboard →';
         }
+        if (this.currentStep === 3) return '✓ Finalizar onboarding';
+        return 'Siguiente →';
+    }
 
-        switch (this.currentStep) {
-            case 1:
-                return this.renderStep1();
-            case 2:
-                return this.renderStep2();
-            case 3:
-                return this.renderStep3();
-            default:
-                return '';
-        }
+    renderStepContent() {
+        if (this.formData.role === 'team') return this.renderTeamOnboarding();
+
+        if (this.currentStep === 1) return this.renderStep1();
+        if (this.currentStep === 2) return this.renderStep2();
+        if (this.currentStep === 3) return this.renderStep3();
+        if (this.currentStep === 4) return this.renderStep4();
+        return '';
     }
 
     renderTeamOnboarding() {
         return `
             <div class="step-content">
-                <h2 class="step-title">¡Bienvenido a tu Cuenta de Equipo!</h2>
-                <p class="step-subtitle">Tu acceso ha sido configurado por el administrador</p>
-
-                <div style="display: flex; flex-direction: column; gap: 1rem;">
-                    <div class="info-box info-box-blue" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 20px; border-radius: 8px; border: none;">
-                        <p style="margin: 0; font-size: 14px; line-height: 1.6;">
-                            <strong>📌 Información Importante:</strong><br><br>
-                            Tu cuenta de equipo funciona bajo la configuración del administrador del negocio. Esto significa:
-                        </p>
-                    </div>
-
-                    <div style="background: #f3f4f6; padding: 16px; border-radius: 8px; border-left: 4px solid #667eea;">
-                        <div style="margin-bottom: 12px;">
-                            <div style="font-weight: 600; color: #1f2937; margin-bottom: 4px;">✓ Plan Heredado</div>
-                            <div style="font-size: 13px; color: #6b7280;">Tu plan se determina según la suscripción del administrador. Tendrás acceso a las funciones permitidas para tu rol.</div>
-                        </div>
-                        <div>
-                            <div style="font-weight: 600; color: #1f2937; margin-bottom: 4px;">✓ Acceso Limitado</div>
-                            <div style="font-size: 13px; color: #6b7280;">Como miembro del equipo, tu acceso está limitado según el rol asignado. Contacta al administrador si necesitas más permisos.</div>
-                        </div>
-                    </div>
-
-                    <!-- Summary Card for Team -->
-                    <div class="summary-card role" style="background: linear-gradient(135deg, #e0e7ff 0%, #f3e8ff 100%); border-left: 4px solid #667eea; padding: 16px; border-radius: 8px;">
-                        <span class="summary-label" style="color: #667eea; font-weight: 600;">👨‍💼 Tu Rol: Empleado (Team)</span>
-                        <small style="display: block; margin-top: 8px; color: #6b7280;">Puedes comenzar a usar AdminG inmediatamente. El administrador puede cambiar tus permisos en cualquier momento.</small>
-                    </div>
-
-                    <div class="info-box info-box-green" style="background: #d1fae5; color: #065f46; padding: 12px; border-radius: 8px; border: 1px solid #6ee7b7; font-size: 12px;">
-                        ✓ <strong>Lista para comenzar:</strong> Tu cuenta está completamente configurada. ¡Accede al dashboard y comienza a trabajar!
-                    </div>
+                <h2 class="step-title">Cuenta de Equipo Activa</h2>
+                <p class="step-subtitle">Tu cuenta hereda configuracion del administrador principal.</p>
+                <div class="info-box info-box-green">
+                    <p>✓ Puedes comenzar a usar la plataforma.</p>
                 </div>
             </div>
         `;
@@ -186,34 +175,20 @@ class OnboardingWizard {
 
         return `
             <div class="step-content">
-                <h2 class="step-title">Información de tu Negocio</h2>
-                <p class="step-subtitle">Cuéntanos sobre tu negocio</p>
-                
-                <!-- Business Type -->
+                <h2 class="step-title">Informacion de tu Negocio</h2>
+                <p class="step-subtitle">Fase 1: define tu base operativa</p>
+
                 <div class="form-group">
-                    <label class="form-label">
-                        Tipo de negocio <span class="required">*</span>
-                    </label>
+                    <label class="form-label">Tipo de negocio <span class="required">*</span></label>
                     <select id="business_type" class="form-select" required>
                         <option value="">Selecciona tu tipo de negocio...</option>
                         ${businessTypeOptions}
                     </select>
-                    <p class="form-help-text">
-                        Las etiquetas y campos se configurarán automáticamente según tu tipo de negocio
-                    </p>
                 </div>
 
-                <!-- Business Name -->
                 <div class="form-group">
-                    <label class="form-label">
-                        Nombre de tu negocio <span class="required">*</span>
-                    </label>
-                    <input type="text" 
-                           id="business_name" 
-                           value="${this.formData.business_name || ''}"
-                           placeholder="Ej: Veterinaria San Francisco, Barbería El Corte"
-                           class="form-input"
-                           required>
+                    <label class="form-label">Nombre de tu negocio <span class="required">*</span></label>
+                    <input type="text" id="business_name" value="${this.formData.business_name || ''}" placeholder="Ej: Junta de Accion Comunal Barrio La Esperanza" class="form-input" required>
                 </div>
             </div>
         `;
@@ -222,346 +197,372 @@ class OnboardingWizard {
     renderStep2() {
         return `
             <div class="step-content">
-                <h2 class="step-title">Selecciona tu Plan</h2>
-                <p class="step-subtitle">Elige el plan que mejor se adapte a tus necesidades</p>
+                <h2 class="step-title">Gobernanza y Nivel Operativo</h2>
+                <p class="step-subtitle">Fase 2: configura modelo institucional y plan</p>
 
-                <div class="plan-grid">
-                    ${this.plans.map(plan => `
-                        <label class="plan-card-wrapper">
-                            <input type="radio" name="plan" value="${plan.code}" 
-                                   ${this.formData.plan === plan.code ? 'checked' : ''}
-                                   id="plan_${plan.code}">
-                            <div class="plan-card plan-card-content ${plan.code} ${this.formData.plan === plan.code ? 'selected' : ''}">
-                                <div class="plan-price-header">
-                                    <h3 class="plan-name">${plan.name}</h3>
-                                    <div class="plan-price">${plan.priceCOP === 0 ? 'GRATIS' : `$${plan.priceCOP.toLocaleString('es-CO')}`}<span class="plan-price-period">/mes</span></div>
-                                </div>
-                                <p class="plan-limits">${plan.limits}</p>
-                                <ul class="plan-features">
-                                    ${plan.features.map(feature => `
-                                        <li>✓ ${feature}</li>
-                                    `).join('')}
-                                </ul>
-                                ${plan.lockedFeatures?.length ? `
-                                    <div class="plan-locked-note">
-                                        Bloqueado en este plan: ${plan.lockedFeatures.join(', ')}
-                                    </div>
-                                ` : ''}
-                                ${plan.nequiLink ? `
-                                    <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
-                                        <a href="${plan.nequiLink}" target="_blank" class="btn btn-next" style="display: inline-block; width: 100%; text-align: center; text-decoration: none; padding: 8px;">
-                                            💳 Pagar con Nequi
-                                        </a>
-                                    </div>
-                                ` : ''}
-                            </div>
-                        </label>
-                    `).join('')}
+                <div class="form-group">
+                    <label class="form-label">Tipo de gobernanza <span class="required">*</span></label>
+                    <select id="governance_mode" class="form-select" required>
+                        ${this.governanceModes.map(mode => `<option value="${mode.code}" ${this.formData.governance_mode === mode.code ? 'selected' : ''}>${mode.label}</option>`).join('')}
+                    </select>
+                    <p class="form-help-text" id="governance_help">${this.governanceModes.find(m => m.code === this.formData.governance_mode)?.description || ''}</p>
                 </div>
 
-                <div class="info-box info-box-blue">
-                    <p>ℹ️ <strong>Nota:</strong> El plan gratuito incluye trial completo de 15 días. Al seleccionar un plan de pago, puedes pagar por enlace o QR de Nequi y luego continuar.</p>
+                <div class="form-group">
+                    <label class="form-label">Nivel operativo <span class="required">*</span></label>
+                    <select id="operation_level" class="form-select" required>
+                        ${this.operationLevels.map(level => `<option value="${level.code}" ${this.formData.operation_level === level.code ? 'selected' : ''}>${level.label}</option>`).join('')}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Objetivo principal <span class="required">*</span></label>
+                    <select id="primary_objective" class="form-select" required>
+                        ${this.objectives.map(obj => `<option value="${obj.code}" ${this.formData.primary_objective === obj.code ? 'selected' : ''}>${obj.label}</option>`).join('')}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Plan <span class="required">*</span></label>
+                    <select id="selected_plan" class="form-select" required>
+                        ${this.plans.map(plan => `<option value="${plan.code}" ${this.formData.plan === plan.code ? 'selected' : ''}>${plan.name} (${plan.priceCOP === 0 ? 'Gratis' : '$' + plan.priceCOP.toLocaleString('es-CO') + '/mes'})</option>`).join('')}
+                    </select>
+                    <p class="form-help-text">Las funciones premium dependen de plan activo y/o trial aprobado.</p>
                 </div>
             </div>
         `;
     }
 
     renderStep3() {
-        const selectedType = this.businessTypes.find(t => t.code === this.formData.business_type);
-        const selectedPlan = this.plans.find(p => p.code === this.formData.plan);
+        const policyHtml = (this.phaseContext.policies || []).map(policy => `
+            <div class="summary-card info" style="margin-bottom: 8px;">
+                <div class="summary-item"><span class="summary-label">Tipo:</span><span class="summary-value">${policy.policy_type}</span></div>
+                <div class="summary-item"><span class="summary-label">Version:</span><span class="summary-value">${policy.version_label}</span></div>
+                <div class="summary-item"><span class="summary-label">Resumen:</span><span class="summary-value">${policy.content_summary || '-'}</span></div>
+            </div>
+        `).join('');
+
+        const consentsHtml = (this.phaseContext.consents || []).map(item => `
+            <label class="plan-card-wrapper" style="margin-bottom: 8px; display: block;">
+                <div class="plan-card plan-card-content" style="padding: 12px;">
+                    <div style="display: flex; gap: 8px; align-items: flex-start;">
+                        <input type="checkbox" class="consent-check" data-code="${item.code}" ${this.phaseContext.accepted[item.code] ? 'checked' : ''}>
+                        <div>
+                            <div style="font-weight: 600;">${item.code} ${item.is_mandatory ? '(obligatorio)' : '(opcional)'}</div>
+                            <div style="font-size: 12px; color: #666;">${item.purpose || ''}</div>
+                        </div>
+                    </div>
+                </div>
+            </label>
+        `).join('');
 
         return `
             <div class="step-content">
-                <h2 class="step-title">¡Confirma tu Configuración!</h2>
-                <p class="step-subtitle">Verifica que todo sea correcto antes de comenzar</p>
+                <h2 class="step-title">Politicas y Consentimiento</h2>
+                <p class="step-subtitle">Fase 3: acepta politicas obligatorias para activar el perfil</p>
 
-                <div style="display: flex; flex-direction: column; gap: 1rem;">
-                    <!-- Business Info Summary -->
-                    <div class="summary-card info">
-                        <div class="summary-card-header">
-                            <span class="summary-step-number">1</span>
-                            Información del Negocio
-                        </div>
-                        <div class="summary-content">
-                            <div class="summary-item">
-                                <span class="summary-label">Tipo:</span>
-                                <span class="summary-value">${selectedType?.icon || ''} ${selectedType?.label || this.formData.business_type}</span>
-                            </div>
-                            <div class="summary-item">
-                                <span class="summary-label">Nombre:</span>
-                                <span class="summary-value">${this.formData.business_name}</span>
-                            </div>
-                            <div class="summary-item">
-                                <span class="summary-label">Mascotas:</span>
-                                <span class="summary-value">${selectedType?.supports_pets ? 'Activado automáticamente' : 'No aplica'}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Plan Summary -->
-                    <div class="summary-card plan">
-                        <div class="summary-card-header">
-                            <span class="summary-step-number">2</span>
-                            Plan Seleccionado
-                        </div>
-                        <div class="summary-content">
-                            <div class="summary-item">
-                                <span class="summary-label">Plan:</span>
-                                <span class="summary-value">${selectedPlan?.name} - ${selectedPlan?.price === 0 ? 'GRATIS' : `$${selectedPlan?.priceCOP.toLocaleString('es-CO')}/mes`}</span>
-                            </div>
-                            <div class="summary-item">
-                                <span class="summary-label">Límites:</span>
-                                <span class="summary-value">${selectedPlan?.limits}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Role Summary -->
-                    <div class="summary-card role" style="background: linear-gradient(135deg, #667eea15, #764ba215); border-left: 4px solid #667eea;">
-                        <div class="summary-card-header">
-                            <span class="summary-step-number">👤</span>
-                            Tu Rol en el Sistema
-                        </div>
-                        <div class="summary-content">
-                            <div class="summary-item">
-                                <span class="summary-label">Rol Asignado:</span>
-                                <span class="summary-value">${this.getRoleLabel(this.formData.role)}</span>
-                            </div>
-                            <div class="summary-item" style="grid-column: 1 / -1;">
-                                <small style="color: #666; font-size: 11px;">
-                                    ${this.getRoleDescription(this.formData.role)}
-                                </small>
-                            </div>
-                        </div>
-                    </div>
+                <div class="info-box info-box-blue">
+                    <p>Debes aceptar todos los consentimientos obligatorios para continuar.</p>
                 </div>
 
-                ${this.formData.plan !== 'free' && selectedPlan?.nequiLink ? `
-                    <div class="info-box info-box-yellow">
-                        <p><strong>⚠️ Último paso:</strong> Después de confirmar, podrás completar el pago a través de Nequi. Tu cuenta quedará activa una vez confirmado el pago.</p>
-                        <a href="${selectedPlan.nequiLink}" target="_blank" class="btn btn-next" style="display: inline-block; margin-top: 12px; text-decoration: none;">
-                            💳 Ir a Pagar con Nequi
-                        </a>
-                    </div>
-                ` : ''}
+                <h3 style="margin: 12px 0 8px;">Politicas vigentes</h3>
+                ${policyHtml || '<p style="color:#666;">No se encontraron politicas activas.</p>'}
 
-                <div class="info-box info-box-green">
-                    <p>✓ Haz clic en "Finalizar" para completar la configuración${this.formData.plan !== 'free' ? ' y proceder al pago' : ''}</p>
-                </div>
+                <h3 style="margin: 12px 0 8px;">Consentimientos</h3>
+                ${consentsHtml || '<p style="color:#666;">No se encontraron consentimientos.</p>'}
             </div>
         `;
     }
 
-    async loadBusinessTypes() {
-        try {
-            const response = await apiService.getBusinessTypes();
-            // Response is array directly from public endpoint
-            this.businessTypes = Array.isArray(response) ? response : (response.types || []);
-        } catch (error) {
-            console.error('Error loading business types:', error);
-            // Fallback to hardcoded types
-            this.businessTypes = [
-                { code: 'veterinaria', label: 'Veterinaria' },
-                { code: 'barberia', label: 'Barbería' },
-                { code: 'nutricion', label: 'Nutrición' },
-                { code: 'medicina_general', label: 'Medicina General' },
-                { code: 'spa', label: 'Spa / Estética' },
-                { code: 'propiedad_horizontal', label: 'Propiedad Horizontal' },
-                { code: 'clinica', label: 'Clínica' },
-                { code: 'otro', label: 'Otro' }
-            ];
-        }
+    renderStep4() {
+        const modules = (this.phaseContext.activation?.modules || []).map(moduleName => `<span class="summary-value" style="margin-right: 8px;">${moduleName}</span>`).join('');
+        const trial = this.phaseContext.trial;
+        const trialPreview = this.phaseContext.trial_preview;
+        const trialText = trial?.active
+            ? `Trial activo (${trial.status || 'active'})`
+            : (trialPreview?.eligible ? 'Elegible para trial por politica' : 'Sin trial activo');
+
+        return `
+            <div class="step-content">
+                <h2 class="step-title">Activacion Final Completada</h2>
+                <p class="step-subtitle">Fase 4: resumen de activacion y acceso</p>
+
+                <div class="info-box info-box-green">
+                    <p>✓ Onboarding completado correctamente.</p>
+                </div>
+
+                <div class="summary-card info">
+                    <div class="summary-card-header">Estado Premium y Trial</div>
+                    <div class="summary-content">
+                        <div class="summary-item"><span class="summary-label">Plan:</span><span class="summary-value">${this.formData.plan}</span></div>
+                        <div class="summary-item"><span class="summary-label">Trial:</span><span class="summary-value">${trialText}</span></div>
+                    </div>
+                </div>
+
+                <div class="summary-card plan">
+                    <div class="summary-card-header">Modulos activados</div>
+                    <div class="summary-content">
+                        <div class="summary-item" style="display:block;">
+                            ${modules || '<span class="summary-value">No informado por backend</span>'}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
     }
 
     attachEvents() {
         document.getElementById('btn-next')?.addEventListener('click', () => this.handleNext());
         document.getElementById('btn-prev')?.addEventListener('click', () => this.handlePrev());
         document.getElementById('btn-logout')?.addEventListener('click', () => this.handleLogout());
-        
-        // Step 1 events - Business info
+
         document.getElementById('business_type')?.addEventListener('change', (e) => {
             this.formData.business_type = e.target.value;
         });
+
         document.getElementById('business_name')?.addEventListener('input', (e) => {
             this.formData.business_name = e.target.value;
+            if (!this.formData.entity_name) {
+                this.formData.entity_name = e.target.value;
+            }
         });
 
-        // Step 2 events - Plan selection
-        this.plans.forEach(plan => {
-            document.getElementById(`plan_${plan.code}`)?.addEventListener('change', (e) => {
-                if (e.target.checked) {
-                    this.formData.plan = plan.code;
-                }
+        document.getElementById('governance_mode')?.addEventListener('change', (e) => {
+            this.formData.governance_mode = e.target.value;
+            const mode = this.governanceModes.find(item => item.code === e.target.value);
+            const help = document.getElementById('governance_help');
+            if (help) help.textContent = mode?.description || '';
+        });
+
+        document.getElementById('operation_level')?.addEventListener('change', (e) => {
+            this.formData.operation_level = e.target.value;
+        });
+
+        document.getElementById('primary_objective')?.addEventListener('change', (e) => {
+            this.formData.primary_objective = e.target.value;
+        });
+
+        document.getElementById('selected_plan')?.addEventListener('change', (e) => {
+            this.formData.plan = e.target.value;
+        });
+
+        document.querySelectorAll('.consent-check').forEach((checkbox) => {
+            checkbox.addEventListener('change', (e) => {
+                const code = e.target.dataset.code;
+                this.phaseContext.accepted[code] = Boolean(e.target.checked);
             });
         });
-
-        // Step 3 - No events needed (confirmation view only)
     }
 
     async handleNext() {
-        // Si es Team, saltar directamente a salvar configuración
         if (this.formData.role === 'team') {
-            await this.saveConfiguration();
+            await this.markOnboardingDone();
+            await router.navigate('dashboard');
             return;
         }
 
         if (this.currentStep === 1) {
-            // Validate Step 1 - Business info
-            if (!this.validateStep1()) {
-                return;
-            }
+            if (!this.validateStep1()) return;
             this.currentStep = 2;
             await this.refresh();
-        } else if (this.currentStep === 2) {
-            // Validate Step 2 - Plan selection
-            if (!this.formData.plan) {
-                modal.showError('Por favor selecciona un plan');
-                return;
-            }
+            return;
+        }
+
+        if (this.currentStep === 2) {
+            if (!this.validateStep2()) return;
+            const ready = await this.preparePhase3();
+            if (!ready) return;
             this.currentStep = 3;
             await this.refresh();
-        } else if (this.currentStep === 3) {
-            // Final step - save configuration
-            await this.saveConfiguration();
+            return;
+        }
+
+        if (this.currentStep === 3) {
+            const ok = await this.completePhase3();
+            if (!ok) return;
+            this.currentStep = 4;
+            await this.refresh();
+            return;
+        }
+
+        if (this.currentStep === 4) {
+            const isPaid = this.formData.plan && this.formData.plan !== 'free';
+            await router.navigate(isPaid ? 'payment-pending' : 'dashboard');
         }
     }
 
     handlePrev() {
         if (this.currentStep > 1) {
-            this.currentStep--;
+            this.currentStep -= 1;
             this.refresh();
-        } else if (this.currentStep === 1) {
-            // En paso 1, "Anterior" significa volver a login (cerrar sesión)
-            this.handleLogout();
+            return;
         }
+        this.handleLogout();
     }
 
     handleLogout() {
-        // Clear auth data and localStorage completely
         authService.logout();
-        // Remove ALL onboarding-related flags to ensure fresh start
         localStorage.removeItem('onboarding_completed');
         localStorage.removeItem('onboarding_user_email');
         localStorage.removeItem('user_plan');
         localStorage.removeItem('user_role');
-        localStorage.removeItem('currentBusinessType'); // If any temp data
-        
-        console.log('✓ Session cleared, redirecting to login...');
-        // Navigate to login
         router.navigate('login');
     }
 
     validateStep1() {
-        const businessType = document.getElementById('business_type').value;
-        const businessName = document.getElementById('business_name').value.trim();
+        const businessType = document.getElementById('business_type')?.value;
+        const businessName = (document.getElementById('business_name')?.value || '').trim();
 
         if (!businessType) {
-            modal.showError('Por favor selecciona el tipo de negocio');
+            modal.showError('Selecciona el tipo de negocio.');
             return false;
         }
 
         if (!businessName) {
-            modal.showError('Por favor ingresa el nombre de tu negocio');
+            modal.showError('Ingresa el nombre de tu negocio.');
             return false;
         }
 
         this.formData.business_type = businessType;
         this.formData.business_name = businessName;
-
+        this.formData.entity_name = businessName;
         return true;
     }
 
-    async saveConfiguration() {
+    validateStep2() {
+        if (!this.formData.governance_mode) {
+            modal.showError('Selecciona un tipo de gobernanza.');
+            return false;
+        }
+        if (!this.formData.operation_level || !this.formData.primary_objective) {
+            modal.showError('Completa nivel operativo y objetivo.');
+            return false;
+        }
+        if (!this.formData.plan) {
+            modal.showError('Selecciona un plan.');
+            return false;
+        }
+        return true;
+    }
+
+    async preparePhase3() {
         try {
-            // Find selected business type to get default labels
-            const selectedType = this.businessTypes.find(t => t.code === this.formData.business_type);
-            
-            // Auto-apply labels from business type
-            this.formData.custom_labels = {
+            modal.showLoading('Preparando politicas y consentimiento...');
+
+            await this.saveBusinessConfigOnly();
+
+            const initResponse = await apiService.post('/onboarding/initialize', {
+                governance_mode: this.formData.governance_mode,
+                role: this.formData.role,
+                operation_level: this.formData.operation_level,
+                primary_objective: this.formData.primary_objective,
+                entity_name: this.formData.entity_name || this.formData.business_name,
+                jurisdiction_code: this.formData.jurisdiction_code || 'CO',
+                territory_code: this.formData.territory_code || null,
+            });
+
+            this.phaseContext.activation = initResponse?.activation || null;
+            this.phaseContext.trial_preview = initResponse?.trial_preview || null;
+
+            const policiesResponse = await apiService.get('/onboarding/policies');
+            this.phaseContext.policies = policiesResponse?.policies || [];
+
+            const consentsResponse = await apiService.get('/onboarding/consents/status');
+            this.phaseContext.consents = consentsResponse?.items || [];
+            this.phaseContext.accepted = {};
+            this.phaseContext.consents.forEach((item) => {
+                this.phaseContext.accepted[item.code] = Boolean(item.active);
+            });
+
+            modal.closeModal();
+            return true;
+        } catch (error) {
+            modal.closeModal();
+            modal.showError(error?.message || 'No se pudo preparar la fase de politicas.');
+            return false;
+        }
+    }
+
+    async completePhase3() {
+        try {
+            const missingMandatory = (this.phaseContext.consents || [])
+                .filter((item) => item.is_mandatory)
+                .filter((item) => !this.phaseContext.accepted[item.code]);
+
+            if (missingMandatory.length > 0) {
+                modal.showError(`Faltan consentimientos obligatorios: ${missingMandatory.map((item) => item.code).join(', ')}`);
+                return false;
+            }
+
+            modal.showLoading('Finalizando onboarding...');
+
+            await apiService.post('/onboarding/consents', {
+                items: (this.phaseContext.consents || []).map((item) => ({
+                    code: item.code,
+                    accepted: Boolean(this.phaseContext.accepted[item.code]),
+                })),
+            });
+
+            await apiService.post('/onboarding/complete', {});
+            await this.markOnboardingDone();
+
+            try {
+                this.phaseContext.trial = await apiService.get('/onboarding/trials/me');
+            } catch (_error) {
+                this.phaseContext.trial = null;
+            }
+
+            modal.closeModal();
+            return true;
+        } catch (error) {
+            modal.closeModal();
+            modal.showError(error?.message || 'No se pudo finalizar onboarding.');
+            return false;
+        }
+    }
+
+    async saveBusinessConfigOnly() {
+        const selectedType = this.businessTypes.find((type) => type.code === this.formData.business_type);
+
+        const payload = {
+            ...this.formData,
+            custom_labels: {
                 customers: selectedType?.default_label_customers || 'Cliente',
                 appointments: selectedType?.default_label_appointments || 'Cita',
-                pets: selectedType?.default_label_pets || 'Mascota'
-            };
+                pets: selectedType?.default_label_pets || 'Mascota',
+            },
+            has_pet_relationship: Boolean(selectedType?.supports_pets),
+        };
 
-            // Auto-detect pet relationship from business type
-            this.formData.has_pet_relationship = selectedType?.supports_pets || false;
-
-            // Set default pet fields if pets are supported
-            if (this.formData.has_pet_relationship) {
-                this.formData.pet_fields_enabled = {
-                    name: true,
-                    breed: true,
-                    species: true,
-                    color: true,
-                    birthdate: false,
-                    weight: false,
-                };
-            }
-
-            modal.showLoading('Guardando configuración...');
-
-            // Try to get existing config
-            let config;
-            try {
-                config = await apiService.getBusinessConfig();
-            } catch (error) {
-                config = null;
-            }
-
-            // Prepare data with plan and role from user
-            const configData = {
-                ...this.formData,
-                plan: this.formData.plan,
-                role: this.formData.role  // Use the role from current user
-            };
-
-            console.log('💾 Saving configuration:', configData);
-
-            // Save or create configuration
-            if (config) {
-                console.log('📝 Updating existing config with plan:', this.formData.plan);
-                await apiService.updateBusinessConfig(configData);
-            } else {
-                console.log('📝 Creating new config with plan:', this.formData.plan);
-                await apiService.createBusinessConfig(configData);
-            }
-
-            modal.closeModal();
-            const isPaid = this.formData.plan && this.formData.plan !== 'free';
-            modal.showSuccess(
-                isPaid
-                    ? '¡Configuración guardada! Ahora completa el pago de tu plan.'
-                    : '¡Configuración guardada! Redirigiendo al dashboard...'
-            );
-
-            // Save plan and role to user preferences
-            localStorage.setItem('user_plan', this.formData.plan);
-            localStorage.setItem('user_role', this.formData.role);
-            
-            console.log('✓ Saved to localStorage - plan:', this.formData.plan);
-            
-            // Mark onboarding as complete in localStorage
-            localStorage.setItem('onboarding_completed', 'true');
-            
-            // Mark onboarding as complete in backend
-            try {
-                await apiService.post('/users/me/complete-onboarding', {});
-                console.log('✅ Onboarding marked as completed in backend');
-            } catch (error) {
-                console.error('⚠️ Failed to update onboarding status in backend:', error);
-                // Continue anyway, localStorage will work for now
-            }
-            
-            // Navigate: paid plan → payment-pending; free → dashboard
-            setTimeout(async () => {
-                await router.navigate(isPaid ? 'payment-pending' : 'dashboard');
-            }, 1500);
-
-        } catch (error) {
-            console.error('Error saving configuration:', error);
-            modal.closeModal();
-            modal.showError('Error al guardar la configuración: ' + (error.message || 'Error desconocido'));
+        let currentConfig = null;
+        try {
+            currentConfig = await apiService.getBusinessConfig();
+        } catch (_error) {
+            currentConfig = null;
         }
+
+        if (currentConfig) {
+            await apiService.updateBusinessConfig(payload);
+        } else {
+            await apiService.createBusinessConfig(payload);
+        }
+    }
+
+    async markOnboardingDone() {
+        localStorage.setItem('user_plan', this.formData.plan || 'free');
+        localStorage.setItem('user_role', this.formData.role || 'viewer');
+        localStorage.setItem('onboarding_completed', 'true');
+
+        try {
+            await apiService.post('/users/me/complete-onboarding', {});
+        } catch (_error) {
+            // Optional fallback flag is already in localStorage.
+        }
+    }
+
+    async loadBusinessTypes() {
+        const response = await apiService.getBusinessTypes();
+        this.businessTypes = Array.isArray(response) ? response : (response?.types || []);
     }
 
     async refresh() {
@@ -574,22 +575,12 @@ class OnboardingWizard {
 
     getRoleLabel(role) {
         const roleLabels = {
-            'team': '👨‍💼 Empleado (Team)',
-            'viewer': '👁️ Empleado (Solo Ver)',
-            'manager': '👔 Manager (Gestionar)',
-            'admin': '🔑 Administrador (Control Total)'
+            team: 'Empleado (Team)',
+            viewer: 'Viewer',
+            manager: 'Manager',
+            admin: 'Administrador',
         };
         return roleLabels[role] || role;
-    }
-
-    getRoleDescription(role) {
-        const roleDescriptions = {
-            'team': '✓ Cuenta de equipo con acceso restringido. Tu administrador controla tus permisos y plan.',
-            'viewer': '✓ Podrás ver clientes, citas y reportes básicos. Ideal para empleados que consultan información.',
-            'manager': '✓ Podrás crear y editar clientes, citas, y gestionar el día a día. Perfecto para gerentes y supervisores.',
-            'admin': '✓ Acceso completo: gestión de usuarios, planes, reportes avanzados y todas las funcionalidades del sistema.'
-        };
-        return roleDescriptions[role] || 'Rol personalizado';
     }
 }
 
