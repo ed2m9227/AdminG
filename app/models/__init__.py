@@ -28,34 +28,51 @@ from app.models.governance import (
     UserTrial,
     KeyRotationEvent,
 )
-from app.models.payroll_payment import PayrollPayment
 from app.models.crm import Consultation, Treatment, Vaccine, MedicalRecord
-from app.models.operations import (
-    OperationalUnitType,
-    OperationalUnit,
-    OperationalContext,
-    OperationalEvent,
-    RiskRegistry,
-    RiskAssessment,
-    Incident,
-    ActionPlan,
-    Expense,
-)
+
+# Optional domain modules: avoid startup crashes if a deployment branch does not include them yet.
+try:
+    from app.models.payroll_payment import PayrollPayment
+except ModuleNotFoundError:
+    PayrollPayment = None
+
+try:
+    from app.models.operations import (
+        OperationalUnitType,
+        OperationalUnit,
+        OperationalContext,
+        OperationalEvent,
+        RiskRegistry,
+        RiskAssessment,
+        Incident,
+        ActionPlan,
+        Expense,
+    )
+except ModuleNotFoundError:
+    OperationalUnitType = None
+    OperationalUnit = None
+    OperationalContext = None
+    OperationalEvent = None
+    RiskRegistry = None
+    RiskAssessment = None
+    Incident = None
+    ActionPlan = None
+    Expense = None
 
 __all__ = [
-    "User", 
+    "User",
     "Customer",
     "Pet",
     "BusinessConfiguration",
-    "Service", 
-    "Appointment", 
-    "Payment", 
+    "Service",
+    "Appointment",
+    "Payment",
     "PaymentItem",
-    "Plan", 
-    "PlanLimit", 
+    "Plan",
+    "PlanLimit",
     "PlanFeature",
     "InventoryItem",
-    "InventoryCategory", 
+    "InventoryCategory",
     "InventoryMovement",
     "TeamUser",
     "CashTransaction",
@@ -77,18 +94,24 @@ __all__ = [
     "TrialPolicy",
     "UserTrial",
     "KeyRotationEvent",
-    "PayrollPayment",
     "Consultation",
     "Treatment",
     "Vaccine",
     "MedicalRecord",
-    "OperationalUnitType",
-    "OperationalUnit",
-    "OperationalContext",
-    "OperationalEvent",
-    "RiskRegistry",
-    "RiskAssessment",
-    "Incident",
-    "ActionPlan",
-    "Expense",
 ]
+
+if PayrollPayment is not None:
+    __all__.append("PayrollPayment")
+
+if OperationalUnitType is not None:
+    __all__.extend([
+        "OperationalUnitType",
+        "OperationalUnit",
+        "OperationalContext",
+        "OperationalEvent",
+        "RiskRegistry",
+        "RiskAssessment",
+        "Incident",
+        "ActionPlan",
+        "Expense",
+    ])
