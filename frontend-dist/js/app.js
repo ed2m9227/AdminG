@@ -57,6 +57,11 @@ if (typeof window !== 'undefined' && typeof window.newUrlFound !== 'function') {
     window.newUrlFound = () => {};
 }
 
+if (typeof window !== 'undefined' && typeof window.currentUserFound !== 'function') {
+    // Guard for legacy launcher scripts that still probe this global.
+    window.currentUserFound = () => {};
+}
+
 class App {
     constructor() {
         this.appRoot = document.getElementById('app');
