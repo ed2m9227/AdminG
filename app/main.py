@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request, Response, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+import importlib
 import logging
 import os
 from pathlib import Path
@@ -17,18 +18,13 @@ from app.modules.services.router import router as services_router
 from app.modules.plans.router import router as plans_router
 from app.modules.inventory.router import router as inventory_router
 from app.modules.payments.router import router as payments_router
-from app.modules.reports.router import router as reports_router
 from app.modules.cashregister.router import router as cashregister_router
 from app.modules.invoices.router import router as invoices_router
 from app.modules.notifications.router import router as notifications_router
-from app.modules.admin.router import router as admin_router
 from app.modules.admin.routers.business_types import router as business_types_router
 from app.modules.documents.router import router as documents_router
 from app.modules.authorizations.router import router as authorizations_router
 from app.modules.crm.router import router as crm_router
-from app.modules.ai.router import router as ai_router
-from app.modules.operations.router import router as operations_router
-from app.modules.eoe.router import router as eoe_router
 from app.modules.onboarding.router import router as onboarding_router
 from app.modules.plans.service import seed_plans, seed_business_types
 from app.core.config import CORS_ALLOW_ALL_ORIGINS, CORS_ALLOW_ORIGINS, validate_runtime_config
@@ -41,6 +37,22 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+
+def _load_optional_router(module_path: str):
+    try:
+        module = importlib.import_module(module_path)
+    except ModuleNotFoundError as exc:
+        logger.warning("Optional router disabled: %s (%s)", module_path, exc)
+        return None
+    return getattr(module, "router", None)
+
+
+reports_router = _load_optional_router("app.modules.reports.router")
+admin_router = _load_optional_router("app.modules.admin.router")
+ai_router = _load_optional_router("app.modules.ai.router")
+operations_router = _load_optional_router("app.modules.operations.router")
+eoe_router = _load_optional_router("app.modules.eoe.router")
 
 app = FastAPI(title="AdminG / AdminPro created by Eduardo")
 
@@ -171,19 +183,25 @@ app.include_router(services_router)
 app.include_router(plans_router)
 app.include_router(inventory_router)
 app.include_router(payments_router)
-app.include_router(reports_router)
 app.include_router(cashregister_router)
 app.include_router(invoices_router)
 app.include_router(notifications_router)
-app.include_router(admin_router)
 app.include_router(business_types_router)
 app.include_router(documents_router)
 app.include_router(authorizations_router)
 app.include_router(crm_router)
-app.include_router(ai_router)
-app.include_router(operations_router)
-app.include_router(eoe_router)
 app.include_router(onboarding_router)
+
+if reports_router is not None:
+    app.include_router(reports_router)
+if admin_router is not None:
+    app.include_router(admin_router)
+if ai_router is not None:
+    app.include_router(ai_router)
+if operations_router is not None:
+    app.include_router(operations_router)
+if eoe_router is not None:
+    app.include_router(eoe_router)
 
 @app.get("/health")
 def health():
