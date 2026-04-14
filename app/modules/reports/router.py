@@ -10,6 +10,9 @@ from app.models.appointment import Appointment
 from app.models.payment import Payment
 from app.models.cash_transaction import CashTransaction
 from app.models.inventory import InventoryItem, InventoryMovement
+from app.models.operations import Expense
+from app.models.operations import Incident
+from app.models.payroll_payment import PayrollPayment
 from app.modules.reports.schemas import (
     DashboardMetrics,
     RevenueReport,
@@ -140,9 +143,31 @@ def get_dashboard_metrics(
         CashTransaction.created_at >= month_start
     ).all()
     cash_expenses_total = sum(t.amount for t in cash_expenses) or Decimal(0)
+
+    # Operational expenses this month (Gastos Operativos module)
+    operational_expenses = db.query(Expense).filter(
+        Expense.tenant_id.in_(user_ids),
+        Expense.expense_date >= month_start,
+    ).all()
+    operational_expenses_total = sum(e.amount for e in operational_expenses) or Decimal(0)
+
+    incident_costs = db.query(Incident).filter(
+        Incident.tenant_id.in_(user_ids),
+        Incident.created_at >= month_start,
+    ).all()
+    incident_costs_total = sum((i.direct_cost or Decimal(0)) + (i.indirect_cost or Decimal(0)) for i in incident_costs) or Decimal(0)
+
+    payroll_expenses = db.query(PayrollPayment).filter(
+        PayrollPayment.owner_user_id.in_(user_ids),
+        PayrollPayment.status == "paid",
+        PayrollPayment.paid_at >= month_start,
+    ).all()
+    payroll_expenses_total = sum(p.net_amount for p in payroll_expenses) or Decimal(0)
+
+    total_expenses_month = cash_expenses_total + operational_expenses_total + incident_costs_total + payroll_expenses_total
     
-    # Total revenue = completed payments + standalone cash sales - cash expenses
-    total_revenue = payment_revenue + cash_sales_total - cash_expenses_total
+    # Net revenue = completed payments + standalone cash sales - all expenses
+    total_revenue = payment_revenue + cash_sales_total - total_expenses_month
     
     # Average ticket based on unique sale transactions only.
     completed_payments = revenue_query.count()
@@ -213,6 +238,30 @@ def get_revenue_report(
         CashTransaction.created_at <= request.end_date
     ).all()
     cash_expenses_total = sum(t.amount for t in cash_expenses) or Decimal(0)
+
+    operational_expenses = db.query(Expense).filter(
+        Expense.tenant_id.in_(user_ids),
+        Expense.expense_date >= request.start_date,
+        Expense.expense_date <= request.end_date,
+    ).all()
+    operational_expenses_total = sum(e.amount for e in operational_expenses) or Decimal(0)
+
+    incidents = db.query(Incident).filter(
+        Incident.tenant_id.in_(user_ids),
+        Incident.created_at >= request.start_date,
+        Incident.created_at <= request.end_date,
+    ).all()
+    incident_costs_total = sum((i.direct_cost or Decimal(0)) + (i.indirect_cost or Decimal(0)) for i in incidents) or Decimal(0)
+
+    payroll_expenses = db.query(PayrollPayment).filter(
+        PayrollPayment.owner_user_id.in_(user_ids),
+        PayrollPayment.status == "paid",
+        PayrollPayment.paid_at >= request.start_date,
+        PayrollPayment.paid_at <= request.end_date,
+    ).all()
+    payroll_expenses_total = sum(p.net_amount for p in payroll_expenses) or Decimal(0)
+
+    total_expenses = cash_expenses_total + operational_expenses_total + incident_costs_total + payroll_expenses_total
     
     pending = sum(p.final_amount for p in payments if p.status == "pending") or Decimal(0)
     
@@ -235,28 +284,40 @@ def get_revenue_report(
         day_payments = [p for p in payments if current_date <= p.created_at < day_end and p.status == "completed"]
         day_cash_sales = [t for t in cash_sales if current_date <= t.created_at < day_end]
         day_cash_expenses = [t for t in cash_expenses if current_date <= t.created_at < day_end]
+        day_operational_expenses = [e for e in operational_expenses if current_date <= e.expense_date < day_end]
+        day_incident_costs = [i for i in incidents if current_date <= i.created_at < day_end]
+        day_payroll_expenses = [p for p in payroll_expenses if p.paid_at and current_date <= p.paid_at < day_end]
 
         day_income = (sum(p.final_amount for p in day_payments) or Decimal(0)) + (sum(t.amount for t in day_cash_sales) or Decimal(0))
-        day_expenses = sum(t.amount for t in day_cash_expenses) or Decimal(0)
+        day_expenses = (
+            (sum(t.amount for t in day_cash_expenses) or Decimal(0))
+            + (sum(e.amount for e in day_operational_expenses) or Decimal(0))
+            + (sum((i.direct_cost or Decimal(0)) + (i.indirect_cost or Decimal(0)) for i in day_incident_costs) or Decimal(0))
+            + (sum(p.net_amount for p in day_payroll_expenses) or Decimal(0))
+        )
         day_balance = day_income - day_expenses
 
-        if day_payments or day_cash_sales or day_cash_expenses:
+        if day_payments or day_cash_sales or day_cash_expenses or day_operational_expenses or day_incident_costs or day_payroll_expenses:
             by_period.append({
                 "date": current_date.date().isoformat(),
                 "income": float(day_income),
                 "expenses": float(day_expenses),
                 "balance": float(day_balance),
-                "transactions": len(day_payments) + len(day_cash_sales) + len(day_cash_expenses),
+                "transactions": len(day_payments) + len(day_cash_sales) + len(day_cash_expenses) + len(day_operational_expenses) + len(day_incident_costs) + len(day_payroll_expenses),
             })
 
         current_date = day_end
 
     total_income = payment_revenue + cash_sales_total
-    balance = total_income - cash_expenses_total
+    balance = total_income - total_expenses
 
     return RevenueReport(
         total_revenue=float(total_income),
-        total_expenses=float(cash_expenses_total),
+        total_expenses=float(total_expenses),
+        cash_expenses=float(cash_expenses_total),
+        operational_expenses=float(operational_expenses_total),
+        incident_costs=float(incident_costs_total),
+        payroll_expenses=float(payroll_expenses_total),
         net_profit=float(balance),
         balance=float(balance),
         paid_amount=float(payment_revenue),

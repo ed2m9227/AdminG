@@ -65,6 +65,14 @@ def require_crm_feature(user: User, feature: Feature):
 
 
 def ensure_veterinary_business(user: User):
+    is_master = (
+        user.role == "admin"
+        or user.plan == "admin"
+        or (user.business_type or "").strip().lower() == "master"
+    )
+    if is_master:
+        return
+
     if (user.business_type or "").strip().lower() != "veterinaria":
         raise HTTPException(status_code=403, detail="CRM veterinario disponible solo para negocios de tipo veterinaria")
 

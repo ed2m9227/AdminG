@@ -16,7 +16,7 @@ export const PLAN_CATALOG = [
         color: 'blue',
         features: ['Hasta 5 usuarios', 'Hasta 100 clientes', 'Hasta 200 citas', 'CRUD completo', 'Reportes basicos'],
         limits: '5 usuarios, 100 clientes',
-        nequiLink: 'https://checkout.nequi.wompi.co/l/f1pHUn',
+        nequiLink: 'https://checkout.nequi.wompi.co/l/tBJ1zT',
         nequiQrUrl: null,
     },
     {
@@ -26,7 +26,7 @@ export const PLAN_CATALOG = [
         color: 'purple',
         features: ['Hasta 25 usuarios', 'Hasta 1000 clientes', 'Citas ilimitadas', 'Reportes avanzados', 'Exportar datos', 'API acceso'],
         limits: '25 usuarios, 1000 clientes',
-        nequiLink: 'https://checkout.nequi.wompi.co/l/dsZT5H',
+        nequiLink: 'https://checkout.nequi.wompi.co/l/WiuhXg',
         nequiQrUrl: null,
         lockedFeatures: ['Documentos', 'Autorizaciones'],
     },
@@ -37,7 +37,7 @@ export const PLAN_CATALOG = [
         color: 'indigo',
         features: ['Hasta 100 usuarios', 'Clientes ilimitados', 'Citas ilimitadas', 'Analytics avanzado', 'API completa', 'IA integrada', 'Documentos y autorizaciones', 'Soporte prioritario'],
         limits: 'Ilimitado',
-        nequiLink: 'https://checkout.nequi.wompi.co/l/Ki8sWT',
+        nequiLink: 'https://checkout.nequi.wompi.co/l/qDXh8p',
         nequiQrUrl: null,
     },
 ];

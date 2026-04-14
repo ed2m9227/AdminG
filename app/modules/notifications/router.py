@@ -301,15 +301,22 @@ def _generate_notifications(owner_id: int, db: Session):
             Notification.reference_type == "daily_summary",
             Notification.created_at >= today_start,
         ).first()
+        message = f"Tienes {today_appointments} cita(s) para hoy."
         if not exists:
             db.add(Notification(
                 user_id=owner_id,
                 type="appointment_today",
                 title="Citas de hoy",
-                message=f"Tienes {today_appointments} cita(s) para hoy.",
+                message=message,
                 reference_id=None,
                 reference_type="daily_summary",
             ))
+        elif (exists.message or "") != message:
+            # Keep a single daily summary but update it cumulatively as new appointments are created.
+            exists.message = message
+            exists.is_read = False
+            exists.created_at = datetime.utcnow()
+            db.add(exists)
 
     db.commit()
 

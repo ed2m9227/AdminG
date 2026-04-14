@@ -148,16 +148,99 @@ export class DashboardView {
 
     async loadCashMovements() {
         try {
-            const [movements, customers] = await Promise.all([
-                apiService.get('/cashregister/transactions?limit=10'),
-                apiService.getCustomers().catch(() => [])
+            const currentUser = authService.getCurrentUser() || {};
+            const scopeOwnerId = currentUser.parent_user_id || currentUser.id || 'global';
+            const hrStorageKey = `hr_requests_scope_${scopeOwnerId}`;
+
+            const [cashResult, expensesResult, customersResult] = await Promise.allSettled([
+                apiService.get('/cashregister/transactions?limit=25'),
+                apiService.get('/operations/expenses'),
+                apiService.getCustomers(),
             ]);
+
+            const cashMovements = cashResult.status === 'fulfilled' && Array.isArray(cashResult.value)
+                ? cashResult.value
+                : [];
+            const operationExpenses = expensesResult.status === 'fulfilled' && Array.isArray(expensesResult.value)
+                ? expensesResult.value
+                : [];
+            const customers = customersResult.status === 'fulfilled' && Array.isArray(customersResult.value)
+                ? customersResult.value
+                : [];
+
+            let hrRequests = [];
+            try {
+                const stored = localStorage.getItem(hrStorageKey);
+                hrRequests = stored ? JSON.parse(stored) : [];
+            } catch (_err) {
+                hrRequests = [];
+            }
             
             const container = document.getElementById('cashMovementsBox');
             
             if (!container) return;
 
-            if (!movements || movements.length === 0) {
+            const normalizedCash = cashMovements.map((mov) => {
+                let typeLabel = 'Movimiento';
+                let movementType = mov.transaction_type || 'movement';
+                let amount = Number(mov.amount || 0);
+
+                if (movementType === 'sale') {
+                    typeLabel = 'Pago';
+                    if (mov.customer_id && Array.isArray(customers)) {
+                        const customer = customers.find(c => c.id === mov.customer_id);
+                        if (customer?.full_name) typeLabel = `Pago de ${customer.full_name}`;
+                    }
+                } else if (movementType === 'expense') {
+                    typeLabel = 'Gasto de caja';
+                    amount = -Math.abs(amount);
+                } else if (movementType === 'base') {
+                    typeLabel = 'Base inicial';
+                } else if (movementType === 'close') {
+                    typeLabel = 'Cierre de caja';
+                }
+
+                return {
+                    id: `cash-${mov.id}`,
+                    movement_type: movementType,
+                    source: 'Caja',
+                    type_label: typeLabel,
+                    description: mov.description || 'Sin descripción',
+                    amount,
+                    created_at: mov.created_at,
+                    status: mov.is_voided ? 'voided' : 'ok',
+                };
+            });
+
+            const normalizedExpenses = operationExpenses.map((exp) => ({
+                id: `expense-${exp.id}`,
+                movement_type: 'operational_expense',
+                source: 'Operaciones',
+                type_label: 'Gasto operativo',
+                description: exp.notes || exp.category || 'Gasto operativo',
+                amount: -Math.abs(Number(exp.amount || 0)),
+                created_at: exp.expense_date || exp.created_at,
+                status: exp.status || 'submitted',
+            }));
+
+            const normalizedAdvances = (Array.isArray(hrRequests) ? hrRequests : [])
+                .filter(req => req?.request_type === 'advance')
+                .map((req) => ({
+                    id: `advance-${req.id || req.created_at || Math.random()}`,
+                    movement_type: 'employee_advance',
+                    source: 'RRHH',
+                    type_label: 'Adelanto empleado',
+                    description: req.reason || req.notes || req.requester_name || 'Solicitud de adelanto',
+                    amount: -Math.abs(Number(req.requested_amount || req.amount || 0)),
+                    created_at: req.created_at || req.requested_at || new Date().toISOString(),
+                    status: req.status || 'pending',
+                }));
+
+            const timeline = [...normalizedCash, ...normalizedExpenses, ...normalizedAdvances]
+                .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+                .slice(0, 20);
+
+            if (!timeline.length) {
                 container.innerHTML = '<div style="padding: 12px; color: #7f8c8d; text-align: center;">Sin movimientos de caja registrados</div>';
                 return;
             }
@@ -182,35 +265,32 @@ export class DashboardView {
                 });
             };
 
-            const movementsHTML = movements.map(mov => {
-                let icon, typeLabel, color;
-                let description = mov.description || 'Sin descripción';
-                
-                // Enriquecer descripción de ventas con nombre del cliente
-                if (mov.transaction_type === 'sale' && mov.customer_id && Array.isArray(customers)) {
-                    const customer = customers.find(c => c.id === mov.customer_id);
-                    if (customer) {
-                        typeLabel = `Venta a ${customer.full_name}`;
-                    }
-                }
-                
-                if (mov.transaction_type === 'sale') {
+            const movementsHTML = timeline.map(mov => {
+                const isOut = Number(mov.amount || 0) < 0;
+                let icon = '📝';
+                let color = '#6b7280';
+
+                if (mov.movement_type === 'sale') {
                     icon = '💳';
-                    if (!typeLabel) typeLabel = 'Venta';
                     color = '#0ea5e9';
-                } else if (mov.transaction_type === 'expense') {
-                    icon = '📊';
-                    typeLabel = 'Gasto';
+                } else if (mov.movement_type === 'expense' || mov.movement_type === 'operational_expense') {
+                    icon = '📉';
                     color = '#ef4444';
-                } else if (mov.transaction_type === 'base') {
+                } else if (mov.movement_type === 'employee_advance') {
+                    icon = '🧾';
+                    color = '#f97316';
+                } else if (mov.movement_type === 'base') {
                     icon = '💰';
-                    typeLabel = 'Base';
                     color = '#10b981';
-                } else {
-                    icon = '📝';
-                    typeLabel = 'Movimiento';
-                    color = '#6b7280';
+                } else if (mov.movement_type === 'close') {
+                    icon = '🧮';
+                    color = '#64748b';
                 }
+
+                const amountText = `${isOut ? '-' : '+'}${formatCurrency(Math.abs(Number(mov.amount || 0)))}`;
+                const statusBadge = mov.status && mov.status !== 'ok'
+                    ? `<span style="font-size:10px; padding:2px 6px; border-radius:10px; background:#f3f4f6; color:#6b7280; text-transform:uppercase;">${mov.status}</span>`
+                    : '';
 
                 return `
                     <div style="padding: 12px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
@@ -218,16 +298,16 @@ export class DashboardView {
                             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
                                 <span style="font-size: 18px;">${icon}</span>
                                 <div>
-                                    <div style="font-weight: 600; color: ${color};">${typeLabel}</div>
-                                    <div style="font-size: 12px; color: #7f8c8d;">${description}</div>
+                                    <div style="font-weight: 600; color: ${color};">${mov.type_label} <span style="color:#9ca3af; font-weight:500;">· ${mov.source}</span></div>
+                                    <div style="font-size: 12px; color: #7f8c8d;">${mov.description || 'Sin descripción'}</div>
                                 </div>
                             </div>
                             <div style="font-size: 11px; color: #9ca3af;">
-                                ${formatDate(mov.created_at)}
+                                ${formatDate(mov.created_at)} ${statusBadge}
                             </div>
                         </div>
                         <div style="text-align: right; margin-left: 16px;">
-                            <div style="font-weight: 700; color: ${color}; font-size: 16px;">${formatCurrency(mov.amount)}</div>
+                            <div style="font-weight: 700; color: ${color}; font-size: 16px;">${amountText}</div>
                         </div>
                     </div>
                 `;

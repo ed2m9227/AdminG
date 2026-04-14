@@ -18,11 +18,16 @@ ENV/
 
 # Database - excluir datos locales (Railway usa volumen propio)
 *.db
+*.db-*
 *.sqlite3
 app.db
+app.db-*
 test.db
 sql_app.db
 admingpyme.db
+
+# Runtime output
+uvicorn_*.txt
 
 # Testing
 .pytest_cache/

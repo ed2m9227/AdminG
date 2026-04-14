@@ -767,7 +767,17 @@ class InvoicesView {
             }
 
             if (item) {
-                invoiceItems.push(item);
+                const existingIdx = invoiceItems.findIndex(i =>
+                    i.source_type === item.source_type &&
+                    (i.service_id ?? null) === (item.service_id ?? null) &&
+                    (i.inventory_item_id ?? null) === (item.inventory_item_id ?? null) &&
+                    i.source_type !== 'custom'
+                );
+                if (existingIdx >= 0) {
+                    invoiceItems[existingIdx].quantity += item.quantity;
+                } else {
+                    invoiceItems.push(item);
+                }
                 renderItems();
                 updateTotal();
                 itemQty.value = 1;

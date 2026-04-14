@@ -9,34 +9,48 @@ import businessRegistry from '../core/businessRegistry.js';
 import authService from '../services/auth.service.js';
 import apiService from '../services/api.service.js';
 import modal from './Modal.js';
+import { t } from '../utils/i18n.js';
+
+function isMasterAccount(user) {
+    return user?.role === 'admin' || user?.plan === 'admin' || user?.business_type === 'master';
+}
 
 export class Sidebar {
     constructor() {
         this.mobileBreakpoint = 576;
         this.allMenuItems = [
             // Core
-            { id: 'dashboard', icon: '📊', label: 'Dashboard', route: 'dashboard', alwaysShow: true },
+            { id: 'dashboard', icon: '📊', label: t('menu.dashboard', 'Dashboard'), route: 'dashboard', alwaysShow: true },
 
             // Main modules
             { id: 'customers', icon: '👥', label: 'Clientes', route: 'customers', requiredFeature: 'view_customers' },
             { id: 'appointments', icon: '📅', label: 'Citas', route: 'appointments', requiredFeature: 'view_appointments' },
-            { id: 'inventory', icon: '📦', label: 'Inventario', route: 'inventory', requiredFeature: 'view_inventory' },
-            { id: 'payments', icon: '💳', label: 'Pagos', route: 'payments', alwaysShow: true },
-            { id: 'reports', icon: '📈', label: 'Reportes', route: 'reports', requiredFeature: 'view_reports' },
-            { id: 'invoices', icon: '🧾', label: 'Facturas', route: 'invoices', requiredFeature: 'view_reports' },
-            { id: 'crm', icon: '🐾', label: 'CRM Vet', route: 'crm', requiredFeature: 'view_crm' },
+            { id: 'inventory', icon: '📦', label: t('menu.inventory', 'Inventario'), route: 'inventory', requiredFeature: 'view_inventory' },
+            { id: 'payments', icon: '💳', label: t('menu.payments', 'Pagos'), route: 'payments', alwaysShow: true },
+            { id: 'team-expenses', icon: '💸', label: t('menu.team_expenses', 'Gastos / Expenses'), route: 'team-expenses', requiredFeature: 'view_expenses' },
+            { id: 'reports', icon: '📈', label: t('menu.reports', 'Reportes'), route: 'reports', requiredFeature: 'view_reports' },
+            { id: 'invoices', icon: '🧾', label: t('menu.invoices', 'Facturas'), route: 'invoices', requiredFeature: 'view_reports' },
+            { id: 'crm', icon: '🤝', label: t('menu.crm', 'CRM'), route: 'crm', requiredFeature: 'view_crm' },
 
             // Advanced
-            { id: 'cashregister', icon: '💰', label: 'Caja', route: 'cashregister', requiredFeature: 'use_cashregister' },
-            { id: 'documents', icon: '📄', label: 'Documentos', route: 'documents', requiredFeature: 'view_documents' },
-            { id: 'authorizations', icon: '✅', label: 'Autorizaciones', route: 'authorizations', requiredFeature: 'view_authorizations' },
+            { id: 'cashregister', icon: '💰', label: t('menu.cashregister', 'Caja'), route: 'cashregister', requiredFeature: 'use_cashregister' },
+            { id: 'documents', icon: '📄', label: t('menu.documents', 'Documentos'), route: 'documents', requiredFeature: 'view_documents' },
+            { id: 'authorizations', icon: '✅', label: t('menu.authorizations', 'Autorizaciones'), route: 'authorizations', requiredFeature: 'view_authorizations' },
 
             // Team & Admin
-            { id: 'team', icon: '👫', label: 'Mi Equipo', route: 'team', requiredFeature: 'view_team' },
-            { id: 'team-movements', icon: '📊', label: 'Movimientos del Equipo', route: 'team-movements', parentId: 'team', roles: ['manager', 'admin'], requiredFeature: 'view_team' },
-            { id: 'admin', icon: '⚙️', label: 'Administración', route: 'admin', roleRequired: 'admin', requiredFeature: 'admin_panel' },
-            { id: 'businessconfig', icon: '🛠️', label: 'Configuracion de negocio', route: 'businessconfig', parentId: 'admin', roles: ['admin', 'manager'], alwaysShow: true },
-            { id: 'businesstypes', icon: '🏢', label: 'Tipos de Negocio', route: 'businesstypes', parentId: 'admin', roleRequired: 'admin', requiredFeature: 'admin_panel' },
+            { id: 'team', icon: '👫', label: t('menu.team', 'Mi Equipo'), route: 'team', requiredFeature: 'view_team' },
+            { id: 'team-risks', icon: '🦺', label: t('menu.team_risks', 'Riesgos Laborales'), route: 'team-risks', parentId: 'team', requiredFeature: 'view_risks' },
+            // RRHH section
+            { id: 'team-employees', icon: '👤', label: t('menu.team_employees', 'Empleados'), route: 'team-employees', parentId: 'team', requiredFeature: 'view_team' },
+            { id: 'team-payroll', icon: '💰', label: t('menu.team_payroll', 'Nómina'), route: 'team-payroll', parentId: 'team-employees', requiredFeature: 'view_payroll' },
+            { id: 'team-requests', icon: '📋', label: t('menu.team_requests', 'Solicitudes'), route: 'team-requests', parentId: 'team-employees', requiredFeature: 'view_hr_requests' },
+            { id: 'team-tracking', icon: '📊', label: t('menu.team_tracking', 'Seguimiento'), route: 'team-tracking', parentId: 'team-employees', requiredFeature: 'view_hr_tracking' },
+            { id: 'team-movements', icon: '📈', label: t('menu.team_movements', 'Movimientos del Equipo'), route: 'team-movements', parentId: 'team', roles: ['manager', 'admin'], requiredFeature: 'view_team' },
+            // Admin IA
+            { id: 'admin-ia', icon: '✨', label: t('menu.admin_ia', 'Admin IA'), route: 'admin-ia', requiredFeature: 'use_ai_studio' },
+            { id: 'admin', icon: '⚙️', label: t('menu.admin', 'Administración'), route: 'admin', roleRequired: 'admin', requiredFeature: 'admin_panel' },
+            { id: 'businessconfig', icon: '🛠️', label: t('menu.business_config', 'Configuración de negocio'), route: 'businessconfig', parentId: 'admin', roles: ['admin', 'manager'], alwaysShow: true },
+            { id: 'businesstypes', icon: '🏢', label: t('menu.business_types', 'Tipos de Negocio'), route: 'businesstypes', parentId: 'admin', roleRequired: 'admin', requiredFeature: 'admin_panel' },
         ];
         this.userFeatures = [];
         this.itemAccessMap = {};
@@ -76,12 +90,17 @@ export class Sidebar {
     }
 
     getMenuItemsWithDynamicLabels() {
+        const user = authService.getCurrentUser();
+        const crmCfg = businessRegistry.getCrmConfig(user?.business_type);
         return this.allMenuItems.map(item => {
             if (item.id === 'customers') {
                 return { ...item, label: this.businessLabels.customer || item.label };
             }
             if (item.id === 'appointments') {
                 return { ...item, label: this.businessLabels.appointment || item.label };
+            }
+            if (item.id === 'crm') {
+                return { ...item, label: crmCfg.label, icon: crmCfg.icon };
             }
             return item;
         });
@@ -137,9 +156,9 @@ export class Sidebar {
                 'view_inventory', 'create_products', 'edit_products', 'delete_products',
                 'view_payments', 'create_payments',
                 'view_team', 'manage_team_users', 'invite_users',
+                'view_risks', 'view_incidents', 'view_expenses',
+                'view_hr', 'view_hr_requests',
                 'use_cashregister', 'open_register', 'close_register',
-                'view_crm', 'create_crm', 'view_crm_analytics', 'use_crm_ai_chat',
-                'use_ai_chat',
             ],
             'pro': [
                 'view_customers', 'create_customers', 'edit_customers', 'delete_customers', 'export_customers',
@@ -149,10 +168,12 @@ export class Sidebar {
                 'view_reports', 'export_reports',
                 'use_cashregister', 'open_register', 'close_register',
                 'view_team', 'manage_team_users', 'invite_users',
+                'view_risks', 'create_risks', 'view_incidents', 'create_incidents',
+                'view_expenses', 'create_expenses',
+                'view_hr', 'view_hr_requests', 'manage_hr_requests', 'view_payroll', 'view_hr_tracking',
                 'view_documents', 'create_documents', 'edit_documents', 'delete_documents',
                 'view_authorizations', 'create_authorizations', 'manage_authorizations',
-                'view_crm', 'create_crm', 'edit_crm', 'delete_crm', 'view_crm_analytics', 'use_crm_ai_chat',
-                'use_ai_chat',
+                'view_crm', 'create_crm', 'edit_crm', 'delete_crm', 'view_crm_analytics',
             ],
             'max': [
                 'view_customers', 'create_customers', 'edit_customers', 'delete_customers', 'export_customers',
@@ -162,13 +183,26 @@ export class Sidebar {
                 'view_reports', 'export_reports', 'advanced_analytics',
                 'use_cashregister', 'open_register', 'close_register',
                 'view_team', 'manage_team_users', 'invite_users',
+                'view_risks', 'create_risks', 'manage_risks', 'view_incidents', 'create_incidents', 'manage_incidents',
+                'view_expenses', 'create_expenses', 'approve_expenses', 'manage_expenses',
+                'view_hr', 'manage_hr', 'view_payroll', 'manage_payroll',
+                'view_hr_requests', 'manage_hr_requests', 'view_hr_tracking',
                 'view_documents', 'create_documents', 'edit_documents', 'delete_documents',
                 'view_authorizations', 'create_authorizations', 'manage_authorizations',
                 'view_crm', 'create_crm', 'edit_crm', 'delete_crm', 'view_crm_analytics', 'use_crm_ai_chat',
-                'use_ai_chat', 'admin_panel',
+                'use_ai_chat', 'use_ai_studio', 'admin_panel',
             ],
         };
+        // Keep fallback behavior aligned with backend policy:
+        // PRO == MAX except IA operability.
+        featuresByPlan.pro = featuresByPlan.max.filter(
+            feature => !['use_ai_chat', 'use_ai_studio', 'use_crm_ai_chat'].includes(feature)
+        );
         let features = [...(featuresByPlan[plan] || featuresByPlan['free'])];
+
+        if (isMasterAccount(user)) {
+            return featuresByPlan.max;
+        }
 
         if (plan === 'starter' && !isParentAccount) {
             features = features.filter(feature => ![
@@ -195,7 +229,7 @@ export class Sidebar {
      */
     render() {
         const user = authService.getCurrentUser();
-        const isAdmin = user?.role === 'admin';
+        const isAdmin = isMasterAccount(user);
         const isSubUser = !!user?.parent_user_id;
         const menuItems = this.getMenuItemsWithDynamicLabels();
         this.itemAccessMap = {};
@@ -211,7 +245,10 @@ export class Sidebar {
             if (item.roles && !item.roles.includes(user?.role)) {
                 return false;
             }
-            if (item.roleRequired && user?.role !== item.roleRequired) {
+            if (item.roleRequired && item.roleRequired === 'admin' && !isAdmin) {
+                return false;
+            }
+            if (item.roleRequired && item.roleRequired !== 'admin' && user?.role !== item.roleRequired) {
                 return false;
             }
             
@@ -232,9 +269,16 @@ export class Sidebar {
             return true;
         });
 
-        // Si un padre no está visible, su submenú tampoco debe renderizarse.
+        // Si un padre no está visible, su submenú tampoco debe renderizarse (soporta 2 niveles).
         const visibleIds = new Set(visibleByRole.map(item => item.id));
-        const filteredItems = visibleByRole.filter(item => !item.parentId || visibleIds.has(item.parentId));
+        const filteredItems = visibleByRole.filter(item => {
+            if (!item.parentId) return true;
+            if (!visibleIds.has(item.parentId)) return false;
+            // Check grandfather visibility for deeply nested items
+            const parent = this.allMenuItems.find(m => m.id === item.parentId);
+            if (parent?.parentId && !visibleIds.has(parent.parentId)) return false;
+            return true;
+        });
 
         const userPlan = user?.plan || 'free';
         const userEmail = user?.email || 'Usuario';
@@ -264,7 +308,9 @@ export class Sidebar {
     renderMenuItem(item, isBlocked = false) {
         const isActive = router.getCurrentRoute() === item.route;
         const lockIcon = isBlocked ? '<span class="menu-lock" style="margin-left:auto;opacity:.8;">🔒</span>' : '';
-        const submenuClass = item.parentId ? 'submenu-item' : '';
+        const parent = item.parentId ? this.allMenuItems.find(m => m.id === item.parentId) : null;
+        const isLevel2 = !!parent?.parentId; // grandchild (e.g. team-payroll under team-hr under team)
+        const submenuClass = item.parentId ? (isLevel2 ? 'submenu-item sub2-item' : 'submenu-item') : '';
         return `
             <div class="menu-item ${submenuClass} ${isActive ? 'active' : ''} ${isBlocked ? 'blocked' : ''}" 
                  data-route="${item.route}"

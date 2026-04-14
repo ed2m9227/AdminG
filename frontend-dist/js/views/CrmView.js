@@ -1,5 +1,6 @@
 import apiService from '../services/api.service.js';
 import authService from '../services/auth.service.js';
+import businessRegistry from '../core/businessRegistry.js';
 import table from '../components/Table.js';
 import modal from '../components/Modal.js';
 
@@ -16,14 +17,20 @@ export class CrmView {
     render() {
         const features = authService.getFeatures();
         const canCreate = features.includes('create_crm');
+        const user = authService.getCurrentUser();
+        const crmCfg = businessRegistry.getCrmConfig(user?.business_type);
+        const isVet = businessRegistry.isVeterinary(user?.business_type);
+        const customerLabel = businessRegistry.getVocabulary(user?.business_type, 'customer', 'Cliente');
+        const secondaryEntityLabel = isVet ? 'Mascota' : 'Registro';
+        const consultationLabel = isVet ? 'Consulta' : 'Interacción';
 
         return `
             <div class="card">
                 <div class="card-header">
-                    <h2 class="card-title">CRM Veterinario</h2>
+                    <h2 class="card-title">${crmCfg.icon} ${crmCfg.label}</h2>
                     <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                        ${canCreate ? '<button class="btn btn-success" id="btnCrmNewOwnerPet">+ Propietario + Mascota</button>' : ''}
-                        ${canCreate ? '<button class="btn btn-primary" id="btnCrmNewConsultation">+ Consulta</button>' : ''}
+                        ${canCreate ? `<button class="btn btn-success" id="btnCrmNewOwnerPet">+ ${customerLabel} + ${secondaryEntityLabel}</button>` : ''}
+                        ${canCreate ? `<button class="btn btn-primary" id="btnCrmNewConsultation">+ ${consultationLabel}</button>` : ''}
                     </div>
                 </div>
                 <div class="card-body">
@@ -35,33 +42,44 @@ export class CrmView {
     }
 
     renderTable() {
+        const user = authService.getCurrentUser();
+        const isVet = businessRegistry.isVeterinary(user?.business_type);
+        const customerLabel = businessRegistry.getVocabulary(user?.business_type, 'customer', 'Cliente');
+        const secondaryEntityLabel = isVet ? 'Mascota' : 'Registro';
+        const emptyText = isVet ? 'No hay consultas veterinarias registradas' : 'No hay interacciones CRM registradas';
+        const emptyIcon = isVet ? '🐾' : '🤝';
+
+        const historyLabel = isVet ? 'Historial clínico' : 'Historial';
         const columns = [
             { key: 'consultation_date', label: 'Fecha', type: 'datetime' },
-            { key: 'customer_name', label: 'Propietario' },
-            { key: 'pet_name', label: 'Mascota' },
+            { key: 'customer_name', label: customerLabel },
+            { key: 'pet_name', label: secondaryEntityLabel },
             { key: 'reason', label: 'Motivo' },
             { key: 'status', label: 'Estado', type: 'badge' },
             {
                 key: 'actions',
                 label: 'Acciones',
-                formatter: (_, row) => `<button class="btn btn-sm" data-crm-history="${row.pet_id}">Historial</button>`
+                formatter: (_, row) => `<button class="btn btn-sm" data-crm-history="${row.pet_id}">${historyLabel}</button>`
             }
         ];
 
         return table.render({
             columns,
             data: this.consultations,
-            emptyMessage: 'No hay consultas veterinarias registradas',
-            emptyIcon: '🐾'
+            emptyMessage: emptyText,
+            emptyIcon
         });
     }
 
     renderMetrics() {
         if (!this.metrics) return '';
+        const user = authService.getCurrentUser();
+        const isVet = businessRegistry.isVeterinary(user?.business_type);
+        const metricLabel = isVet ? 'Consultas' : 'Interacciones';
         return `
             <div class="crm-metrics-grid">
-                <div class="detail-item"><span class="detail-label">Consultas Totales</span><span class="detail-value">${this.metrics.consultations_total || 0}</span></div>
-                <div class="detail-item"><span class="detail-label">Consultas (30 dias)</span><span class="detail-value">${this.metrics.consultations_period || 0}</span></div>
+                <div class="detail-item"><span class="detail-label">${metricLabel} Totales</span><span class="detail-value">${this.metrics.consultations_total || 0}</span></div>
+                <div class="detail-item"><span class="detail-label">${metricLabel} (30 dias)</span><span class="detail-value">${this.metrics.consultations_period || 0}</span></div>
                 <div class="detail-item"><span class="detail-label">Clientes Recurrentes</span><span class="detail-value">${this.metrics.recurring_clients || 0}</span></div>
             </div>
         `;
@@ -131,22 +149,29 @@ export class CrmView {
     }
 
     async showOwnerPetModal() {
+        const user = authService.getCurrentUser();
+        const isVet = businessRegistry.isVeterinary(user?.business_type);
+        const customerLabel = businessRegistry.getVocabulary(user?.business_type, 'customer', 'Cliente');
+        const entityLabel = isVet ? 'Mascota' : 'Registro';
+        const typeLabel = isVet ? 'Tipo animal' : 'Tipo';
+        const typePlaceholder = isVet ? 'perro, gato...' : 'categoria o tipo';
+
         const content = `
             <form id="crmOwnerPetForm" class="modal-form">
-                <div class="form-group"><label>Nombre propietario *</label><input name="customer_full_name" required></div>
+                <div class="form-group"><label>Nombre ${customerLabel.toLowerCase()} *</label><input name="customer_full_name" required></div>
                 <div class="form-row">
                     <div class="form-group"><label>Telefono</label><input name="customer_phone"></div>
                     <div class="form-group"><label>Email</label><input name="customer_email" type="email"></div>
                 </div>
-                <div class="form-group"><label>Nombre mascota *</label><input name="pet_name" required></div>
+                <div class="form-group"><label>Nombre ${entityLabel.toLowerCase()} *</label><input name="pet_name" required></div>
                 <div class="form-row">
-                    <div class="form-group"><label>Tipo animal *</label><input name="animal_type" required placeholder="perro, gato..."></div>
-                    <div class="form-group"><label>Raza</label><input name="breed"></div>
+                    <div class="form-group"><label>${typeLabel} *</label><input name="animal_type" required placeholder="${typePlaceholder}"></div>
+                    <div class="form-group"><label>Detalle</label><input name="breed"></div>
                 </div>
                 <div class="modal-actions"><button class="btn btn-success" type="submit">Guardar</button><button class="btn" type="button" data-close>Cancelar</button></div>
             </form>
         `;
-        const modalEl = modal.show({ title: 'Nuevo Propietario + Mascota', content, size: 'medium' });
+        const modalEl = modal.show({ title: `Nuevo ${customerLabel} + ${entityLabel}`, content, size: 'medium' });
         document.getElementById('crmOwnerPetForm')?.addEventListener('submit', async (e) => {
             e.preventDefault();
             const fd = new FormData(e.target);
@@ -164,6 +189,12 @@ export class CrmView {
     }
 
     async showConsultationModal() {
+        const user = authService.getCurrentUser();
+        const isVet = businessRegistry.isVeterinary(user?.business_type);
+        const customerLabel = businessRegistry.getVocabulary(user?.business_type, 'customer', 'Cliente');
+        const entityLabel = isVet ? 'Mascota' : 'Registro';
+        const consultationLabel = isVet ? 'Consulta' : 'Interacción';
+
         const selectedServices = new Map();
 
         const renderServicePicker = () => {
@@ -194,15 +225,15 @@ export class CrmView {
         const content = `
             <form id="crmConsultationForm" class="modal-form">
                 <div class="form-group">
-                    <label>Propietario *</label>
+                    <label>${customerLabel} *</label>
                     <select id="crmCustomerSelect" name="customer_id" required>
                         <option value="">Seleccionar...</option>${customerOptions}
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Mascota *</label>
+                    <label>${entityLabel} *</label>
                     <select id="crmPetSelect" name="pet_id" required>
-                        <option value="">Seleccionar propietario</option>
+                        <option value="">Seleccionar ${customerLabel.toLowerCase()}</option>
                     </select>
                 </div>
                 <div class="form-group"><label>Motivo</label><input name="reason"></div>
@@ -215,12 +246,12 @@ export class CrmView {
                     <div id="crmServicePicker" class="crm-svc-picker">${renderServicePicker()}</div>
                 </div>
                 <div class="modal-actions">
-                    <button class="btn btn-success" type="submit">Guardar consulta</button>
+                    <button class="btn btn-success" type="submit">Guardar ${consultationLabel.toLowerCase()}</button>
                     <button class="btn" type="button" data-close>Cancelar</button>
                 </div>
             </form>
         `;
-        const modalEl = modal.show({ title: 'Nueva Consulta Veterinaria', content, size: 'medium' });
+        const modalEl = modal.show({ title: `Nueva ${consultationLabel}`, content, size: 'medium' });
 
         const customerSelect = document.getElementById('crmCustomerSelect');
         const petSelect = document.getElementById('crmPetSelect');
@@ -229,7 +260,7 @@ export class CrmView {
         const syncPets = async () => {
             const customerId = Number(customerSelect?.value || 0);
             if (!customerId) {
-                petSelect.innerHTML = '<option value="">Seleccionar propietario</option>';
+                petSelect.innerHTML = `<option value="">Seleccionar ${customerLabel.toLowerCase()}</option>`;
                 return;
             }
             if (!this.petsByCustomer.has(customerId)) {
@@ -243,7 +274,7 @@ export class CrmView {
             const pets = this.petsByCustomer.get(customerId) || [];
             petSelect.innerHTML = pets.length
                 ? `<option value="">Seleccionar...</option>${pets.map(p => `<option value="${p.id}">${p.name}</option>`).join('')}`
-                : '<option value="">Sin mascotas registradas</option>';
+                : `<option value="">Sin ${entityLabel.toLowerCase()}s registrados</option>`;
         };
 
         customerSelect?.addEventListener('change', syncPets);
@@ -289,16 +320,18 @@ export class CrmView {
 
     async showPetHistory(petId) {
         try {
+            const user = authService.getCurrentUser();
+            const isVet = businessRegistry.isVeterinary(user?.business_type);
             const data = await apiService.getCrmPetHistory(petId);
             const content = `
                 <div class="detail-grid">
-                    <div class="detail-item"><span class="detail-label">Consultas</span><span class="detail-value">${data.consultations?.length || 0}</span></div>
-                    <div class="detail-item"><span class="detail-label">Tratamientos</span><span class="detail-value">${data.treatments?.length || 0}</span></div>
-                    <div class="detail-item"><span class="detail-label">Vacunas</span><span class="detail-value">${data.vaccines?.length || 0}</span></div>
+                    <div class="detail-item"><span class="detail-label">${isVet ? 'Consultas' : 'Interacciones'}</span><span class="detail-value">${data.consultations?.length || 0}</span></div>
+                    <div class="detail-item"><span class="detail-label">${isVet ? 'Tratamientos' : 'Acciones'}</span><span class="detail-value">${data.treatments?.length || 0}</span></div>
+                    <div class="detail-item"><span class="detail-label">${isVet ? 'Vacunas' : 'Seguimientos'}</span><span class="detail-value">${data.vaccines?.length || 0}</span></div>
                     <div class="detail-item"><span class="detail-label">Registros</span><span class="detail-value">${data.records?.length || 0}</span></div>
                 </div>
             `;
-            modal.show({ title: 'Historial Clinico', content, size: 'medium' });
+            modal.show({ title: isVet ? 'Historial Clínico' : 'Historial CRM', content, size: 'medium' });
         } catch (error) {
             modal.showError('No se pudo cargar historial: ' + error.message);
         }

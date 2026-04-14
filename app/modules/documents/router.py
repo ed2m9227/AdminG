@@ -55,7 +55,7 @@ def serialize_document(document: Document):
         "created_at": document.created_at.isoformat() if document.created_at else None,
         "updated_at": document.updated_at.isoformat() if document.updated_at else None,
         "created_by_user_id": document.created_by_user_id,
-        "created_by_name": document.created_by.email if document.created_by else None,
+        "created_by_name": (document.created_by.full_name or document.created_by.email) if document.created_by else None,
     }
 
 

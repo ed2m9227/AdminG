@@ -20,6 +20,10 @@ class ReportRequest(BaseModel):
 class RevenueReport(BaseModel):
     total_revenue: float
     total_expenses: float
+    cash_expenses: float = 0
+    operational_expenses: float = 0
+    incident_costs: float = 0
+    payroll_expenses: float = 0
     net_profit: float
     balance: float
     paid_amount: float

@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime
+from decimal import Decimal
 import logging
 from app.db.session import get_db
 from app.core.security import get_current_user_with_plan_check, get_current_user
@@ -77,6 +78,17 @@ class OpenCashRegister(BaseModel):
     initial_amount: float
 
 
+ZERO_DECIMAL = Decimal("0")
+
+
+def money_sum(transactions: list[CashTransaction], transaction_type: str) -> Decimal:
+    return sum((Decimal(t.amount or 0) for t in transactions if t.transaction_type == transaction_type), ZERO_DECIMAL)
+
+
+def money_value(value) -> Decimal:
+    return Decimal(value or 0)
+
+
 def get_cash_owner_id(user: User) -> int:
     """Sub-users operate over the parent cash register session."""
     return user.parent_user_id if user.parent_user_id else user.id
@@ -116,17 +128,18 @@ async def get_cash_register_status(
         CashTransaction.created_at >= session.opened_at
     ).all()
     
-    sales_total = sum(float(t.amount) for t in transactions if t.transaction_type == 'sale')
-    expenses_total = sum(float(t.amount) for t in transactions if t.transaction_type == 'expense')
-    base_total = sum(float(t.amount) for t in transactions if t.transaction_type == 'base')
+    sales_total = money_sum(transactions, 'sale')
+    expenses_total = money_sum(transactions, 'expense')
+    base_total = money_sum(transactions, 'base')
+    balance = money_value(session.initial_amount) + sales_total - expenses_total
     
     return {
         "status": "open",
-        "balance": session.initial_amount + sales_total - expenses_total,
-        "sales": sales_total,
-        "expenses": expenses_total,
-        "base": base_total,
-        "initial_amount": session.initial_amount,
+        "balance": float(balance),
+        "sales": float(sales_total),
+        "expenses": float(expenses_total),
+        "base": float(base_total),
+        "initial_amount": float(money_value(session.initial_amount)),
         "opened_at": session.opened_at.isoformat(),
         "transaction_count": len(transactions)
     }
@@ -294,10 +307,10 @@ async def close_cash_register(
         CashTransaction.created_at >= session.opened_at
     ).all()
     
-    sales = sum(float(t.amount) for t in transactions if t.transaction_type == 'sale')
-    expenses = sum(float(t.amount) for t in transactions if t.transaction_type == 'expense')
-    base = sum(float(t.amount) for t in transactions if t.transaction_type == 'base')
-    final_balance = float(session.initial_amount) + sales - expenses
+    sales = money_sum(transactions, 'sale')
+    expenses = money_sum(transactions, 'expense')
+    base = money_sum(transactions, 'base')
+    final_balance = money_value(session.initial_amount) + sales - expenses
     
     # Close session
     session.is_active = False
@@ -310,7 +323,7 @@ async def close_cash_register(
     close_transaction = CashTransaction(
         user_id=user.id,
         transaction_type='close',
-        amount=final_balance,
+        amount=float(final_balance),
         description=f'Cierre de caja - Balance final: {final_balance}'
     )
     db.add(close_transaction)
@@ -319,11 +332,11 @@ async def close_cash_register(
     return {
         "success": True,
         "message": "Caja cerrada",
-        "final_balance": final_balance,
-        "sales": sales,
-        "expenses": expenses,
-        "initial_amount": session.initial_amount,
-        "base": base,
+        "final_balance": float(final_balance),
+        "sales": float(sales),
+        "expenses": float(expenses),
+        "initial_amount": float(money_value(session.initial_amount)),
+        "base": float(base),
         "transaction_count": len(transactions),
         "status": "closed"
     }
@@ -355,9 +368,9 @@ async def reset_cash_register(
             CashTransaction.created_at >= session.opened_at
         ).all()
 
-        sales = sum(float(t.amount) for t in transactions if t.transaction_type == 'sale')
-        expenses = sum(float(t.amount) for t in transactions if t.transaction_type == 'expense')
-        final_balance = float(session.initial_amount) + sales - expenses
+        sales = money_sum(transactions, 'sale')
+        expenses = money_sum(transactions, 'expense')
+        final_balance = money_value(session.initial_amount) + sales - expenses
 
         session.is_active = False
         session.closed_at = datetime.utcnow()
@@ -367,7 +380,7 @@ async def reset_cash_register(
         close_transaction = CashTransaction(
             user_id=user.id,
             transaction_type='close',
-            amount=final_balance,
+            amount=float(final_balance),
             description=f'Cierre por reset - Balance final: {final_balance}'
         )
         db.add(close_transaction)
@@ -412,10 +425,10 @@ async def close_previous_day_cash(
         CashTransaction.created_at >= session.opened_at
     ).all()
     
-    sales = sum(float(t.amount) for t in transactions if t.transaction_type == 'sale')
-    expenses = sum(float(t.amount) for t in transactions if t.transaction_type == 'expense')
-    base = sum(float(t.amount) for t in transactions if t.transaction_type == 'base')
-    final_balance = float(session.initial_amount) + sales - expenses
+    sales = money_sum(transactions, 'sale')
+    expenses = money_sum(transactions, 'expense')
+    base = money_sum(transactions, 'base')
+    final_balance = money_value(session.initial_amount) + sales - expenses
     
     # Close the previous day's session
     session.is_active = False
@@ -429,7 +442,7 @@ async def close_previous_day_cash(
         user_id=user.id,
         customer_id=None,
         transaction_type='close',
-        amount=final_balance,
+        amount=float(final_balance),
         description=f'Cierre automático de caja anterior - Balance: {final_balance}'
     )
     db.add(close_transaction)
@@ -438,11 +451,11 @@ async def close_previous_day_cash(
     return {
         "success": True,
         "message": "Caja de día anterior cerrada",
-        "final_balance": final_balance,
-        "sales": sales,
-        "expenses": expenses,
-        "base": base,
-        "initial_amount": session.initial_amount,
+        "final_balance": float(final_balance),
+        "sales": float(sales),
+        "expenses": float(expenses),
+        "base": float(base),
+        "initial_amount": float(money_value(session.initial_amount)),
         "transaction_count": len(transactions),
         "status": "closed"
     }

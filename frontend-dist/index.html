@@ -8,16 +8,22 @@
     <link rel="icon" href="data:,">
 
     <!-- Clean Architecture: Estilos modulares separados -->
-    <link rel="stylesheet" href="/css/main.css?v=20260229">
-    <link rel="stylesheet" href="/css/components.css?v=20260229">
-    <link rel="stylesheet" href="/css/admin.css?v=20260229">
-    <link rel="stylesheet" href="/css/onboarding.css?v=20260229">
+    <link rel="stylesheet" href="/css/main.css?v=202604054">
+    <link rel="stylesheet" href="/css/components.css?v=202604042">
+    <link rel="stylesheet" href="/css/admin.css?v=202604042">
+    <link rel="stylesheet" href="/css/onboarding.css?v=202604042">
 </head>
 <body>
+    <script>
+        if (typeof window.newUrlFound !== 'function') {
+            window.newUrlFound = function () {};
+        }
+    </script>
+
     <!-- Single Responsibility: El contenedor raíz solo renderiza contenido dinámico -->
     <div id="app"></div>
 
     <!-- Dependency Inversion: El punto de entrada principal carga toda la lógica -->
-    <script type="module" src="/js/app.js?v=20260229"></script>
+    <script type="module" src="/js/app.js?v=202604054"></script>
 </body>
 </html>

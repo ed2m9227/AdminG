@@ -14,6 +14,8 @@ export class InventoryView {
         this.items = [];
         this.services = [];
         this.activeTab = 'products'; // 'products' or 'services'
+        this._eventsBound = false;
+        this._onDocumentClick = this._handleDocumentClick.bind(this);
     }
 
     formatCurrency(value) {
@@ -33,28 +35,30 @@ export class InventoryView {
         const canCreateCategory = canCreateProducts;
         
         return `
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">Inventario y Servicios</h2>
-                    <div style="display: flex; gap: 10px;">
-                        ${canCreateCategory ? '<button class="btn btn-primary" id="btnNewCategory">+ 📂 Nueva Categoría</button>' : ''}
-                        ${canCreateProducts ? `<button class="btn btn-success" id="btnNewProduct" style="${this.activeTab === 'products' ? '' : 'display: none;'}">+ 📦 Nuevo Producto</button>` : ''}
-                        ${canCreateProducts ? `<button class="btn btn-success" id="btnNewService" style="${this.activeTab === 'services' ? '' : 'display: none;'}">+ 📋 Nuevo Servicio</button>` : ''}
+            <div id="inventoryViewRoot">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Inventario y Servicios</h2>
+                        <div style="display: flex; gap: 10px;">
+                            ${canCreateCategory ? '<button class="btn btn-primary" id="btnNewCategory">+ 📂 Nueva Categoría</button>' : ''}
+                            ${canCreateProducts ? `<button class="btn btn-success" id="btnNewProduct" style="${this.activeTab === 'products' ? '' : 'display: none;'}">+ 📦 Nuevo Producto</button>` : ''}
+                            ${canCreateProducts ? `<button class="btn btn-success" id="btnNewService" style="${this.activeTab === 'services' ? '' : 'display: none;'}">+ 📋 Nuevo Servicio</button>` : ''}
+                        </div>
                     </div>
-                </div>
-                
-                <!-- Tabs -->
-                <div class="tabs" style="border-bottom: 1px solid #e1e5e9; margin-bottom: 20px;">
-                    <button class="tab-button ${this.activeTab === 'products' ? 'active' : ''}" data-tab="products">
-                        📦 Productos
-                    </button>
-                    <button class="tab-button ${this.activeTab === 'services' ? 'active' : ''}" data-tab="services">
-                        📋 Servicios
-                    </button>
-                </div>
-                
-                <div class="card-body" id="inventoryTableContainer">
-                    ${this.activeTab === 'products' ? this.renderProductsTable() : this.renderServicesTable()}
+
+                    <!-- Tabs -->
+                    <div class="tabs" style="border-bottom: 1px solid #e1e5e9; margin-bottom: 20px;">
+                        <button class="tab-button ${this.activeTab === 'products' ? 'active' : ''}" data-tab="products">
+                            📦 Productos
+                        </button>
+                        <button class="tab-button ${this.activeTab === 'services' ? 'active' : ''}" data-tab="services">
+                            📋 Servicios
+                        </button>
+                    </div>
+
+                    <div class="card-body" id="inventoryTableContainer">
+                        ${this.activeTab === 'products' ? this.renderProductsTable() : this.renderServicesTable()}
+                    </div>
                 </div>
             </div>
             
@@ -247,69 +251,72 @@ export class InventoryView {
     }
 
     attachEventListeners() {
-        // Tab switching
-        document.addEventListener('click', (e) => {
-            const tabBtn = e.target.closest('.tab-button');
-            if (tabBtn) {
-                const tab = tabBtn.dataset.tab;
-                this.switchTab(tab);
-            }
-        });
+        if (this._eventsBound) return;
+        this._eventsBound = true;
+        document.addEventListener('click', this._onDocumentClick);
+    }
 
-        // Product buttons
-        document.getElementById('btnNewProduct')?.addEventListener('click', () => {
+    _handleDocumentClick(e) {
+        // Restrict delegation to this view to avoid cross-view side effects.
+        if (!e.target.closest('#inventoryViewRoot')) return;
+
+        const tabBtn = e.target.closest('.tab-button');
+        if (tabBtn) {
+            this.switchTab(tabBtn.dataset.tab);
+            return;
+        }
+
+        if (e.target.closest('#btnNewProduct')) {
             this.showProductModal();
-        });
-        
-        document.getElementById('btnNewCategory')?.addEventListener('click', () => {
+            return;
+        }
+
+        if (e.target.closest('#btnNewCategory')) {
             this.showCategoryModal();
-        });
+            return;
+        }
 
-        // Service buttons
-        document.getElementById('btnNewService')?.addEventListener('click', () => {
+        if (e.target.closest('#btnNewService')) {
             this.showServiceModal();
-        });
+            return;
+        }
 
-        // Action buttons
-        document.addEventListener('click', (e) => {
-            // Product actions
-            const editBtn = e.target.closest('[data-edit]');
-            if (editBtn) {
-                const productId = editBtn.dataset.edit;
-                this.editProduct(productId);
-            }
+        // Product actions
+        const editBtn = e.target.closest('[data-edit]');
+        if (editBtn) {
+            this.editProduct(editBtn.dataset.edit);
+            return;
+        }
 
-            const viewItemBtn = e.target.closest('[data-view-item]');
-            if (viewItemBtn) {
-                const productId = viewItemBtn.dataset.viewItem;
-                this.showProductViewModal(productId);
-            }
-            
-            const deleteBtn = e.target.closest('[data-delete-item]');
-            if (deleteBtn) {
-                const itemId = deleteBtn.dataset.deleteItem;
-                this.deleteItem(itemId);
-            }
+        const viewItemBtn = e.target.closest('[data-view-item]');
+        if (viewItemBtn) {
+            this.showProductViewModal(viewItemBtn.dataset.viewItem);
+            return;
+        }
 
-            // Service actions
-            const editServiceBtn = e.target.closest('[data-edit-service]');
-            if (editServiceBtn) {
-                const serviceId = editServiceBtn.dataset.editService;
-                this.editService(serviceId);
-            }
+        const deleteBtn = e.target.closest('[data-delete-item]');
+        if (deleteBtn) {
+            this.deleteItem(deleteBtn.dataset.deleteItem);
+            return;
+        }
 
-            const viewServiceBtn = e.target.closest('[data-view-service]');
-            if (viewServiceBtn) {
-                const serviceId = viewServiceBtn.dataset.viewService;
-                this.showServiceViewModal(serviceId);
-            }
-            
-            const deleteServiceBtn = e.target.closest('[data-delete-service]');
-            if (deleteServiceBtn) {
-                const serviceId = deleteServiceBtn.dataset.deleteService;
-                this.deleteService(serviceId);
-            }
-        });
+        // Service actions
+        const editServiceBtn = e.target.closest('[data-edit-service]');
+        if (editServiceBtn) {
+            this.editService(editServiceBtn.dataset.editService);
+            return;
+        }
+
+        const viewServiceBtn = e.target.closest('[data-view-service]');
+        if (viewServiceBtn) {
+            this.showServiceViewModal(viewServiceBtn.dataset.viewService);
+            return;
+        }
+
+        const deleteServiceBtn = e.target.closest('[data-delete-service]');
+        if (deleteServiceBtn) {
+            this.deleteService(deleteServiceBtn.dataset.deleteService);
+        }
     }
 
     switchTab(tab) {
@@ -1038,7 +1045,17 @@ export class InventoryView {
             }
 
             if (item) {
-                invoiceItems.push(item);
+                const existingIdx = invoiceItems.findIndex(i =>
+                    i.source_type === item.source_type &&
+                    (i.service_id ?? null) === (item.service_id ?? null) &&
+                    (i.inventory_item_id ?? null) === (item.inventory_item_id ?? null) &&
+                    i.source_type !== 'custom'
+                );
+                if (existingIdx >= 0) {
+                    invoiceItems[existingIdx].quantity += item.quantity;
+                } else {
+                    invoiceItems.push(item);
+                }
                 renderItems();
                 updateTotal();
                 itemQty.value = 1;

@@ -3,6 +3,15 @@ import authService from '../services/auth.service.js';
 import modal from '../components/Modal.js';
 import router from '../utils/router.js';
 
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 class AuthorizationsView {
     constructor() {
         this.authorizations = [];
@@ -19,73 +28,9 @@ class AuthorizationsView {
             <div class="card">
                 <div class="card-header">
                     <h2 class="card-title">Autorizaciones</h2>
+                    <button class="btn btn-primary" id="btnNewAuthorization">+ Nueva autorización</button>
                 </div>
                 <div class="card-body">
-                    <form id="authorizationsForm" class="modal-form" style="margin-bottom: 20px;">
-                        <input type="hidden" id="authorizationId">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Cliente *</label>
-                                <select id="authorizationCustomer" required></select>
-                            </div>
-                            <div class="form-group">
-                                <label>Documento relacionado</label>
-                                <select id="authorizationDocument"></select>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Título *</label>
-                                <input id="authorizationTitle" type="text" required placeholder="Ej: Autorización baño medicado">
-                            </div>
-                            <div class="form-group">
-                                <label>Responsable de aprobación</label>
-                                <select id="authorizationApprover"></select>
-                                <small style="display:block; margin-top:4px; color:#6b7280; font-size:11px;">Solo gerentes activos (Mi Equipo) que ya aceptaron invitación</small>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Servicio / procedimiento</label>
-                                <select id="authorizationServiceId">
-                                    <option value="">Seleccionar servicio...</option>
-                                    <option value="__manual__">Otro (texto manual)</option>
-                                </select>
-                                <input id="authorizationServiceManual" type="text" placeholder="Servicio o motivo" style="display:none; margin-top:6px;">
-                            </div>
-                            <div class="form-group">
-                                <label>Número de autorización</label>
-                                <input id="authorizationNumber" type="text" placeholder="Consecutivo / referencia externa">
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Estado *</label>
-                                <select id="authorizationStatus" required>
-                                    <option value="pending">Pendiente</option>
-                                    <option value="approved">Aprobada</option>
-                                    <option value="rejected">Rechazada</option>
-                                    <option value="expired">Vencida</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Válida hasta</label>
-                                <input id="authorizationValidUntil" type="datetime-local">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label>Notas de solicitud</label>
-                            <textarea id="authorizationNotes" rows="3" placeholder="Observaciones clínicas, administrativas o restricciones"></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label>Criterio / motivo de decisión</label>
-                            <textarea id="authorizationDecisionReason" rows="3" placeholder="Obligatorio al aprobar o rechazar"></textarea>
-                        </div>
-                        <div class="form-actions">
-                            <button class="btn btn-primary" type="submit">Guardar autorización</button>
-                            <button class="btn btn-secondary" type="button" id="btnResetAuthorizationForm">Limpiar</button>
-                        </div>
-                    </form>
                     <div id="authorizationsList"></div>
                 </div>
             </div>
@@ -105,18 +50,7 @@ class AuthorizationsView {
     }
 
     attachEvents() {
-        document.getElementById('authorizationsForm')?.addEventListener('submit', (event) => this.handleSubmit(event));
-        document.getElementById('btnResetAuthorizationForm')?.addEventListener('click', () => this.resetForm());
-        document.getElementById('authorizationServiceId')?.addEventListener('change', (event) => {
-            const manualInput = document.getElementById('authorizationServiceManual');
-            if (!manualInput) return;
-            if (event.target.value === '__manual__') {
-                manualInput.style.display = '';
-            } else {
-                manualInput.style.display = 'none';
-                manualInput.value = '';
-            }
-        });
+        document.getElementById('btnNewAuthorization')?.addEventListener('click', () => this.openFormModal());
 
         if (this.boundClickHandler) {
             document.removeEventListener('click', this.boundClickHandler);
@@ -125,7 +59,7 @@ class AuthorizationsView {
         this.boundClickHandler = async (event) => {
             const editButton = event.target.closest('[data-edit-authorization]');
             if (editButton) {
-                this.populateForm(Number(editButton.dataset.editAuthorization));
+                this.openFormModal(Number(editButton.dataset.editAuthorization));
                 return;
             }
 
@@ -154,15 +88,6 @@ class AuthorizationsView {
         try {
             const result = await apiService.get('/customers/?limit=1000');
             this.customers = Array.isArray(result) ? result : [];
-            const select = document.getElementById('authorizationCustomer');
-            if (!select) return;
-            select.innerHTML = '<option value="">Seleccionar cliente...</option>';
-            this.customers.forEach((customer) => {
-                const option = document.createElement('option');
-                option.value = String(customer.id);
-                option.textContent = customer.full_name || 'Sin nombre';
-                select.appendChild(option);
-            });
         } catch (error) {
             modal.showError(error.message || 'No se pudieron cargar los clientes');
         }
@@ -172,15 +97,6 @@ class AuthorizationsView {
         try {
             const result = await apiService.get('/documents/');
             this.documents = Array.isArray(result) ? result : [];
-            const select = document.getElementById('authorizationDocument');
-            if (!select) return;
-            select.innerHTML = '<option value="">Sin documento relacionado</option>';
-            this.documents.forEach((record) => {
-                const option = document.createElement('option');
-                option.value = String(record.id);
-                option.textContent = `${record.title} · ${record.customer_name || `Cliente #${record.customer_id}`}`;
-                select.appendChild(option);
-            });
         } catch (error) {
             modal.showError(error.message || 'No se pudieron cargar los documentos');
         }
@@ -190,21 +106,6 @@ class AuthorizationsView {
         try {
             const result = await apiService.get('/services/');
             this.services = Array.isArray(result) ? result : [];
-            const select = document.getElementById('authorizationServiceId');
-            if (!select) return;
-
-            const currentValue = select.value;
-            select.innerHTML = '<option value="">Seleccionar servicio...</option><option value="__manual__">Otro (texto manual)</option>';
-            this.services.forEach((service) => {
-                const option = document.createElement('option');
-                option.value = String(service.id);
-                option.textContent = service.name || `Servicio #${service.id}`;
-                select.appendChild(option);
-            });
-
-            if (currentValue) {
-                select.value = currentValue;
-            }
         } catch (_error) {
             this.services = [];
         }
@@ -214,22 +115,6 @@ class AuthorizationsView {
         try {
             const result = await apiService.get('/authorizations/assignees');
             this.assignees = Array.isArray(result) ? result : [];
-            const select = document.getElementById('authorizationApprover');
-            if (!select) return;
-            select.innerHTML = '<option value="">Cuenta principal decide</option>';
-            this.assignees.forEach((user) => {
-                const option = document.createElement('option');
-                option.value = String(user.id);
-                const roleLabel = user.is_owner ? 'Cuenta principal' : (user.role || 'Equipo');
-                option.textContent = `${user.email} · ${roleLabel}`;
-                select.appendChild(option);
-            });
-            if (this.assignees.length === 0) {
-                const option = document.createElement('option');
-                option.value = '';
-                option.textContent = 'No hay gerentes activos disponibles';
-                select.appendChild(option);
-            }
         } catch (error) {
             modal.showError(error.message || 'No se pudo cargar el equipo de aprobación');
         }
@@ -315,65 +200,164 @@ class AuthorizationsView {
         return labels[status] || status || '-';
     }
 
-    populateForm(authorizationId) {
-        const record = this.authorizations.find((item) => item.id === authorizationId);
-        if (!record) return;
+    buildCustomerOptions(selectedId) {
+        return [
+            '<option value="">Seleccionar cliente...</option>',
+            ...this.customers.map((customer) => `
+                <option value="${customer.id}" ${Number(selectedId) === Number(customer.id) ? 'selected' : ''}>
+                    ${escapeHtml(customer.full_name || 'Sin nombre')}
+                </option>
+            `)
+        ].join('');
+    }
 
-        document.getElementById('authorizationId').value = String(record.id);
-        document.getElementById('authorizationCustomer').value = String(record.customer_id);
-        document.getElementById('authorizationDocument').value = record.document_id ? String(record.document_id) : '';
-        document.getElementById('authorizationTitle').value = record.title || '';
-        document.getElementById('authorizationApprover').value = record.assigned_approver_user_id ? String(record.assigned_approver_user_id) : '';
+    buildDocumentOptions(selectedId) {
+        return [
+            '<option value="">Sin documento relacionado</option>',
+            ...this.documents.map((record) => `
+                <option value="${record.id}" ${Number(selectedId) === Number(record.id) ? 'selected' : ''}>
+                    ${escapeHtml(`${record.title} · ${record.customer_name || `Cliente #${record.customer_id}`}`)}
+                </option>
+            `)
+        ].join('');
+    }
 
-        const serviceSelect = document.getElementById('authorizationServiceId');
-        const manualInput = document.getElementById('authorizationServiceManual');
-        if (serviceSelect) {
-            if (record.service_id) {
-                serviceSelect.value = String(record.service_id);
-                if (manualInput) {
-                    manualInput.style.display = 'none';
-                    manualInput.value = '';
-                }
-            } else if (record.service_name) {
-                serviceSelect.value = '__manual__';
-                if (manualInput) {
-                    manualInput.style.display = '';
-                    manualInput.value = record.service_name;
-                }
-            } else {
-                serviceSelect.value = '';
-                if (manualInput) {
-                    manualInput.style.display = 'none';
-                    manualInput.value = '';
-                }
-            }
+    buildApproverOptions(selectedId) {
+        const options = ['<option value="">Cuenta principal decide</option>'];
+        this.assignees.forEach((user) => {
+            const roleLabel = user.is_owner ? 'Cuenta principal' : (user.role || 'Equipo');
+            const displayName = user.full_name || user.email || `Usuario #${user.id}`;
+            options.push(`
+                <option value="${user.id}" ${Number(selectedId) === Number(user.id) ? 'selected' : ''}>
+                    ${escapeHtml(`${displayName} · ${roleLabel}`)}
+                </option>
+            `);
+        });
+        if (this.assignees.length === 0) {
+            options.push('<option value="">No hay gerentes activos disponibles</option>');
         }
+        return options.join('');
+    }
 
-        document.getElementById('authorizationNumber').value = record.authorization_number || '';
-        document.getElementById('authorizationStatus').value = record.status || 'pending';
-        document.getElementById('authorizationValidUntil').value = record.valid_until ? this.toDatetimeLocal(record.valid_until) : '';
-        document.getElementById('authorizationNotes').value = record.notes || '';
-        document.getElementById('authorizationDecisionReason').value = record.decision_reason || '';
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+    buildServiceOptions(selectedValue) {
+        return [
+            '<option value="">Seleccionar servicio...</option>',
+            `<option value="__manual__" ${selectedValue === '__manual__' ? 'selected' : ''}>Otro (texto manual)</option>`,
+            ...this.services.map((service) => `
+                <option value="${service.id}" ${String(selectedValue) === String(service.id) ? 'selected' : ''}>
+                    ${escapeHtml(service.name || `Servicio #${service.id}`)}
+                </option>
+            `)
+        ].join('');
+    }
+
+    buildFormContent(record = null) {
+        const current = record || {};
+        const serviceSelectValue = current.service_id ? String(current.service_id) : (current.service_name ? '__manual__' : '');
+        const showManual = serviceSelectValue === '__manual__';
+
+        return `
+            <div class="modal-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Cliente *</label>
+                        <select id="authorizationCustomer" required>${this.buildCustomerOptions(current.customer_id)}</select>
+                    </div>
+                    <div class="form-group">
+                        <label>Documento relacionado</label>
+                        <select id="authorizationDocument">${this.buildDocumentOptions(current.document_id)}</select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Título *</label>
+                        <input id="authorizationTitle" type="text" required placeholder="Ej: Autorización baño medicado" value="${escapeHtml(current.title || '')}">
+                    </div>
+                    <div class="form-group">
+                        <label>Responsable de aprobación</label>
+                        <select id="authorizationApprover">${this.buildApproverOptions(current.assigned_approver_user_id)}</select>
+                        <small style="display:block; margin-top:4px; color:#6b7280; font-size:11px;">Solo gerentes activos (Mi Equipo) que ya aceptaron invitación</small>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Servicio / procedimiento</label>
+                        <select id="authorizationServiceId">${this.buildServiceOptions(serviceSelectValue)}</select>
+                        <input id="authorizationServiceManual" type="text" placeholder="Servicio o motivo" value="${escapeHtml(current.service_name || '')}" style="${showManual ? '' : 'display:none; '}margin-top:6px;">
+                    </div>
+                    <div class="form-group">
+                        <label>Número de autorización</label>
+                        <input id="authorizationNumber" type="text" placeholder="Consecutivo / referencia externa" value="${escapeHtml(current.authorization_number || '')}">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Estado *</label>
+                        <select id="authorizationStatus" required>
+                            <option value="pending" ${(!current.status || current.status === 'pending') ? 'selected' : ''}>Pendiente</option>
+                            <option value="approved" ${current.status === 'approved' ? 'selected' : ''}>Aprobada</option>
+                            <option value="rejected" ${current.status === 'rejected' ? 'selected' : ''}>Rechazada</option>
+                            <option value="expired" ${current.status === 'expired' ? 'selected' : ''}>Vencida</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Válida hasta</label>
+                        <input id="authorizationValidUntil" type="datetime-local" value="${current.valid_until ? this.toDatetimeLocal(current.valid_until) : ''}">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Notas de solicitud</label>
+                    <textarea id="authorizationNotes" rows="3" placeholder="Observaciones clínicas, administrativas o restricciones">${escapeHtml(current.notes || '')}</textarea>
+                </div>
+                <div class="form-group">
+                    <label>Criterio / motivo de decisión</label>
+                    <textarea id="authorizationDecisionReason" rows="3" placeholder="Obligatorio al aprobar o rechazar">${escapeHtml(current.decision_reason || '')}</textarea>
+                </div>
+                <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:12px;">
+                    <button class="btn btn-secondary" type="button" data-close-authorization-modal>Cancelar</button>
+                    <button class="btn btn-primary" type="button" data-save-authorization>${record ? 'Actualizar autorización' : 'Guardar autorización'}</button>
+                </div>
+            </div>
+        `;
+    }
+
+    openFormModal(authorizationId = null) {
+        const record = authorizationId ? this.authorizations.find((item) => item.id === authorizationId) : null;
+        const modalEl = modal.show({
+            title: record ? 'Editar autorización' : 'Nueva autorización',
+            content: this.buildFormContent(record),
+            size: 'large',
+        });
+
+        modalEl.querySelector('#authorizationServiceId')?.addEventListener('change', () => this.toggleManualServiceInput(modalEl));
+
+        modalEl.addEventListener('click', async (event) => {
+            if (event.target.closest('[data-close-authorization-modal]')) {
+                modal.close(modalEl);
+                return;
+            }
+            if (!event.target.closest('[data-save-authorization]')) return;
+            await this.handleSubmit(modalEl, record?.id || 0);
+        });
+    }
+
+    toggleManualServiceInput(modalEl) {
+        const serviceSelect = modalEl.querySelector('#authorizationServiceId');
+        const manualInput = modalEl.querySelector('#authorizationServiceManual');
+        if (!serviceSelect || !manualInput) return;
+
+        if (serviceSelect.value === '__manual__') {
+            manualInput.style.display = '';
+        } else {
+            manualInput.style.display = 'none';
+            manualInput.value = '';
+        }
     }
 
     toDatetimeLocal(value) {
         const date = new Date(value);
         const pad = (number) => String(number).padStart(2, '0');
         return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
-    }
-
-    resetForm() {
-        document.getElementById('authorizationsForm')?.reset();
-        const hiddenId = document.getElementById('authorizationId');
-        if (hiddenId) hiddenId.value = '';
-        const manualInput = document.getElementById('authorizationServiceManual');
-        if (manualInput) {
-            manualInput.style.display = 'none';
-            manualInput.value = '';
-        }
-        const statusSelect = document.getElementById('authorizationStatus');
-        if (statusSelect) statusSelect.value = 'pending';
     }
 
     buildPrefillQuery(record) {
@@ -401,24 +385,22 @@ class AuthorizationsView {
         setTimeout(() => document.getElementById('btnNewPayment')?.click(), 80);
     }
 
-    async handleSubmit(event) {
-        event.preventDefault();
-        const id = Number(document.getElementById('authorizationId')?.value || 0);
-        const validUntil = document.getElementById('authorizationValidUntil')?.value;
-        const selectedService = document.getElementById('authorizationServiceId')?.value || '';
-        const manualService = document.getElementById('authorizationServiceManual')?.value?.trim() || '';
+    async handleSubmit(modalEl, id = 0) {
+        const validUntil = modalEl.querySelector('#authorizationValidUntil')?.value;
+        const selectedService = modalEl.querySelector('#authorizationServiceId')?.value || '';
+        const manualService = modalEl.querySelector('#authorizationServiceManual')?.value?.trim() || '';
         const payload = {
-            customer_id: Number(document.getElementById('authorizationCustomer')?.value || 0),
-            document_id: Number(document.getElementById('authorizationDocument')?.value || 0) || null,
-            assigned_approver_user_id: Number(document.getElementById('authorizationApprover')?.value || 0) || null,
-            title: document.getElementById('authorizationTitle')?.value?.trim(),
+            customer_id: Number(modalEl.querySelector('#authorizationCustomer')?.value || 0),
+            document_id: Number(modalEl.querySelector('#authorizationDocument')?.value || 0) || null,
+            assigned_approver_user_id: Number(modalEl.querySelector('#authorizationApprover')?.value || 0) || null,
+            title: modalEl.querySelector('#authorizationTitle')?.value?.trim(),
             service_id: selectedService && selectedService !== '__manual__' ? Number(selectedService) : null,
             service_name: selectedService === '__manual__' ? (manualService || null) : null,
-            authorization_number: document.getElementById('authorizationNumber')?.value?.trim() || null,
-            status: document.getElementById('authorizationStatus')?.value,
+            authorization_number: modalEl.querySelector('#authorizationNumber')?.value?.trim() || null,
+            status: modalEl.querySelector('#authorizationStatus')?.value,
             valid_until: validUntil ? new Date(validUntil).toISOString() : null,
-            notes: document.getElementById('authorizationNotes')?.value?.trim() || null,
-            decision_reason: document.getElementById('authorizationDecisionReason')?.value?.trim() || null,
+            notes: modalEl.querySelector('#authorizationNotes')?.value?.trim() || null,
+            decision_reason: modalEl.querySelector('#authorizationDecisionReason')?.value?.trim() || null,
         };
 
         if (!payload.customer_id || !payload.title) {
@@ -445,8 +427,8 @@ class AuthorizationsView {
                     }
                 }
             }
+            modal.close(modalEl);
             modal.showSuccess(id ? 'Autorización actualizada' : 'Autorización creada');
-            this.resetForm();
             await this.loadAuthorizations();
         } catch (error) {
             modal.showError(error.message || 'No se pudo guardar la autorización');

@@ -170,6 +170,7 @@ export class AppointmentsView {
                     if (confirmed) {
                         try {
                             await apiService.delete(`/appointments/${appointmentId}`);
+                            window.dispatchEvent(new CustomEvent('appointments:changed'));
                             await this.init();
                             const lbl = this._getApptLabels().singular;
                             await modal.alert({ title: 'Éxito', message: `${lbl} eliminada correctamente`, type: 'success' });
@@ -347,6 +348,7 @@ export class AppointmentsView {
             try {
                 await apiService.post('/appointments/', appointmentData);
                 modal.close(appointmentModal);
+                window.dispatchEvent(new CustomEvent('appointments:changed'));
                 await this.init();
                 await modal.alert({ title: 'Éxito', message: `${singular} creada correctamente`, type: 'success' });
             } catch (error) {
@@ -467,6 +469,7 @@ export class AppointmentsView {
             try {
                 await apiService.put(`/appointments/${appointment.id}`, appointmentData);
                 modal.close(appointmentModal);
+                window.dispatchEvent(new CustomEvent('appointments:changed'));
                 await this.init();
                 await modal.alert({ title: 'Éxito', message: `${apptSingular} actualizada correctamente`, type: 'success' });
             } catch (error) {
@@ -2536,6 +2539,10 @@ export class ReportsView {
         const maxIncome = periods.length ? Math.max(...periods.map((p) => Number(p.income || p.revenue || 0))) : 0;
         const maxExpenses = periods.length ? Math.max(...periods.map((p) => Number(p.expenses || 0))) : 0;
         const maxScale = Math.max(maxIncome, maxExpenses, 1);
+        const cashExpenses = Number(data.cash_expenses || 0);
+        const operationalExpenses = Number(data.operational_expenses || 0);
+        const incidentCosts = Number(data.incident_costs || 0);
+        const payrollExpenses = Number(data.payroll_expenses || 0);
 
         return `
             <div class="card">
@@ -2566,6 +2573,33 @@ export class ReportsView {
                             <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Pendiente</div>
                             <div style="font-size: 24px; font-weight: 600; color: #c2185b;">
                                 ${this.formatCurrency(data.pending_amount || 0)}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 16px;">
+                        <div style="background: #fff7ed; border: 1px solid #fed7aa; padding: 12px; border-radius: 6px;">
+                            <div style="font-size: 11px; color: #9a3412; margin-bottom: 4px;">Gasto caja</div>
+                            <div style="font-size: 20px; font-weight: 700; color: #c2410c;">
+                                ${this.formatCurrency(cashExpenses)}
+                            </div>
+                        </div>
+                        <div style="background: #fef2f2; border: 1px solid #fecaca; padding: 12px; border-radius: 6px;">
+                            <div style="font-size: 11px; color: #991b1b; margin-bottom: 4px;">Gasto operativo</div>
+                            <div style="font-size: 20px; font-weight: 700; color: #b91c1c;">
+                                ${this.formatCurrency(operationalExpenses)}
+                            </div>
+                        </div>
+                        <div style="background: #fdf4ff; border: 1px solid #f5d0fe; padding: 12px; border-radius: 6px;">
+                            <div style="font-size: 11px; color: #86198f; margin-bottom: 4px;">Costo incidentes</div>
+                            <div style="font-size: 20px; font-weight: 700; color: #a21caf;">
+                                ${this.formatCurrency(incidentCosts)}
+                            </div>
+                        </div>
+                        <div style="background: #eef2ff; border: 1px solid #c7d2fe; padding: 12px; border-radius: 6px;">
+                            <div style="font-size: 11px; color: #3730a3; margin-bottom: 4px;">Nómina pagada</div>
+                            <div style="font-size: 20px; font-weight: 700; color: #4338ca;">
+                                ${this.formatCurrency(payrollExpenses)}
                             </div>
                         </div>
                     </div>
