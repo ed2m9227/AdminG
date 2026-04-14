@@ -36,8 +36,12 @@ from app.models.cash_transaction import CashTransaction
 from app.models.service_package import ServicePackage, ServicePackageItem
 from app.models.inventory_package import InventoryPackage, InventoryPackageItem
 from app.models.audit_log import AuditLog, VoidRequest
-from app.models.payroll_payment import PayrollPayment
 from datetime import datetime, timedelta
+
+try:
+    from app.models.payroll_payment import PayrollPayment
+except ModuleNotFoundError:
+    PayrollPayment = None
 
 router = APIRouter(
     prefix="/admin",
@@ -111,7 +115,15 @@ def _resolve_payroll_owner_id(user: User, db: Session) -> int:
     )
 
 
-def _serialize_payroll_payment(record: PayrollPayment):
+def _ensure_payroll_module_available():
+    if PayrollPayment is None:
+        raise HTTPException(
+            status_code=503,
+            detail="El modulo de nomina no esta disponible en este despliegue",
+        )
+
+
+def _serialize_payroll_payment(record):
     return {
         "id": record.id,
         "owner_user_id": record.owner_user_id,
@@ -835,6 +847,8 @@ def list_team_payroll(
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    _ensure_payroll_module_available()
+
     user = db.query(User).filter(User.id == int(current_user["id"])).first()
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
@@ -858,6 +872,8 @@ def create_team_payroll_payment(
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    _ensure_payroll_module_available()
+
     user = db.query(User).filter(User.id == int(current_user["id"])).first()
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
