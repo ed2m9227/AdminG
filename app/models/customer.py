@@ -10,6 +10,7 @@ class Customer(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
     full_name = Column(String(120), nullable=False)
+    identification = Column(String(50), nullable=True, index=True)
     phone = Column(EncryptedText(), nullable=True)
     email = Column(String(120), nullable=True, index=True)
     notes = Column(EncryptedText(), nullable=True)

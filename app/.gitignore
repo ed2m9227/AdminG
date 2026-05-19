@@ -1,13 +1,74 @@
 # Python
-__pycache_/
-*.pyc
-
-# Entornos
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
 venv/
-.env
+env/
+ENV/
+.venv/
 
-# IDE
+# Environment secrets - NUNCA subir al repo
+.env
+*.env
+
+# Database - excluir datos locales (Railway usa volumen propio)
+*.db
+*.sqlite3
+app.db
+test.db
+sql_app.db
+admingpyme.db
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+*.cover
+
+# IDEs
 .vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+.DS_Store
+
+# Alembic
+alembic/versions/__pycache__/
+
+# Frontend/Node
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/.env.local
+frontend/.env.*.local
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/pnpm-debug.log*
+frontend-cdn-backup/
+
+# Build outputs
+*.egg-info/
+dist/
+build/
+
+# Logs
+*.log
+logs/
 
 # OS
 .DS_Store
+Thumbs.db
+
+# Env files
+.env
+.env.local
+.env.*.local
+
+# Temporary
+*.tmp
+*.temp
+.cache/

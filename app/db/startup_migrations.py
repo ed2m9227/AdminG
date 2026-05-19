@@ -136,7 +136,10 @@ def run_sqlite_startup_migrations(db_path: str = "app.db") -> list[str]:
             _ensure_columns(
                 cursor,
                 "customers",
-                [("user_id", "INTEGER")],
+                [
+                    ("user_id", "INTEGER"),
+                    ("identification", "TEXT"),
+                ],
             )
         )
 
@@ -256,6 +259,16 @@ def run_sqlite_startup_migrations(db_path: str = "app.db") -> list[str]:
         """)
         cursor.execute("CREATE INDEX IF NOT EXISTS ix_user_consents_user_id ON user_consents(user_id)")
         cursor.execute("CREATE INDEX IF NOT EXISTS ix_user_consents_status ON user_consents(status)")
+
+        if "dignitaries" in {row[0] for row in cursor.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()}:
+            applied.extend(
+                _ensure_columns(
+                    cursor,
+                    "dignitaries",
+                    [("owner_user_id", "INTEGER")],
+                )
+            )
+            cursor.execute("CREATE INDEX IF NOT EXISTS ix_dignitaries_owner_user_id ON dignitaries(owner_user_id)")
 
         # Trial governance
         cursor.execute("""

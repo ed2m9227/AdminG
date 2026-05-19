@@ -154,14 +154,6 @@ const BUSINESS_REGISTRY = {
         aiIntents: SHARED_INTENTS,
         crmLabel: 'CRM Residentes', crmIcon: '🏢',
     },
-    gobernanza_politica: {
-        displayName: 'Gobernanza / Política',
-        category: 'professional',
-        vocabulary: { customer: 'Ciudadano', customers: 'Ciudadanos', appointment: 'Reunión', appointments: 'Reuniones', product: 'Documento', service: 'Gestión' },
-        blockedFeatures: NON_HEALTHCARE_BLOCKED,
-        aiIntents: SHARED_INTENTS,
-        crmLabel: 'Partes Interesadas', crmIcon: '🏛️',
-    },
     consultoria: {
         displayName: 'Consultoría',
         category: 'professional',

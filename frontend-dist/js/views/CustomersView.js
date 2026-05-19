@@ -219,38 +219,69 @@ export class CustomersView {
         });
     }
 
+    activateModalTabs(modalEl) {
+        if (!modalEl) return;
+        const tabs = modalEl.querySelectorAll('[data-modal-tab]');
+        const panels = modalEl.querySelectorAll('[data-modal-panel]');
+        if (!tabs.length || !panels.length) return;
+
+        tabs.forEach((tab) => {
+            tab.addEventListener('click', () => {
+                const target = tab.dataset.modalTab;
+                tabs.forEach((item) => item.classList.remove('is-active'));
+                panels.forEach((panel) => panel.classList.remove('is-active'));
+                tab.classList.add('is-active');
+                const panel = modalEl.querySelector(`[data-modal-panel="${target}"]`);
+                if (panel) panel.classList.add('is-active');
+            });
+        });
+    }
+
     showCustomerModal(customer = null, pet = null) {
         const isEdit = !!customer;
         const { singular, article } = this._getEntityLabels();
         const title = isEdit ? `Editar ${singular}` : `${article} ${singular}`;
         const petSection = this.renderPetSection(pet);
 
+        const hasPet = this.businessConfig?.has_pet_relationship;
         const content = `
             <form id="customerForm" class="modal-form" data-customer-id="${customer?.id || ''}">
                 <input type="hidden" name="pet_id" value="${pet?.id || ''}">
-                <div class="form-group">
-                    <label>Nombre *</label>
-                    <input type="text" name="full_name" value="${customer?.full_name || ''}" required>
+                ${hasPet ? `
+                <div class="detail-tabs" role="tablist" aria-label="Responsable y mascota">
+                    <button type="button" class="detail-tab is-active" data-modal-tab="responsible">Responsable</button>
+                    <button type="button" class="detail-tab" data-modal-tab="mascota">Mascota</button>
                 </div>
-                
-                <div class="form-row">
+                ` : ''}
+
+                <div class="detail-panel${hasPet ? ' is-active' : ''}" data-modal-panel="responsible">
                     <div class="form-group">
-                        <label>Email</label>
-                        <input type="email" name="email" value="${customer?.email || ''}">
+                        <label>Nombre *</label>
+                        <input type="text" name="full_name" value="${customer?.full_name || ''}" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" name="email" value="${customer?.email || ''}">
+                        </div>
+                        <div class="form-group">
+                            <label>Teléfono</label>
+                            <input type="tel" name="phone" value="${customer?.phone || ''}">
+                        </div>
                     </div>
                     <div class="form-group">
-                        <label>Teléfono</label>
-                        <input type="tel" name="phone" value="${customer?.phone || ''}">
+                        <label>Cédula / Identificación</label>
+                        <input type="text" name="identification" value="${customer?.identification || ''}">
                     </div>
-                </div>
-                
-                <div class="form-group">
-                    <label>Notas</label>
-                    <textarea name="notes" rows="3">${customer?.notes || ''}</textarea>
+                    <div class="form-group">
+                        <label>Notas</label>
+                        <textarea name="notes" rows="3">${customer?.notes || ''}</textarea>
+                    </div>
                 </div>
 
-                ${petSection}
-                
+                ${hasPet ? `<div class="detail-panel" data-modal-panel="mascota">${petSection}</div>` : petSection}
+
                 <div class="modal-actions">
                     <button type="submit" class="btn btn-success">Guardar</button>
                     <button type="button" class="btn" data-close>Cancelar</button>
@@ -259,6 +290,7 @@ export class CustomersView {
         `;
 
         const customerModal = modal.show({ title, content, size: 'medium' });
+        this.activateModalTabs(customerModal);
 
         const form = document.getElementById('customerForm');
         form?.addEventListener('submit', async (e) => {
@@ -277,6 +309,7 @@ export class CustomersView {
         
         const customerData = {
             full_name: formData.get('full_name'),
+            identification: formData.get('identification') || null,
             email: formData.get('email') || null,
             phone: formData.get('phone') || null,
             notes: formData.get('notes') || null
@@ -384,6 +417,7 @@ export class CustomersView {
                     <div class="form-row">
                         <div class="form-group"><label>Email</label><input type="text" value="${customer.email || '-'}" disabled></div>
                         <div class="form-group"><label>Teléfono</label><input type="text" value="${customer.phone || '-'}" disabled></div>
+                        <div class="form-group"><label>Cédula / Identificación</label><input type="text" value="${customer.identification || '-'}" disabled></div>
                     </div>
                     <div class="form-group"><label>Notas</label><textarea rows="4" disabled>${customer.notes || '-'}</textarea></div>
                 </div>

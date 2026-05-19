@@ -266,6 +266,62 @@ def list_all_users(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/master/trials")
+def list_trial_users(
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """Lista usuarios en trial con información detallada (Master Admin only)"""
+    import math
+    try:
+        now = datetime.utcnow()
+        users = db.query(User).filter(
+            User.plan == "free",
+            User.role != "admin",
+            User.parent_user_id == None,
+            User.free_trial_started_at != None
+        ).order_by(User.free_trial_started_at.desc()).all()
+        
+        trial_data = []
+        for u in users:
+            trial_started_at = u.free_trial_started_at
+            trial_ends_at = trial_started_at + timedelta(days=15)
+            is_trial_active = not bool(u.free_trial_used) and (now <= trial_ends_at)
+            
+            if is_trial_active:
+                hours_remaining = (trial_ends_at - now).total_seconds() / 3600
+                days_remaining = math.ceil(hours_remaining / 24)
+            else:
+                hours_remaining = 0
+                days_remaining = 0
+            
+            trial_data.append({
+                "id": u.id,
+                "email": u.email,
+                "full_name": u.full_name or "N/A",
+                "business_type": u.business_type,
+                "trial_started_at": trial_started_at.isoformat(),
+                "trial_ends_at": trial_ends_at.isoformat(),
+                "is_active": is_trial_active,
+                "hours_remaining": round(hours_remaining, 1),
+                "days_remaining": days_remaining,
+                "status": "active" if is_trial_active else "expired",
+                "created_at": u.created_at.isoformat(),
+            })
+        
+        active_trials = sum(1 for t in trial_data if t["is_active"])
+        expired_trials = sum(1 for t in trial_data if not t["is_active"])
+        
+        return {
+            "total": len(trial_data),
+            "active_count": active_trials,
+            "expired_count": expired_trials,
+            "trials": trial_data
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.patch("/master/users/{user_id}/role")
 def change_user_role(
     user_id: int,
@@ -504,6 +560,9 @@ def permanently_delete_user(
         sub_ids = [u.id for u in db.query(User.id).filter(User.parent_user_id == user_id).all()]
         all_ids = [user_id] + sub_ids
 
+        # Importar modelos de gobernanza
+        from app.models.governance import GovernanceEntity, LegalEntity, Dignitary, UserConsent, PolicyVersion
+
         dependencies = {
             "clientes": db.query(Customer).filter(Customer.user_id.in_(all_ids)).count(),
             "servicios": db.query(Service).filter(Service.user_id.in_(all_ids)).count(),
@@ -532,6 +591,13 @@ def permanently_delete_user(
             "solicitudes_anulacion": db.query(VoidRequest).filter(
                 or_(VoidRequest.requested_by.in_(all_ids), VoidRequest.resolved_by.in_(all_ids))
             ).count(),
+            # Tablas de gobernanza
+            "entidades_gobernanza": db.query(GovernanceEntity).filter(GovernanceEntity.owner_user_id.in_(all_ids)).count(),
+            "entidades_legales": db.query(LegalEntity).filter(LegalEntity.owner_user_id.in_(all_ids)).count(),
+            "dignatarios": db.query(Dignitary).filter(
+                or_(Dignitary.owner_user_id.in_(all_ids), Dignitary.user_id.in_(all_ids))
+            ).count(),
+            "consents": db.query(UserConsent).filter(UserConsent.user_id.in_(all_ids)).count(),
         }
 
         used_dependencies = {k: v for k, v in dependencies.items() if v > 0}
@@ -546,11 +612,18 @@ def permanently_delete_user(
             )
 
         # If no operational data exists, purge lightweight references then users
+        from app.models.governance import GovernanceEntity, LegalEntity, Dignitary, UserConsent
+
         db.query(Notification).filter(Notification.user_id.in_(all_ids)).delete(synchronize_session=False)
         db.query(BusinessConfiguration).filter(BusinessConfiguration.user_id.in_(all_ids)).delete(synchronize_session=False)
         db.query(TeamUser).filter(
             or_(TeamUser.team_owner_id.in_(all_ids), TeamUser.member_user_id.in_(all_ids))
         ).delete(synchronize_session=False)
+        # Limpiar tablas de gobernanza
+        db.query(Dignitary).filter(Dignitary.owner_user_id.in_(all_ids)).delete(synchronize_session=False)
+        db.query(LegalEntity).filter(LegalEntity.owner_user_id.in_(all_ids)).delete(synchronize_session=False)
+        db.query(GovernanceEntity).filter(GovernanceEntity.owner_user_id.in_(all_ids)).delete(synchronize_session=False)
+        db.query(UserConsent).filter(UserConsent.user_id.in_(all_ids)).delete(synchronize_session=False)
 
         db.query(User).filter(User.parent_user_id == user_id).delete(synchronize_session=False)
         db.query(User).filter(User.id == user_id).delete(synchronize_session=False)

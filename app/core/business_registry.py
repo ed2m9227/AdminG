@@ -290,21 +290,6 @@ BUSINESS_REGISTRY: Dict[str, BusinessTypeConfig] = {
         blocked_features=_NON_HEALTHCARE_BLOCKED,
         ai_intents=SHARED_INTENTS,
     ),
-    "gobernanza_politica": BusinessTypeConfig(
-        id="gobernanza_politica",
-        display_name="Gobernanza / Política",
-        category="professional",
-        vocabulary={
-            "customer": "Ciudadano",
-            "customers": "Ciudadanos",
-            "appointment": "Reunión",
-            "appointments": "Reuniones",
-            "product": "Documento",
-            "service": "Gestión",
-        },
-        blocked_features=_NON_HEALTHCARE_BLOCKED,
-        ai_intents=SHARED_INTENTS,
-    ),
     "consultoria": BusinessTypeConfig(
         id="consultoria",
         display_name="Consultoría",

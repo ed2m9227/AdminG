@@ -1,5 +1,6 @@
 fastapi
 uvicorn[standard]
+gunicorn
 passlib[bcrypt]
 bcrypt==4.0.1
 python-jose[cryptography]
@@ -11,3 +12,5 @@ alembic
 reportlab
 pyotp
 cryptography
+psycopg2-binary  # Para PostgreSQL (opcional)
+python-multipart  # Para uploads de archivos

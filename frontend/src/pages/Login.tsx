@@ -23,6 +23,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const nextPath = new URLSearchParams(window.location.search).get('next') || '/dashboard';
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,8 +44,8 @@ export default function Login() {
       // Guardar token
       localStorage.setItem('token', response.data.access_token);
       
-      // Redirigir al dashboard
-      window.location.href = '/dashboard';
+      // Redirigir a onboarding o dashboard segun flujo.
+      window.location.href = nextPath;
     } catch (err: any) {
       setError(
         err.response?.data?.detail || 'Error al iniciar sesión'

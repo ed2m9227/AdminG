@@ -8,6 +8,7 @@ interface User {
   email: string;
   role: string;
   plan: string;
+  governance_mode?: string | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -47,6 +48,11 @@ export default function Dashboard() {
         }
       );
       setUser(userResponse.data);
+
+      if (!userResponse.data.governance_mode) {
+        window.location.href = '/onboarding';
+        return;
+      }
 
       // Fetch version/features
       const versionResponse = await axios.get<VersionResponse>(

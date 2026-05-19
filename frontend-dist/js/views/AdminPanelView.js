@@ -89,6 +89,16 @@ export class MasterAdminView {
                         <div style="color:#64748b;">Cargando pagos pendientes...</div>
                     </div>
                 </div>
+
+                <!-- Usuarios en Trial -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>📅 Usuarios en Período de Prueba</h3>
+                    </div>
+                    <div class="card-body" id="trialsContainer">
+                        <div style="color:#64748b;">Cargando datos de trial...</div>
+                    </div>
+                </div>
             </div>
         `;
     }
@@ -103,6 +113,11 @@ export class MasterAdminView {
             const pendingRes = await apiService.getPendingPlanPayments();
             this.pendingPlanPayments = pendingRes.pending || [];
             this.renderPendingPlanPayments();
+
+            // Cargar datos de trials
+            const trialsRes = await apiService.request('/admin/master/trials', 'GET');
+            this.trialsData = trialsRes;
+            this.renderTrials();
 
             // Cargar usuarios
             const usersRes = await apiService.request('/admin/master/users', 'GET');
@@ -179,6 +194,73 @@ export class MasterAdminView {
                 `).join('')}
             </div>
         `;
+    }
+
+    renderTrials() {
+        const container = document.getElementById('trialsContainer');
+        if (!container) return;
+
+        if (!this.trialsData || !this.trialsData.trials || this.trialsData.trials.length === 0) {
+            container.innerHTML = '<div style="color:#64748b;">No hay usuarios en período de prueba.</div>';
+            return;
+        }
+
+        const { total, active_count, expired_count, trials } = this.trialsData;
+
+        let html = `
+            <div style="margin-bottom: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+                <div style="padding: 12px; background: #d4edda; border-radius: 8px; border-left: 4px solid #28a745;">
+                    <div style="font-size: 12px; color: #155724; font-weight: 600;">ACTIVOS</div>
+                    <div style="font-size: 24px; font-weight: bold; color: #28a745; margin-top: 5px;">${active_count}</div>
+                </div>
+                <div style="padding: 12px; background: #f8d7da; border-radius: 8px; border-left: 4px solid #dc3545;">
+                    <div style="font-size: 12px; color: #721c24; font-weight: 600;">EXPIRADOS</div>
+                    <div style="font-size: 24px; font-weight: bold; color: #dc3545; margin-top: 5px;">${expired_count}</div>
+                </div>
+                <div style="padding: 12px; background: #e7f3ff; border-radius: 8px; border-left: 4px solid #0066cc;">
+                    <div style="font-size: 12px; color: #003d99; font-weight: 600;">TOTAL</div>
+                    <div style="font-size: 24px; font-weight: bold; color: #0066cc; margin-top: 5px;">${total}</div>
+                </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                ${trials.map((trial) => {
+                    const statusColor = trial.is_active ? '#28a745' : '#dc3545';
+                    const statusText = trial.is_active ? '✓ ACTIVO' : '✗ EXPIRADO';
+                    const daysBar = trial.is_active 
+                        ? `<div style="margin-top: 8px; height: 24px; background: #e9ecef; border-radius: 4px; display: flex; align-items: center; padding: 0 8px; font-weight: 600; font-size: 12px; color: #0066cc;">${trial.days_remaining} días restantes</div>`
+                        : '';
+
+                    return `
+                        <div style="border: 1px solid #e2e8f0; border-radius: 10px; padding: 15px; display: grid; grid-template-columns: 1fr auto auto; gap: 15px; align-items: start; background: ${trial.is_active ? '#f0f9ff' : '#fef2f2'};">
+                            <div>
+                                <div style="font-weight: 700; color: #0f172a; font-size: 14px;">${trial.email}</div>
+                                <div style="font-size: 12px; color: #64748b; margin-top: 4px;">
+                                    ${trial.full_name} ${trial.full_name === 'N/A' ? '(Sin nombre)' : ''}
+                                </div>
+                                <div style="font-size: 12px; color: #64748b; margin-top: 2px;">
+                                    Tipo: <strong>${trial.business_type || 'N/A'}</strong>
+                                </div>
+                                <div style="font-size: 12px; color: #64748b; margin-top: 2px;">
+                                    Inicio: ${new Date(trial.trial_started_at).toLocaleString()}
+                                </div>
+                                <div style="font-size: 12px; color: #64748b; margin-top: 2px;">
+                                    Vencimiento: ${new Date(trial.trial_ends_at).toLocaleString()}
+                                </div>
+                                ${daysBar}
+                            </div>
+                            <div style="text-align: right; min-width: 100px;">
+                                <div style="background: ${statusColor}; color: white; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; white-space: nowrap;">
+                                    ${statusText}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        `;
+
+        container.innerHTML = html;
     }
 
     renderUsersTable() {

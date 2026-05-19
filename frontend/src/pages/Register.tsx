@@ -101,8 +101,8 @@ export default function Register() {
       setConfirmPassword('');
 
       setTimeout(() => {
-        window.location.href = '/login';
-      }, 2000);
+        window.location.href = '/login?next=/onboarding';
+      }, 1200);
     } catch (err: any) {
       const message = err.response?.data?.detail;
       setError(message || 'Error al registrarse');

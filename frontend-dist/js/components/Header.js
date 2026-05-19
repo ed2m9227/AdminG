@@ -54,7 +54,7 @@ export class Header {
             'team-payroll': t('menu.team_payroll', 'Nómina'),
             'team-requests': t('menu.team_requests', 'Solicitudes RRHH'),
             'team-tracking': t('menu.team_tracking', 'Seguimiento RRHH'),
-            'admin-ia': `🤖 ${t('menu.admin_ia', 'Admin IA')}`,
+            'admin-ia': `✨ ${t('menu.admin_ia', 'Admin IA')}`,
             admin: t('menu.admin', 'Administración'),
             businessconfig: t('menu.business_config', 'Configuración de Negocio'),
             businesstypes: t('menu.business_types', 'Tipos de Negocio'),

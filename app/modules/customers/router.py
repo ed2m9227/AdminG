@@ -55,6 +55,7 @@ def create_customer(
     customer = Customer(
         user_id=target_user_id,
         full_name=payload.full_name,
+        identification=payload.identification,
         phone=payload.phone,
         email=payload.email,
         notes=payload.notes,

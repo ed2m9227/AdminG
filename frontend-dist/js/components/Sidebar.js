@@ -51,6 +51,14 @@ export class Sidebar {
             { id: 'admin', icon: '⚙️', label: t('menu.admin', 'Administración'), route: 'admin', roleRequired: 'admin', requiredFeature: 'admin_panel' },
             { id: 'businessconfig', icon: '🛠️', label: t('menu.business_config', 'Configuración de negocio'), route: 'businessconfig', parentId: 'admin', roles: ['admin', 'manager'], alwaysShow: true },
             { id: 'businesstypes', icon: '🏢', label: t('menu.business_types', 'Tipos de Negocio'), route: 'businesstypes', parentId: 'admin', roleRequired: 'admin', requiredFeature: 'admin_panel' },
+
+            // JAC - Sistema de Gobernanza (Fases 1-6) - Solo para tipo de negocio gobernanza
+            { id: 'governance', icon: '🏛️', label: 'Gobernanza JAC', route: 'governance', roles: ['admin', 'manager'], businessType: 'gobernanza' },
+            { id: 'treasury', icon: '💰', label: 'Tesorería', route: 'treasury', parentId: 'governance', roles: ['admin', 'manager'], businessType: 'gobernanza' },
+            { id: 'assembly', icon: '🗳️', label: 'Asambleas', route: 'assembly', parentId: 'governance', roles: ['admin', 'manager'], businessType: 'gobernanza' },
+            { id: 'projects-jac', icon: '📋', label: 'Proyectos', route: 'projects', parentId: 'governance', roles: ['admin', 'manager'], businessType: 'gobernanza' },
+            { id: 'inventory-jac', icon: '📦', label: 'Inventario JAC', route: 'inventory-jac', parentId: 'governance', roles: ['admin', 'manager'], businessType: 'gobernanza' },
+            { id: 'strategic', icon: '🎯', label: 'Estrategia', route: 'strategic', parentId: 'governance', roles: ['admin', 'manager'], businessType: 'gobernanza' },
         ];
         this.userFeatures = [];
         this.itemAccessMap = {};
@@ -234,10 +242,16 @@ export class Sidebar {
         const menuItems = this.getMenuItemsWithDynamicLabels();
         this.itemAccessMap = {};
         
-        // Filtrar items por rol y sub-usuario. Las restricciones por plan se muestran bloqueadas.
+        // Filtrar items por rol, sub-usuario y tipo de negocio. Las restricciones por plan se muestran bloqueadas.
+        const userBusinessType = (user?.business_type || '').toLowerCase().trim();
         const visibleByRole = menuItems.filter(item => {
             // Sub-usuarios no ven Reportes ni Mi Equipo
             if (isSubUser && (item.id === 'reports' || item.id === 'team')) {
+                return false;
+            }
+            
+            // Filtro por tipo de negocio - solo mostrar módulos de gobernanza si el negocio es gobernanza
+            if (item.businessType && item.businessType !== userBusinessType) {
                 return false;
             }
             

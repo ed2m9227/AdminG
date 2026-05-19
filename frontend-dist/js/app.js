@@ -37,6 +37,12 @@ import documentsView from './views/DocumentsView.js';
 import authorizationsView from './views/AuthorizationsView.js';
 import crmView from './views/CrmView.js';
 import totpSetupView from './views/TotpSetupView.js';
+import governanceView from './views/GovernanceView.js';
+import treasuryView from './views/TreasuryView.js';
+import assemblyView from './views/AssemblyView.js';
+import projectsView from './views/ProjectsView.js';
+import inventoryJacView from './views/InventoryJacView.js';
+import strategicView from './views/StrategicView.js';
 import modal from './components/Modal.js';
 import aiChatWidget from './components/AiChatWidget.js';
 
@@ -310,6 +316,61 @@ class App {
                 modal.showError('Solo administradores pueden acceder a esta sección');
                 await router.navigate('dashboard');
             }
+        });
+
+        // Rutas JAC - Sistema de Gobernanza (Fases 1-6)
+        router.register('governance', async () => {
+            const onboardingCompleted = localStorage.getItem('onboarding_completed');
+            if (!onboardingCompleted) {
+                await router.navigate('onboarding');
+                return;
+            }
+            await this.renderProtectedView(governanceView);
+        });
+
+        router.register('treasury', async () => {
+            const onboardingCompleted = localStorage.getItem('onboarding_completed');
+            if (!onboardingCompleted) {
+                await router.navigate('onboarding');
+                return;
+            }
+            await this.renderProtectedView(treasuryView);
+        });
+
+        router.register('assembly', async () => {
+            const onboardingCompleted = localStorage.getItem('onboarding_completed');
+            if (!onboardingCompleted) {
+                await router.navigate('onboarding');
+                return;
+            }
+            await this.renderProtectedView(assemblyView);
+        });
+
+        router.register('projects', async () => {
+            const onboardingCompleted = localStorage.getItem('onboarding_completed');
+            if (!onboardingCompleted) {
+                await router.navigate('onboarding');
+                return;
+            }
+            await this.renderProtectedView(projectsView);
+        });
+
+        router.register('inventory-jac', async () => {
+            const onboardingCompleted = localStorage.getItem('onboarding_completed');
+            if (!onboardingCompleted) {
+                await router.navigate('onboarding');
+                return;
+            }
+            await this.renderProtectedView(inventoryJacView);
+        });
+
+        router.register('strategic', async () => {
+            const onboardingCompleted = localStorage.getItem('onboarding_completed');
+            if (!onboardingCompleted) {
+                await router.navigate('onboarding');
+                return;
+            }
+            await this.renderProtectedView(strategicView);
         });
     }
 
