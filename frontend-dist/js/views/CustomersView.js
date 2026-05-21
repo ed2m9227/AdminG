@@ -27,7 +27,7 @@ export class CustomersView {
         this._customersClickHandler = null;
         this.petFieldLabels = {
             name: 'Nombre',
-            animal_type: 'Tipo de Animal',
+            animal_type: 'Especie',
             breed: 'Raza',
             color_description: 'Color',
             age_years: 'Edad (Años)',
@@ -555,7 +555,7 @@ export class CustomersView {
         if (!hasAny) return null;
 
         if (!name || !animalType) {
-            throw new Error('Nombre y tipo de animal son requeridos para la mascota');
+            throw new Error('Nombre y especie son requeridos para la mascota');
         }
 
         return {

@@ -11,6 +11,8 @@ from app.db.session import get_db
 from app.models.customer import Customer
 from app.models.document import Document
 from app.models.user import User
+from fastapi.responses import StreamingResponse
+from io import BytesIO
 
 router = APIRouter(prefix="/documents", tags=["Documents"])
 
@@ -111,6 +113,69 @@ def create_document(
     db.commit()
     db.refresh(document)
     return serialize_document(document)
+
+
+@router.get("/{document_id}/pdf")
+def download_document_pdf(
+    document_id: int,
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    user = db.query(User).filter(User.id == int(current_user["id"])).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    owner_id, scope_user_ids = get_owner_and_scope(user, db)
+    document = db.query(Document).filter(Document.id == document_id, Document.user_id == owner_id).first()
+    if not document:
+        raise HTTPException(status_code=404, detail="Documento no encontrado")
+
+    try:
+        from reportlab.lib.pagesizes import letter
+        from reportlab.pdfgen import canvas
+    except ImportError as exc:
+        raise HTTPException(
+            status_code=501,
+            detail="PDF generation dependency missing: install reportlab"
+        ) from exc
+
+    buffer = BytesIO()
+    pdf = canvas.Canvas(buffer, pagesize=letter)
+    width, height = letter
+    y = height - 50
+
+    pdf.setFont("Helvetica-Bold", 16)
+    pdf.drawString(50, y, (document.title or "Documento")[:80])
+    y -= 30
+
+    pdf.setFont("Helvetica", 11)
+    pdf.drawString(50, y, f"Tipo: {document.document_type or ''}")
+    y -= 16
+    pdf.drawString(50, y, f"Cliente: {document.customer.full_name if document.customer else ''}")
+    y -= 16
+    if document.issued_at:
+        pdf.drawString(50, y, f"Emitido: {document.issued_at.strftime('%Y-%m-%d')}")
+        y -= 16
+
+    y -= 8
+    pdf.setFont("Helvetica", 10)
+    text = pdf.beginText(50, y)
+    text.setLeading(14)
+    content = document.content or ""
+    for line in content.splitlines():
+        text.textLine(line)
+    pdf.drawText(text)
+
+    pdf.showPage()
+    pdf.save()
+    buffer.seek(0)
+
+    filename = f"document_{document.id}.pdf"
+    return StreamingResponse(
+        buffer,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+    )
 
 
 @router.put("/{document_id}")

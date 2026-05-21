@@ -207,6 +207,12 @@ def generate_invoice(
         notes=data.notes,
         status="issued"
     )
+    # Guardar metadata de facturación si fue provista (sobrescribe business config)
+    if getattr(data, "metadata_json", None):
+        try:
+            invoice.metadata_json = data.metadata_json
+        except Exception:
+            invoice.metadata_json = {}
     
     db.add(invoice)
     db.flush()  # Para obtener el invoice.id
@@ -322,6 +328,10 @@ def download_invoice_pdf(
     customer = db.query(Customer).filter(Customer.id == invoice.customer_id).first()
     business_config = db.query(BusinessConfiguration).filter(BusinessConfiguration.user_id == invoice.user_id).first()
     billing_profile = (business_config.custom_fields or {}).get("billing_profile", {}) if business_config else {}
+    # invoice-level metadata overrides business-level billing_profile
+    invoice_meta = invoice.metadata_json or {}
+    if invoice_meta:
+        billing_profile = {**billing_profile, **invoice_meta}
 
     try:
         from reportlab.lib.pagesizes import letter
@@ -338,11 +348,11 @@ def download_invoice_pdf(
     y = height - 50
 
     pdf.setFont("Helvetica-Bold", 16)
-    pdf.drawString(50, y, "Invoice")
+    pdf.drawString(50, y, "Factura")
     y -= 30
 
     issuer_name = billing_profile.get("legal_name") or (business_config.business_name if business_config else None) or "Negocio"
-    issuer_doc_type = billing_profile.get("document_type") or "NIT"
+    issuer_doc_type = billing_profile.get("document_type") or "NIT/ID"
     issuer_doc_number = billing_profile.get("document_number")
     issuer_regime = billing_profile.get("tax_regime")
     issuer_city = billing_profile.get("city")
@@ -371,11 +381,11 @@ def download_invoice_pdf(
         pdf.drawString(50, y, f"Referencia fiscal: {issuer_resolution}")
         y -= 20
 
-    pdf.drawString(50, y, f"Invoice Number: {invoice.invoice_number}")
+    pdf.drawString(50, y, f"Número de factura: {invoice.invoice_number}")
     y -= 16
-    pdf.drawString(50, y, f"Issued At: {invoice.issued_at.strftime('%Y-%m-%d %H:%M')}")
+    pdf.drawString(50, y, f"Emitida: {invoice.issued_at.strftime('%Y-%m-%d %H:%M')}")
     y -= 16
-    pdf.drawString(50, y, f"Customer: {customer.full_name if customer else invoice.customer_id}")
+    pdf.drawString(50, y, f"Cliente: {customer.full_name if customer else invoice.customer_id}")
     y -= 24
 
     pdf.setFont("Helvetica-Bold", 11)

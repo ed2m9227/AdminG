@@ -165,6 +165,14 @@ def run_sqlite_startup_migrations(db_path: str = "app.db") -> list[str]:
                     [("authorization_id", "INTEGER REFERENCES authorizations(id)")],
                 )
             )
+            # Add metadata_json for invoice-level billing overrides
+            applied.extend(
+                _ensure_columns(
+                    cursor,
+                    "invoices",
+                    [("metadata_json", "TEXT")],
+                )
+            )
 
         if "payments" in {row[0] for row in cursor.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()}:
             applied.extend(

@@ -51,6 +51,13 @@ class DocumentsView {
         };
 
         document.addEventListener('click', this.boundClickHandler);
+        // global click handler for download PDF
+        document.addEventListener('click', async (e) => {
+            const pdfBtn = e.target.closest('[data-download-pdf]');
+            if (pdfBtn) {
+                await this.downloadDocumentPdf(Number(pdfBtn.dataset.downloadPdf));
+            }
+        });
     }
 
     async loadCustomers() {
@@ -104,7 +111,10 @@ class DocumentsView {
                                 <td>${record.created_by_name || '-'}</td>
                                 <td>${this.getStatusLabel(record.status)}</td>
                                 <td>${record.created_at ? new Date(record.created_at).toLocaleString('es-CO') : '-'}</td>
-                                <td><button class="btn btn-sm btn-secondary" data-edit-document="${record.id}">Editar</button></td>
+                                <td>
+                                    <button class="btn btn-sm btn-secondary" data-edit-document="${record.id}">Editar</button>
+                                    <button class="btn btn-sm btn-secondary" data-download-pdf="${record.id}" style="margin-left:6px;">PDF</button>
+                                </td>
                             </tr>
                         `).join('')}
                     </tbody>
@@ -225,6 +235,43 @@ class DocumentsView {
             await this.loadDocuments();
         } catch (error) {
             modal.showError(error.message || 'No se pudo guardar el documento');
+        }
+    }
+
+    async downloadDocumentPdf(documentId) {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            modal.showWarning('Sesion expirada');
+            return;
+        }
+
+        try {
+            const response = await fetch(`http://127.0.0.1:8000/documents/${documentId}/pdf`, {
+                method: 'GET',
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            if (!response.ok) {
+                let message = `Error ${response.status}`;
+                try {
+                    const error = await response.json();
+                    if (error?.detail) message = typeof error.detail === 'string' ? error.detail : JSON.stringify(error.detail);
+                } catch (_err) {}
+                throw new Error(message);
+            }
+
+            const blob = await response.blob();
+            const objectUrl = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = objectUrl;
+            link.download = `documento-${documentId}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            URL.revokeObjectURL(objectUrl);
+        } catch (error) {
+            console.error('Error downloading document pdf:', error);
+            modal.showError(error.message || 'No se pudo descargar el PDF');
         }
     }
 }

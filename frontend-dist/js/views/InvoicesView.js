@@ -41,6 +41,36 @@ class InvoicesView {
                                     <label>Notas</label>
                                     <input id="invoiceNotes" type="text" placeholder="Notas opcionales">
                                 </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Razón social / Empresa</label>
+                                        <input id="billingLegalName" type="text" placeholder="Nombre o razón social">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Tipo doc.</label>
+                                        <input id="billingDocType" type="text" placeholder="NIT / CC">
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Número documento</label>
+                                        <input id="billingDocNumber" type="text" placeholder="Nit o CC">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Régimen</label>
+                                        <input id="billingRegime" type="text" placeholder="Régimen fiscal">
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group" style="flex:2;">
+                                        <label>Dirección</label>
+                                        <input id="billingAddress" type="text" placeholder="Dirección fiscal">
+                                    </div>
+                                    <div class="form-group" style="flex:1;">
+                                        <label>Tipo de venta</label>
+                                        <input id="billingSaleType" type="text" placeholder="Contado / Crédito">
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="form-row">
@@ -397,6 +427,22 @@ class InvoicesView {
             iva_percentage: ivaInput ? Number(ivaInput) : null,
             retencion_percentage: retInput ? Number(retInput) : null
         };
+        // Collect billing metadata if provided
+        const billingMeta = {};
+        const legalName = document.getElementById('billingLegalName')?.value?.trim();
+        if (legalName) billingMeta.legal_name = legalName;
+        const docType = document.getElementById('billingDocType')?.value?.trim();
+        if (docType) billingMeta.document_type = docType;
+        const docNumber = document.getElementById('billingDocNumber')?.value?.trim();
+        if (docNumber) billingMeta.document_number = docNumber;
+        const regime = document.getElementById('billingRegime')?.value?.trim();
+        if (regime) billingMeta.tax_regime = regime;
+        const address = document.getElementById('billingAddress')?.value?.trim();
+        if (address) billingMeta.address = address;
+        const saleType = document.getElementById('billingSaleType')?.value?.trim();
+        if (saleType) billingMeta.sale_type = saleType;
+
+        if (Object.keys(billingMeta).length) payload.metadata_json = billingMeta;
 
         try {
             const invoice = await apiService.post('/invoices/generate', payload);
@@ -606,6 +652,37 @@ class InvoicesView {
                     <textarea name="notes" placeholder="Notas adicionales..." style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px; height: 60px;"></textarea>
                 </div>
 
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Razón social / Empresa</label>
+                        <input name="billing_legal_name" type="text" placeholder="Nombre o razón social" style="width:100%; padding:8px;">
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo doc.</label>
+                        <input name="billing_doc_type" type="text" placeholder="NIT / CC" style="width:100%; padding:8px;">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Número documento</label>
+                        <input name="billing_doc_number" type="text" placeholder="Nit o CC" style="width:100%; padding:8px;">
+                    </div>
+                    <div class="form-group">
+                        <label>Régimen</label>
+                        <input name="billing_regime" type="text" placeholder="Régimen fiscal" style="width:100%; padding:8px;">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group" style="flex:2;">
+                        <label>Dirección</label>
+                        <input name="billing_address" type="text" placeholder="Dirección fiscal" style="width:100%; padding:8px;">
+                    </div>
+                    <div class="form-group" style="flex:1;">
+                        <label>Tipo de venta</label>
+                        <input name="billing_sale_type" type="text" placeholder="Contado / Crédito" style="width:100%; padding:8px;">
+                    </div>
+                </div>
+
                 <div class="modal-actions">
                     <button type="submit" class="btn btn-success">Generar Factura</button>
                     <button type="button" class="btn" data-close>Cancelar</button>
@@ -810,6 +887,15 @@ class InvoicesView {
                 items: invoiceItemsData,
                 notes: formData.get('notes') || null
             };
+            // Collect billing metadata from modal form
+            const billingMeta = {};
+            if (formData.get('billing_legal_name')) billingMeta.legal_name = formData.get('billing_legal_name');
+            if (formData.get('billing_doc_type')) billingMeta.document_type = formData.get('billing_doc_type');
+            if (formData.get('billing_doc_number')) billingMeta.document_number = formData.get('billing_doc_number');
+            if (formData.get('billing_regime')) billingMeta.tax_regime = formData.get('billing_regime');
+            if (formData.get('billing_address')) billingMeta.address = formData.get('billing_address');
+            if (formData.get('billing_sale_type')) billingMeta.sale_type = formData.get('billing_sale_type');
+            if (Object.keys(billingMeta).length) invoiceData.metadata_json = billingMeta;
             
             try {
                 const response = await apiService.post('/invoices/generate', invoiceData);

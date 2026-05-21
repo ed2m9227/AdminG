@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Any
 from decimal import Decimal
 
 
@@ -37,6 +37,7 @@ class InvoiceCreate(BaseModel):
     apply_retencion: bool = False  # Si aplicar retención
     iva_percentage: Optional[Decimal] = None  # Permitir override manual
     retencion_percentage: Optional[Decimal] = None
+    metadata_json: Optional[dict[str, Any]] = None
 
 
 class InvoiceResponse(BaseModel):
@@ -59,6 +60,7 @@ class InvoiceResponse(BaseModel):
     issued_at: datetime
     due_date: Optional[datetime] = None
     items: List[InvoiceItemResponse] = Field(default_factory=list)
+    metadata_json: Optional[dict[str, Any]] = None
 
 
 class TaxConfigCreate(BaseModel):

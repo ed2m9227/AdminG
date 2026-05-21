@@ -3,7 +3,7 @@ Notifications Router
 Gestión de notificaciones del sistema (stock bajo, citas próximas, etc.)
 """
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from datetime import datetime, timedelta
@@ -16,6 +16,8 @@ from app.models.notification import Notification
 from app.models.inventory import InventoryItem
 from app.models.appointment import Appointment
 from app.models.customer import Customer
+from app.models.user import User as AppUser
+from app.modules.users.router import resolve_free_trial_state, PLAN_DURATION_DAYS
 
 router = APIRouter(prefix="/notifications", tags=["Notifications"])
 READ_RETENTION_DAYS = 7
@@ -320,6 +322,61 @@ def _generate_notifications(owner_id: int, db: Session):
 
     db.commit()
 
+    # -- Free trial warnings and plan expiration (owner account) ---------
+    try:
+        owner_user = db.query(AppUser).filter(AppUser.id == owner_id).first()
+        if owner_user:
+            # Free trial warning: active and <= 3 days left
+            try:
+                free_active, free_ends, free_days_left = resolve_free_trial_state(owner_user, db)
+            except Exception:
+                free_active, free_ends, free_days_left = False, None, 0
+
+            if free_active and free_days_left <= 3:
+                exists = db.query(Notification).filter(
+                    Notification.user_id == owner_id,
+                    Notification.type == "trial_warning",
+                    Notification.reference_id == owner_id,
+                    Notification.created_at >= today_start,
+                ).first()
+                if not exists:
+                    db.add(Notification(
+                        user_id=owner_id,
+                        type="trial_warning",
+                        title="Últimos días de prueba gratuita",
+                        message=f"Quedan {free_days_left} día(s) de prueba gratuita.",
+                        reference_id=owner_id,
+                        reference_type="user",
+                    ))
+
+            # Paid plan expiration warning: 3 days before plan end
+            try:
+                if owner_user.plan and owner_user.plan != 'free' and owner_user.plan_start_date:
+                    plan_expires = owner_user.plan_start_date + timedelta(days=PLAN_DURATION_DAYS)
+                    days_left = (plan_expires - datetime.utcnow()).days
+                    if 0 < days_left <= 3:
+                        exists2 = db.query(Notification).filter(
+                            Notification.user_id == owner_id,
+                            Notification.type == "plan_expiring",
+                            Notification.reference_id == owner_id,
+                            Notification.created_at >= today_start,
+                        ).first()
+                        if not exists2:
+                            db.add(Notification(
+                                user_id=owner_id,
+                                type="plan_expiring",
+                                title="Tu plan vence pronto",
+                                message=f"Tu plan vence en {days_left} día(s). Actualiza o renueva para evitar interrupciones.",
+                                reference_id=owner_id,
+                                reference_type="user",
+                            ))
+            except Exception:
+                pass
+            db.commit()
+    except Exception:
+        # keep notifications generation non-fatal
+        pass
+
 
 def _to_dict(n: Notification) -> dict:
     return {
@@ -332,3 +389,29 @@ def _to_dict(n: Notification) -> dict:
         "reference_type": n.reference_type,
         "created_at": n.created_at.isoformat(),
     }
+
+
+@router.post('/whatsapp')
+def send_whatsapp_placeholder(payload: dict, current_user: dict = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Placeholder endpoint to schedule or record WhatsApp outgoing messages.
+    Stores a `whatsapp_outgoing` notification for later processing/integration.
+    """
+    user = db.query(User).filter(User.id == int(current_user["id"])).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    owner_id, _ = get_owner_and_scope(user, db)
+    target = payload.get('target_phone') or payload.get('to')
+    message = payload.get('message') or payload.get('template') or ''
+    reference_id = payload.get('reference_id')
+
+    db.add(Notification(
+        user_id=owner_id,
+        type='whatsapp_outgoing',
+        title='WhatsApp programado',
+        message=(message[:240] if message else 'Mensaje programado'),
+        reference_id=reference_id,
+        reference_type='whatsapp',
+    ))
+    db.commit()
+    return {"ok": True, "scheduled": True}

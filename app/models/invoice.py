@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, Numeric, String, Text
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, Numeric, String, Text, JSON
 from sqlalchemy.orm import relationship
 from app.db.base import Base
 from app.core.encryption import EncryptedText
@@ -24,6 +24,7 @@ class Invoice(Base):
     
     # Información adicional
     notes = Column(EncryptedText(), nullable=True)
+    metadata_json = Column(JSON, nullable=True, default={})
     status = Column(String(30), default="issued", nullable=False)  # issued, paid, cancelled, void
     issued_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     due_date = Column(DateTime, nullable=True)
