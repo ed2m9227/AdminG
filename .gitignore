@@ -77,7 +77,6 @@ ONBOARDING_Y_PERMISOS.md
 
 # MÓDULOS INCOMPLETOS / EN DESARROLLO - NO SUBIR
 app/modules/assembly/
-app/modules/identity/
 app/modules/inventory_jac/
 app/modules/projects/
 app/modules/strategic_jac/
