@@ -27,13 +27,8 @@ from app.modules.authorizations.router import router as authorizations_router
 from app.modules.crm.router import router as crm_router
 from app.modules.onboarding.router import router as onboarding_router
 from app.modules.identity.router import router as identity_router
-from app.modules.treasury.router import router as treasury_router
-from app.modules.assembly.router import router as assembly_router
-from app.modules.projects.router import router as projects_router
-from app.modules.inventory_jac.router import router as inventory_jac_router
-from app.modules.strategic_jac.router import router as strategic_jac_router
 from app.modules.plans.service import seed_plans, seed_business_types
-from app.core.config import CORS_ALLOW_ALL_ORIGINS, CORS_ALLOW_ORIGINS, validate_runtime_config
+from app.core.config import CORS_ALLOW_ALL_ORIGINS, CORS_ALLOW_ORIGINS, validate_runtime_config, is_module_enabled
 # Side-effect import: ensure RefreshToken table is registered with SQLAlchemy metadata
 from app.models import refresh_token as _refresh_token_model  # noqa: F401
 
@@ -45,7 +40,11 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def _load_optional_router(module_path: str):
+def _load_optional_router(module_path: str, enabled: bool = True):
+    """Carga un router opcional, saltando si está deshabilitado por feature flag."""
+    if not enabled:
+        logger.info("Router deshabilitado por feature flag: %s", module_path)
+        return None
     try:
         module = importlib.import_module(module_path)
     except ModuleNotFoundError as exc:
@@ -54,6 +53,14 @@ def _load_optional_router(module_path: str):
     return getattr(module, "router", None)
 
 
+# Routers obligatorios (siempre se cargan)
+treasury_router = _load_optional_router("app.modules.treasury.router", is_module_enabled("treasury"))
+assembly_router = _load_optional_router("app.modules.assembly.router", is_module_enabled("assembly"))
+projects_router = _load_optional_router("app.modules.projects.router", is_module_enabled("projects"))
+inventory_jac_router = _load_optional_router("app.modules.inventory_jac.router", is_module_enabled("inventory_jac"))
+strategic_jac_router = _load_optional_router("app.modules.strategic_jac.router", is_module_enabled("strategic_jac"))
+
+# Routers adicionales opcionales
 reports_router = _load_optional_router("app.modules.reports.router")
 admin_router = _load_optional_router("app.modules.admin.router")
 ai_router = _load_optional_router("app.modules.ai.router")
@@ -198,12 +205,20 @@ app.include_router(authorizations_router)
 app.include_router(crm_router)
 app.include_router(onboarding_router)
 app.include_router(identity_router)
-app.include_router(treasury_router)
-app.include_router(assembly_router)
-app.include_router(projects_router)
-app.include_router(inventory_jac_router)
-app.include_router(strategic_jac_router)
 
+# Routers de módulos JAC (controlados por feature flags)
+if treasury_router is not None:
+    app.include_router(treasury_router)
+if assembly_router is not None:
+    app.include_router(assembly_router)
+if projects_router is not None:
+    app.include_router(projects_router)
+if inventory_jac_router is not None:
+    app.include_router(inventory_jac_router)
+if strategic_jac_router is not None:
+    app.include_router(strategic_jac_router)
+
+# Routers opcionales adicionales
 if reports_router is not None:
     app.include_router(reports_router)
 if admin_router is not None:

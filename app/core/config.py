@@ -49,6 +49,42 @@ AUTH_EXPOSE_RESET_TOKEN = _as_bool(os.getenv("AUTH_EXPOSE_RESET_TOKEN"), False)
 
 APP_ENV = os.getenv("APP_ENV", os.getenv("ENVIRONMENT", "development")).strip().lower()
 
+# ============================================================================
+# FEATURE FLAGS - MÓDULOS EN DESARROLLO
+# ============================================================================
+# Controla qué módulos JAC están habilitados (alternativa a .gitignore)
+# En .env: MODULES_ASSEMBLY=true|false, MODULES_INVENTORY_JAC=true|false, etc.
+MODULES = {
+    "assembly": _as_bool(os.getenv("MODULES_ASSEMBLY"), False),
+    "inventory_jac": _as_bool(os.getenv("MODULES_INVENTORY_JAC"), False),
+    "projects": _as_bool(os.getenv("MODULES_PROJECTS"), False),
+    "strategic_jac": _as_bool(os.getenv("MODULES_STRATEGIC_JAC"), False),
+    "treasury": _as_bool(os.getenv("MODULES_TREASURY"), False),
+    # Módulos principales (siempre activos)
+    "identity": True,
+    "auth": True,
+    "users": True,
+    "customers": True,
+    "business": True,
+    "appointments": True,
+    "services": True,
+    "plans": True,
+    "inventory": True,
+    "payments": True,
+    "cashregister": True,
+    "invoices": True,
+    "notifications": True,
+    "documents": True,
+    "authorizations": True,
+    "crm": True,
+    "onboarding": True,
+}
+
+
+def is_module_enabled(module_name: str) -> bool:
+    """Check if a module is enabled via feature flags."""
+    return MODULES.get(module_name.lower(), False)
+
 
 def is_production() -> bool:
     return APP_ENV in {"prod", "production"}

@@ -75,12 +75,14 @@ DATABASE_RESET.md
 FRONTEND_BUILD.md
 ONBOARDING_Y_PERMISOS.md
 
-# MÓDULOS INCOMPLETOS / EN DESARROLLO - NO SUBIR
-app/modules/assembly/
-app/modules/inventory_jac/
-app/modules/projects/
-app/modules/strategic_jac/
-app/modules/treasury/
+# MÓDULOS EN DESARROLLO - TRACKEADOS PERO PUEDEN ESTAR INACTIVOS VÍA CONFIG
+# (Usar feature flags en app/core/config.py para controlar qué módulos están activos, NO excluir de git)
+# - assembly: Gestión de asambleas (JAC)
+# - inventory_jac: Inventario especial para JAC
+# - projects: Gestión de proyectos (JAC)
+# - strategic_jac: Planeación estratégica (JAC)
+# - treasury: Tesorería (JAC)
+# Todos estos módulos se trackan en git para sincronización automática dev <-> prod
 frontend-dist/js/views/AssemblyView.js
 frontend-dist/js/views/GovernanceView.js
 frontend-dist/js/views/InventoryJacView.js
