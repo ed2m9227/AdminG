@@ -83,13 +83,7 @@ ONBOARDING_Y_PERMISOS.md
 # - strategic_jac: Planeación estratégica (JAC)
 # - treasury: Tesorería (JAC)
 # Todos estos módulos se trackan en git para sincronización automática dev <-> prod
-frontend-dist/js/views/AssemblyView.js
-frontend-dist/js/views/GovernanceView.js
-frontend-dist/js/views/InventoryJacView.js
-frontend-dist/js/views/ProjectsView.js
-frontend-dist/js/views/StrategicView.js
-frontend-dist/js/views/TreasuryView.js
-frontend/src/pages/Onboarding.tsx
+
 
 # SCRIPTS DE DEBUG Y TESTING LOCAL - NO SUBIR
 apply_void_migration.py
