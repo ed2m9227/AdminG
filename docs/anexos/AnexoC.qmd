@@ -1,0 +1,112 @@
+---
+title: "Anexo C - Modelo de datos y persistencia"
+author: "Eduardo Martinez"
+format:
+  html:
+    self-contained: true
+    mermaid-format: svg
+    toc: true
+    number-sections: true
+  pdf:
+    mermaid-format: png
+    toc: true
+    number-sections: true
+editor: visual
+---
+
+## Proposito del anexo
+
+Este anexo describe el modelo de datos de AdminG Systems, sus entidades principales, sus relaciones, las garantias de consistencia y la forma en que el almacenamiento soporta los requerimientos definidos en el [Anexo A](AnexoA.html) y la arquitectura del [Anexo B](AnexoB.html). La base actual usa SQLAlchemy y migraciones Alembic, con SQLite como persistencia inicial para desarrollo y despliegue controlado en VM. Para una operacion productiva con mayor concurrencia, se recomienda migrar a PostgreSQL.
+
+El modelo no solo guarda informacion. Tambien expresa reglas de negocio: que usuario posee clientes, que plan habilita caracteristicas, que cita puede generar pagos, que factura puede relacionarse con items, que inventario registra movimientos y que autorizaciones o documentos agregan trazabilidad.
+
+## Entidades principales
+
+La entidad `User` representa el sujeto de acceso al sistema. Contiene correo, contrasena hasheada, rol, plan, estado, jerarquia de usuario padre y datos de negocio. A partir de ella se organizan clientes, pagos, inventario, configuraciones, documentos y usuarios de equipo. `RefreshToken` permite renovar sesiones sin exponer credenciales.
+
+`Customer` representa la informacion de clientes. Puede conectarse con mascotas o entidades relacionadas, citas, pagos, CRM y documentos. `Appointment` administra agenda, servicios, estados y relacion con clientes. `Service` y `ServicePackage` permiten separar servicios individuales de paquetes comerciales.
+
+El bloque financiero esta formado por `Payment`, `PaymentItem`, `CashRegisterSession`, `CashTransaction`, `Invoice`, `InvoiceItem` y `Authorization`. Esta separacion evita que un pago sea confundido con una factura o con una sesion de caja. Una factura documenta una obligacion o venta; un pago registra el movimiento economico; caja agrupa movimientos en una jornada; autorizaciones registran aprobaciones.
+
+Inventario se organiza con `InventoryCategory`, `InventoryItem`, `InventoryMovement` e inventario especializado cuando aplica. Esta estructura permite controlar SKU, stock minimo, entradas, salidas y trazabilidad del producto. Planes se modela con `Plan`, `PlanLimit` y `PlanFeature`, lo que permite activar funciones sin modificar el nucleo de usuario.
+
+## Modelo entidad-relacion
+
+```{mermaid}
+erDiagram
+  USERS ||--o{ REFRESH_TOKENS : owns
+  USERS ||--o{ TEAM_USERS : delegates
+  USERS ||--o{ CUSTOMERS : owns
+  USERS ||--o{ BUSINESS_CONFIGS : configures
+  USERS ||--o{ PAYMENTS : records
+  USERS ||--o{ INVENTORY_CATEGORIES : owns
+  USERS ||--o{ INVENTORY_ITEMS : owns
+  USERS ||--o{ DOCUMENTS : issues
+  USERS ||--o{ AUTHORIZATIONS : requests
+
+  PLANS ||--o{ PLAN_LIMITS : defines
+  PLANS ||--o{ PLAN_FEATURES : enables
+  PLANS ||--o{ USERS : assigned_to
+
+  CUSTOMERS ||--o{ PETS : may_have
+  CUSTOMERS ||--o{ APPOINTMENTS : schedules
+  CUSTOMERS ||--o{ PAYMENTS : pays
+  CUSTOMERS ||--o{ INVOICES : receives
+  CUSTOMERS ||--o{ CRM_EVENTS : generates
+
+  SERVICES ||--o{ APPOINTMENTS : used_in
+  SERVICE_PACKAGES ||--o{ APPOINTMENTS : groups
+  APPOINTMENTS ||--o{ PAYMENTS : produces
+  APPOINTMENTS ||--o{ INVOICES : supports
+
+  INVOICES ||--o{ INVOICE_ITEMS : contains
+  INVOICES ||--o{ PAYMENTS : settled_by
+  PAYMENTS ||--o{ PAYMENT_ITEMS : contains
+  CASH_REGISTER_SESSIONS ||--o{ CASH_TRANSACTIONS : groups
+  PAYMENTS ||--o{ CASH_TRANSACTIONS : may_create
+
+  INVENTORY_CATEGORIES ||--o{ INVENTORY_ITEMS : classifies
+  INVENTORY_ITEMS ||--o{ INVENTORY_MOVEMENTS : tracks
+  INVENTORY_ITEMS ||--o{ INVOICE_ITEMS : sold_as
+
+  DOCUMENTS ||--o{ AUTHORIZATIONS : may_require
+  AUTHORIZATIONS ||--o{ AUDIT_LOGS : records
+```
+
+## Normalizacion y consistencia
+
+El modelo separa entidades con responsabilidades distintas. `Plan` no almacena todas sus reglas en una columna extensa, sino que delega limites y caracteristicas a tablas relacionadas. `Payment` no debe reemplazar a `Invoice`, porque el documento legal y el movimiento de dinero tienen ciclos de vida diferentes. `InventoryMovement` evita sobrescribir la historia del stock: cada entrada o salida queda registrada.
+
+Las garantias ACID se aplican especialmente en pagos, facturas e inventario. Si una factura descarga inventario y registra un pago, la operacion debe confirmarse completa o revertirse completa. SQLAlchemy facilita esta unidad de trabajo mediante sesiones y commits controlados. Las claves foraneas y validaciones de schemas reducen inconsistencias entre clientes, citas, pagos y usuarios.
+
+## Persistencia en VM y crecimiento
+
+En la etapa evidenciada por las capturas, SQLite es util porque simplifica el despliegue en Oracle Free Tier. El archivo `app.db` puede vivir en disco persistente de la VM, con copias de seguridad programadas. Sin embargo, el uso de SQLite requiere prudencia: no es ideal para alta concurrencia, multiples instancias o analitica pesada. La ruta de evolucion natural es PostgreSQL, conservando SQLAlchemy y Alembic para minimizar cambios.
+
+::: callout-note
+## Informacion para gestionar e introducir
+
+- Indicar ruta real de `app.db` en la VM Ubuntu.
+- Documentar politica de backup: frecuencia, ubicacion y prueba de restauracion.
+- Confirmar si se mantiene SQLite o se migra a PostgreSQL.
+- Insertar captura del dashboard donde se observan clientes, citas, productos e ingresos.
+:::
+
+## Diccionario resumido
+
+| Entidad | Funcion |
+|---|---|
+| `User` | Identidad, rol, plan y jerarquia. |
+| `Customer` | Cliente administrado por usuario u organizacion. |
+| `Appointment` | Agenda y relacion con servicios. |
+| `Payment` | Movimiento economico y estado de pago. |
+| `Invoice` | Documento comercial/fiscal con items. |
+| `InventoryItem` | Producto o SKU con stock. |
+| `InventoryMovement` | Historial de entradas y salidas. |
+| `PlanFeature` | Caracteristica habilitada por plan. |
+| `Authorization` | Aprobacion formal de acciones sensibles. |
+| `AuditLog` | Evidencia de cambios y trazabilidad. |
+
+## Cierre
+
+El modelo de datos de AdminG es el puente entre la arquitectura y la operacion real. Si las entidades se mantienen separadas, las reglas de negocio pueden crecer sin duplicidad. El proximo anexo toma este modelo como base para definir pruebas, seguridad, control de cambios y criterios de calidad.

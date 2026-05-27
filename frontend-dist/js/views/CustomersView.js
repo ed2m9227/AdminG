@@ -254,7 +254,7 @@ export class CustomersView {
                 </div>
                 ` : ''}
 
-                <div class="detail-panel${hasPet ? ' is-active' : ''}" data-modal-panel="responsible">
+                <div class="detail-panel is-active" data-modal-panel="responsible">
                     <div class="form-group">
                         <label>Nombre *</label>
                         <input type="text" name="full_name" value="${customer?.full_name || ''}" required>

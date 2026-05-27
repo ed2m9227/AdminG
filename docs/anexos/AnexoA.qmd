@@ -1,0 +1,103 @@
+---
+title: "Anexo A - Requerimientos y alcance de AdminG Systems"
+author: "Eduardo Martinez"
+format:
+  html:
+    self-contained: true
+    mermaid-format: svg
+    toc: true
+    number-sections: true
+  pdf:
+    mermaid-format: png
+    toc: true
+    number-sections: true
+editor: visual
+---
+
+## Proposito del anexo
+
+Este anexo organiza los requerimientos funcionales y no funcionales de **AdminG Systems**, una plataforma de administracion general orientada a pequenas y medianas empresas. Su funcion dentro del conjunto documental es definir que necesita resolver el sistema antes de explicar como se estructura, como persiste la informacion, como se valida su calidad y como se implementa en un entorno real. Por esa razon, este documento se conecta directamente con el [Anexo B](AnexoB.html), donde se traduce el alcance en arquitectura, con el [Anexo C](AnexoC.html), donde se concreta el modelo de datos, con el [Anexo D](AnexoD.html), donde se verifican criterios de calidad, y con el [Anexo E](AnexoE.html), donde se documenta la evidencia de implementacion y despliegue.
+
+AdminG combina autenticacion, gestion de usuarios, clientes, citas, servicios, pagos, inventario, reportes, documentos, autorizaciones, CRM, onboarding y control de planes. El objetivo no es construir un modulo aislado, sino una base SaaS progresiva: una aplicacion que pueda empezar con operaciones pequenas y crecer hacia control financiero, trazabilidad documental, gestion de equipos y reglas de negocio por plan.
+
+## Alcance funcional
+
+El sistema debe permitir registro e inicio de sesion mediante credenciales seguras, emision de tokens JWT, refresh tokens y control de acceso por usuario, rol y plan. Una vez autenticado, el usuario accede a un tablero de trabajo donde puede consultar metricas operativas, administrar clientes, programar citas, registrar servicios, manejar pagos, emitir facturas, controlar inventario y revisar reportes.
+
+Tambien se requiere un esquema comercial flexible. AdminG no debe tratar a todos los usuarios igual: un plan gratuito o basico puede habilitar clientes y agenda, mientras que planes superiores pueden activar inventario, pagos, reportes avanzados, CRM, facturacion, documentos o funciones de equipo. Esta regla exige que la autorizacion no dependa solo del rol, sino tambien del plan contratado, del estado de prueba, de los limites definidos y de las caracteristicas habilitadas.
+
+Las capturas de la plataforma muestran tres evidencias clave: la pantalla de login en direccion publica de Oracle Free Tier, la misma interfaz corriendo localmente en `localhost:8000`, y el dashboard autenticado con usuario `caniche1@example.com`, rol Manager y plan Free. Estas imagenes deben insertarse como evidencia del flujo minimo: acceso publico, validacion local durante desarrollo y entrada al panel operativo.
+
+::: callout-note
+## Informacion para gestionar e introducir
+
+- Insertar captura 1: login desplegado en Oracle Free Tier VM Micro Ubuntu, URL publica `http://157.151.206.208`.
+- Insertar captura 2: login local en VS Code con `http://localhost:8000/`.
+- Insertar captura 3: login con credenciales de prueba `caniche1@example.com`.
+- Confirmar si el dominio final reemplazara la IP publica y si se activara HTTPS.
+:::
+
+## Requerimientos funcionales y no funcionales
+
+| Categoria | Requerimiento |
+|---|---|
+| Autenticacion | Registro, login, recuperacion de contrasena, JWT, refresh token, usuario activo y cierre seguro de sesion. |
+| Usuarios y roles | Administrador, manager, miembros de equipo, subusuarios, permisos y jerarquia por organizacion. |
+| Clientes y CRM | CRUD de clientes, seguimiento, historial, datos de contacto, mascotas o entidades relacionadas segun tipo de negocio. |
+| Operacion | Agenda de citas, servicios, paquetes, pagos, facturas, caja, inventario y movimientos. |
+| Planes | Catalogo Free, Basic, Plus, Start, Max o equivalentes, limites y caracteristicas activables. |
+| Reportes | Dashboard, metricas de clientes, citas, productos, ingresos y comportamiento operativo. |
+| Documentos | Facturas, autorizaciones, documentos trazables y posibilidad de evolucionar hacia QR o auditoria formal. |
+| Seguridad | Hash de contrasenas, CORS estricto, secretos fuera del codigo, validacion Pydantic y control de acceso por recurso. |
+| Disponibilidad | Despliegue en VM Ubuntu con backend FastAPI sirviendo API y frontend estatico. |
+| Mantenibilidad | Arquitectura modular, pruebas automatizadas, migraciones, documentacion viva y ramas Git controladas. |
+
+## Mapa de requerimientos
+
+```{mermaid}
+flowchart TB
+  classDef user fill:#e8f2ff,stroke:#2563eb,stroke-width:2px,color:#0f172a;
+  classDef core fill:#ecfdf5,stroke:#059669,stroke-width:2px,color:#064e3b;
+  classDef money fill:#fff7ed,stroke:#ea580c,stroke-width:2px,color:#7c2d12;
+  classDef quality fill:#f8fafc,stroke:#475569,stroke-width:2px,color:#111827;
+  classDef annex fill:#f5f3ff,stroke:#7c3aed,stroke-width:2px,color:#2e1065;
+
+  U[Usuario Pyme]:::user --> A[Login y registro]:::core
+  A --> B{JWT valido?}:::core
+  B -- Si --> C[Dashboard operativo]:::core
+  B -- No --> X[Error o recuperacion]:::quality
+  C --> D[Clientes y CRM]:::core
+  C --> E[Citas y servicios]:::core
+  C --> F[Pagos, caja y facturas]:::money
+  C --> G[Inventario y SKU]:::money
+  C --> H[Reportes y metricas]:::core
+  C --> I[Equipo, roles y planes]:::core
+
+  D --> Q[Datos relacionales]:::quality
+  E --> Q
+  F --> Q
+  G --> Q
+  Q --> R[Pruebas, migraciones y auditoria]:::quality
+
+  subgraph Documentacion A-E
+    AA[Anexo A: que se requiere]:::annex
+    BB[Anexo B: como se arquitectura]:::annex
+    CC[Anexo C: como se modelan datos]:::annex
+    DD[Anexo D: como se valida calidad]:::annex
+    EE[Anexo E: como se implementa]:::annex
+  end
+
+  AA --> BB --> CC --> DD --> EE
+  R --> DD
+  C --> EE
+```
+
+## Criterios de aceptacion
+
+Un requerimiento se considera aceptado cuando existe una ruta o vista que lo soporte, un modelo o esquema que lo represente, una regla de permisos que limite su uso si aplica y una evidencia documental que lo conecte con los anexos. Por ejemplo, el login requiere pantalla visible, endpoint de autenticacion, hash de contrasena, token emitido, usuario persistido y evidencia de acceso al dashboard. El inventario requiere categorias, items, cantidades, movimientos, validaciones y reglas por plan.
+
+El despliegue en Oracle Free Tier agrega un requerimiento operativo: la aplicacion debe poder ejecutarse en una VM Micro Ubuntu con recursos limitados, por lo que el diseno debe ser prudente con memoria, procesos, logs, base de datos y dependencias. Para desarrollo en produccion controlada, SQLite puede ser aceptable como etapa inicial si se acompana de backups, pero el crecimiento natural del sistema debe contemplar PostgreSQL.
+
+## Cierre
+
+El Anexo A define a AdminG como una plataforma modular, segura y escalable. Su valor esta en integrar funciones administrativas que suelen estar separadas: clientes, agenda, pagos, inventario, reportes y documentos. La evidencia visual del login y dashboard demuestra que el alcance no es solo teorico; ya existe una interfaz desplegada y operable. Los anexos siguientes explican como esa necesidad se convierte en arquitectura, datos, calidad e implementacion.

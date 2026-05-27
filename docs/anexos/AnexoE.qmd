@@ -1,0 +1,116 @@
+---
+title: "Anexo E - Implementacion, evidencia y operacion"
+author: "Eduardo Martinez"
+format:
+  html:
+    self-contained: true
+    mermaid-format: svg
+    toc: true
+    number-sections: true
+  pdf:
+    mermaid-format: png
+    toc: true
+    number-sections: true
+editor: visual
+---
+
+## Proposito del anexo
+
+Este anexo documenta la implementacion de AdminG Systems y reune la evidencia practica del sistema en ejecucion. Cierra la cadena iniciada por el [Anexo A](AnexoA.html), que define requerimientos; continuada por el [Anexo B](AnexoB.html), que define arquitectura; sustentada por el [Anexo C](AnexoC.html), que define persistencia; y validada por el [Anexo D](AnexoD.html), que define calidad.
+
+La implementacion actual integra backend FastAPI, frontend estatico, routers modulares, base de datos relacional mediante SQLAlchemy, migraciones, semillas iniciales, control de planes y despliegue en Oracle Free Tier VM Micro Ubuntu. Las capturas muestran que existe una pantalla de login disponible por IP publica, una version local en VS Code y un dashboard autenticado con usuario de prueba.
+
+## Flujo implementado
+
+El flujo base inicia con la carga del frontend, continua con autenticacion, emision de token y consulta de datos del dashboard. El backend crea o verifica tablas al iniciar, ejecuta migraciones SQLite de arranque cuando aplica, siembra planes y tipos de negocio, y garantiza la existencia de un usuario administrador por defecto para tareas iniciales. La aplicacion monta archivos estaticos de `frontend-dist` y responde rutas SPA desde `index.html`.
+
+```{mermaid}
+sequenceDiagram
+  autonumber
+  participant Dev as Desarrollador
+  participant Git as Repo AdminG
+  participant VM as Oracle VM Ubuntu
+  participant App as FastAPI app.main
+  participant DB as app.db
+  participant User as Usuario final
+  participant UI as Frontend
+
+  Dev->>Git: Commit docs/codigo
+  Git->>VM: Pull o copia controlada
+  VM->>VM: Activar entorno Python
+  VM->>App: Iniciar servicio Uvicorn/Gunicorn
+  App->>App: validate_runtime_config()
+  App->>DB: create_all + startup migrations
+  App->>DB: seed_plans + seed_business_types
+  App->>UI: Servir index.html, CSS y JS
+  User->>UI: Abre IP publica
+  UI->>App: POST /auth/login
+  App->>DB: Verifica usuario
+  App-->>UI: JWT + datos de sesion
+  UI->>App: GET dashboard/reportes
+  App-->>UI: Metricas, rol, plan y modulos
+```
+
+## Endpoints y modulos visibles
+
+Los endpoints publicos esenciales son `POST /auth/register`, `POST /auth/login`, rutas de recuperacion si estan habilitadas y `GET /health`. Los endpoints protegidos incluyen usuarios, clientes, mascotas, negocio, citas, servicios, planes, inventario, pagos, caja, facturas, notificaciones, documentos, autorizaciones, CRM, onboarding e identidad. Tambien existen modulos opcionales que pueden activarse segun configuracion: reportes, administracion, IA, operaciones, proyectos, tesoreria y otros dominios especializados.
+
+En la evidencia visual se observa el login con campos de email y contrasena, boton de inicio de sesion, enlace de registro y recuperacion. Luego, el dashboard muestra barra lateral, plan Free, usuario `caniche1@example.com`, rol Manager, clientes totales, citas del dia, productos e ingresos del mes. Esa vista confirma que la autenticacion enlaza con datos operativos y reglas de plan.
+
+## Evidencias graficas
+
+::: callout-note
+## Informacion para gestionar e introducir
+
+Inserta aqui las imagenes finales con rutas reales, por ejemplo:
+
+```markdown
+![Login en Oracle Free Tier](images/anexo-e-login-oracle.png)
+![Login local en VS Code](images/anexo-e-login-local.png)
+![Credenciales de prueba](images/anexo-e-login-caniche.png)
+![Dashboard local autenticado](images/anexo-e-dashboard-local.png)
+![Dashboard publico autenticado](images/anexo-e-dashboard-oracle.png)
+```
+
+Descripcion sugerida: plataforma desplegada en Oracle Free Tier VM Micro Ubuntu para desarrollo en produccion, con acceso publico por IP, frontend servido por FastAPI y validacion local desde VS Code.
+:::
+
+## Despliegue operativo
+
+La operacion en la VM debe documentarse con comandos exactos. Una ruta prudente incluye crear usuario del sistema, instalar Python, clonar repositorio, crear entorno virtual, instalar `requirements.txt`, configurar `.env.production`, compilar o copiar `frontend-dist`, abrir puertos necesarios, validar `GET /health` e iniciar la aplicacion mediante `systemd` o un proceso controlado.
+
+```{mermaid}
+flowchart TB
+  classDef step fill:#f8fafc,stroke:#334155,stroke-width:2px,color:#0f172a;
+  classDef secure fill:#fee2e2,stroke:#dc2626,stroke-width:2px,color:#7f1d1d;
+  classDef ok fill:#dcfce7,stroke:#16a34a,stroke-width:2px,color:#14532d;
+
+  A[Preparar VM Ubuntu]:::step --> B[Instalar Python y dependencias]:::step
+  B --> C[Configurar .env production]:::secure
+  C --> D[Instalar requirements]:::step
+  D --> E[Preparar frontend-dist]:::step
+  E --> F[Arrancar FastAPI]:::step
+  F --> G{Health OK?}:::ok
+  G -- Si --> H[Validar login publico]:::ok
+  G -- No --> I[Revisar logs y variables]:::secure
+  H --> J[Probar dashboard y modulos]:::ok
+  J --> K[Registrar evidencia en Anexo E]:::ok
+  I --> C
+```
+
+## Checklist de cierre
+
+| Item | Estado sugerido |
+|---|---|
+| Login local carga en `localhost:8000` | Evidenciado por captura |
+| Login publico carga en IP Oracle | Evidenciado por captura |
+| Usuario de prueba inicia sesion | Evidenciado por captura |
+| Dashboard muestra plan, rol y metricas | Evidenciado por captura |
+| `GET /health` responde `ok` | Pendiente de registrar salida |
+| HTTPS y dominio | Pendiente de confirmar |
+| Backup de base de datos | Pendiente de politica |
+| Servicio systemd o supervisor | Pendiente de documentar |
+
+## Cierre
+
+La implementacion de AdminG ya cuenta con una base funcional y desplegada. El valor del Anexo E esta en convertir esa ejecucion en evidencia verificable: capturas, comandos, rutas, variables, pruebas y decisiones de operacion. Al mantener este anexo actualizado, el proyecto puede evolucionar sin perder trazabilidad entre lo planeado, lo construido y lo desplegado.

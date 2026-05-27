@@ -1,0 +1,126 @@
+---
+title: "Anexo B - Arquitectura y despliegue de AdminG Systems"
+author: "Eduardo Martinez"
+format:
+  html:
+    self-contained: true
+    mermaid-format: svg
+    toc: true
+    number-sections: true
+  pdf:
+    mermaid-format: png
+    toc: true
+    number-sections: true
+editor: visual
+---
+
+## Proposito del anexo
+
+Este anexo documenta la arquitectura de AdminG Systems y su despliegue en una VM Micro Ubuntu de Oracle Cloud Free Tier. Mientras el [Anexo A](AnexoA.html) define los requerimientos, este documento explica como se organizan los componentes para cumplirlos: frontend, backend, base de datos, seguridad, modulos de negocio, archivos estaticos, configuracion de entorno y publicacion.
+
+La arquitectura actual combina **FastAPI** como backend, **SQLAlchemy** como capa ORM, **Alembic** para migraciones, **Pydantic** para validacion, routers modulares por dominio y un frontend distribuido desde `frontend-dist`. En desarrollo local se accede por `http://localhost:8000/`; en el despliegue mostrado se accede por la IP publica `http://157.151.206.208`. Esta dualidad es importante: permite validar cambios localmente y luego observar la misma experiencia en la VM.
+
+::: callout-note
+## Informacion para gestionar e introducir
+
+- Insertar captura del login en IP publica de Oracle.
+- Insertar captura del login local en VS Code.
+- Indicar comandos exactos usados en Ubuntu para clonar, instalar dependencias, configurar `.env`, levantar Uvicorn/Gunicorn o servicio systemd.
+- Confirmar proveedor DNS, dominio final y certificado TLS si se agregan despues.
+:::
+
+## Arquitectura logica
+
+AdminG usa una arquitectura por capas con separacion clara de responsabilidades. La capa de presentacion renderiza las vistas, administra la sesion del usuario y consume la API. La capa de aplicacion recibe solicitudes HTTP, valida tokens, aplica reglas de plan y ejecuta casos de uso. La capa de persistencia guarda usuarios, clientes, citas, pagos, inventario, facturas, documentos y reglas comerciales.
+
+Los routers principales incluyen autenticacion, usuarios, clientes, mascotas, negocio, citas, servicios, planes, inventario, pagos, caja, facturas, notificaciones, documentos, autorizaciones, CRM, onboarding e identidad. Tambien existen routers opcionales para tesoreria, ensamble, proyectos, inventario JAC, estrategia, reportes, administracion, inteligencia artificial, operaciones y EOE, cargados por feature flags o disponibilidad de modulo.
+
+```{mermaid}
+flowchart LR
+  classDef edge fill:#f8fafc,stroke:#334155,stroke-width:2px,color:#0f172a;
+  classDef api fill:#e0f2fe,stroke:#0284c7,stroke-width:2px,color:#0c4a6e;
+  classDef data fill:#dcfce7,stroke:#16a34a,stroke-width:2px,color:#14532d;
+  classDef sec fill:#fee2e2,stroke:#dc2626,stroke-width:2px,color:#7f1d1d;
+  classDef cloud fill:#f5f3ff,stroke:#7c3aed,stroke-width:2px,color:#2e1065;
+
+  Browser[Browser del usuario]:::edge -->|HTTP publico| Oracle[Oracle Free Tier VM Micro Ubuntu]:::cloud
+  Dev[VS Code / localhost:8000]:::edge -->|validacion local| API
+
+  subgraph Oracle[VM Ubuntu - entorno desplegado]
+    Web[Frontend estatico frontend-dist]:::edge
+    API[FastAPI app.main]:::api
+    Static[CSS / JS / Assets]:::edge
+    DB[(SQLite app.db inicial)]:::data
+    Logs[Logs y servicio de proceso]:::cloud
+  end
+
+  Web -->|fetch JSON| API
+  API -->|SQLAlchemy sessions| DB
+  API --> Static
+  API --> Logs
+
+  subgraph Seguridad
+    JWT[JWT + refresh tokens]:::sec
+    CORS[CORS por allowlist]:::sec
+    ENV[SECRET_KEY y variables .env]:::sec
+    Hash[Hash bcrypt/passlib]:::sec
+  end
+
+  API --> JWT
+  API --> CORS
+  API --> ENV
+  API --> Hash
+
+  API --> Auth[Auth]
+  API --> Users[Users]
+  API --> Customers[Customers / CRM]
+  API --> Ops[Citas / Servicios]
+  API --> Money[Pagos / Caja / Facturas]
+  API --> Stock[Inventario]
+  API --> Docs[Documentos / Autorizaciones]
+  API --> Plans[Planes / Permisos]
+```
+
+## Despliegue en Oracle Free Tier
+
+El despliegue en Oracle Free Tier es adecuado para desarrollo en produccion controlada porque ofrece una VM siempre gratuita, acceso SSH, disco persistente y libertad para ejecutar FastAPI como proceso del sistema. Frente a plataformas serverless, esta opcion permite conservar SQLite temporalmente, servir el frontend estatico desde la misma aplicacion y controlar configuraciones de red, puertos, firewall y logs.
+
+La VM debe considerarse un entorno productivo de baja escala, no un simple laboratorio. Por ello, aunque la captura muestre `Not secure`, el cierre tecnico debe incluir HTTPS, dominio, CORS restringido, variables de entorno reales, secretos robustos, bloqueo de endpoints administrativos de desarrollo y backups de `app.db`. Si el proyecto crece o se habilita multiusuario intensivo, la persistencia debe migrarse a PostgreSQL.
+
+## Ciclo de solicitud
+
+```{mermaid}
+sequenceDiagram
+  autonumber
+  participant U as Usuario
+  participant B as Browser
+  participant VM as Oracle VM Ubuntu
+  participant API as FastAPI
+  participant DB as SQLite/PostgreSQL
+  participant MOD as Modulo negocio
+
+  U->>B: Abre IP publica o dominio
+  B->>VM: GET /
+  VM-->>B: index.html + JS + CSS
+  U->>B: Ingresa email y contrasena
+  B->>API: POST /auth/login
+  API->>DB: Busca usuario y refresh token
+  DB-->>API: Datos de usuario y plan
+  API-->>B: JWT + datos de sesion
+  B->>API: GET /reports/dashboard
+  API->>MOD: Valida permisos y plan
+  MOD->>DB: Consulta metricas
+  DB-->>MOD: Resultados
+  MOD-->>API: Respuesta normalizada
+  API-->>B: Dashboard operativo
+```
+
+## Decisiones arquitectonicas
+
+Se eligio FastAPI por su rendimiento, tipado, documentacion automatica y compatibilidad con Pydantic. SQLAlchemy permite mantener independencia parcial frente al motor de base de datos y Alembic permite evolucionar esquemas. El frontend distribuido como archivos estaticos simplifica el despliegue inicial: la misma app sirve API y SPA, evitando configurar un servidor web adicional en la primera etapa.
+
+La modularidad es el punto central. Cada dominio tiene router, schemas, modelos y reglas propias. Esto evita que autenticacion, inventario, pagos o CRM se mezclen en una unica capa dificil de mantener. Ademas, los routers opcionales permiten que el sistema crezca sin obligar a cargar todos los modulos siempre.
+
+## Conexiones documentales
+
+La arquitectura responde a los requerimientos del Anexo A, depende del modelo de datos descrito en el Anexo C, debe verificarse con los criterios del Anexo D y se evidencia en la implementacion del Anexo E. Cualquier cambio en despliegue, dominio, HTTPS, base de datos o proceso de arranque debe actualizar este anexo y reflejarse en los demas.
