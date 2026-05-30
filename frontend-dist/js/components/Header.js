@@ -34,6 +34,13 @@ export class Header {
             language: this._readStoredValue(STORAGE_KEYS.language, 'ES'),
         };
 
+        this.quickSettingsSections = [
+            { id: 'interface', title: t('quick.section_interface', 'Interfaz'), icon: '⚙️' },
+            { id: 'security', title: t('quick.section_security', 'Seguridad'), icon: '🔒' },
+            { id: 'session', title: t('quick.section_session', 'Sesión'), icon: '👤' },
+        ];
+        this.quickSettingsCollapsed = this._loadQuickSettingsSectionState();
+
         this.titles = {
             dashboard: t('menu.dashboard', 'Dashboard'),
             customers: t('menu.customers', 'Clientes'),
@@ -117,16 +124,30 @@ export class Header {
                                 </div>
                             </div>
                             <div id="quickSettingsList" class="quick-settings-list">
-                                ${quickActions.map(action => `
-                                    <button class="quick-settings-item${action.danger ? ' danger' : ''}" data-quick-action="${action.id}">
-                                        <span class="quick-settings-icon">${action.icon}</span>
-                                        <span class="quick-settings-copy">
-                                            <span class="quick-settings-label">${action.label}</span>
-                                            <span class="quick-settings-hint">${action.hint}</span>
-                                        </span>
-                                        ${action.status ? `<span class="quick-settings-status">${action.status}</span>` : ''}
-                                    </button>
-                                `).join('')}
+                                ${this._getQuickActionSections().map((section) => {
+                                    const isCollapsed = this.quickSettingsCollapsed[section.id];
+                                    return `
+                                        <div class="quick-settings-section${isCollapsed ? ' collapsed' : ''}">
+                                            <button type="button" class="quick-settings-section-header" data-quick-settings-section="${section.id}">
+                                                <span class="quick-settings-section-icon">${section.icon}</span>
+                                                <span>${section.title}</span>
+                                                <span class="quick-settings-section-indicator">${isCollapsed ? '+' : '−'}</span>
+                                            </button>
+                                            <div class="quick-settings-section-items">
+                                                ${section.items.map(action => `
+                                                    <button class="quick-settings-item${action.danger ? ' danger' : ''}" data-quick-action="${action.id}">
+                                                        <span class="quick-settings-icon">${action.icon}</span>
+                                                        <span class="quick-settings-copy">
+                                                            <span class="quick-settings-label">${action.label}</span>
+                                                            <span class="quick-settings-hint">${action.hint}</span>
+                                                        </span>
+                                                        ${action.status ? `<span class="quick-settings-status">${action.status}</span>` : ''}
+                                                    </button>
+                                                `).join('')}
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
                             </div>
                         </div>
                     </div>
@@ -438,9 +459,14 @@ export class Header {
     }
 
     _getQuickActions() {
+        const currentUser = authService.getCurrentUser() || {};
+        const plan = (currentUser.plan || 'free').toLowerCase();
+        const isAdmin = currentUser.role === 'admin';
+
         return [
             {
                 id: 'toggle-theme',
+                section: 'interface',
                 icon: this.preferences.theme === 'night' ? '☀' : '☾',
                 label: this.preferences.theme === 'night' ? t('quick.theme_day', 'Modo día') : t('quick.theme_night', 'Modo noche'),
                 hint: t('quick.theme_hint', 'Cambia la interfaz entre claro y oscuro'),
@@ -448,6 +474,7 @@ export class Header {
             },
             {
                 id: 'change-language',
+                section: 'interface',
                 icon: '🌐',
                 label: t('quick.change_language', 'Cambiar idioma'),
                 hint: t('quick.change_language_hint', 'Alterna entre ES / EN / DE / RU'),
@@ -455,18 +482,30 @@ export class Header {
             },
             {
                 id: 'toggle-fullscreen',
+                section: 'interface',
                 icon: document.fullscreenElement ? '⊡' : '⛶',
                 label: document.fullscreenElement ? t('quick.fullscreen_off', 'Salir de pantalla completa') : t('quick.fullscreen_on', 'Pantalla completa'),
                 hint: t('quick.fullscreen_hint', 'Usa más espacio para operar'),
             },
             {
+                id: 'change-password',
+                section: 'security',
+                icon: '🔑',
+                label: t('quick.change_password', 'Cambiar contraseña'),
+                hint: t('quick.change_password_hint', 'Actualiza tu contraseña de forma segura'),
+                hidden: false,
+            },
+            {
                 id: '2fa-settings',
+                section: 'security',
                 icon: '🔐',
                 label: t('quick.2fa', 'Verificación en 2 pasos'),
                 hint: t('quick.2fa_hint', 'Configura Google Authenticator / Authy'),
+                hidden: !['pro', 'max', 'admin'].includes(plan) && !isAdmin,
             },
             {
                 id: 'logout',
+                section: 'session',
                 icon: '⇦',
                 label: t('quick.logout', 'Cerrar sesión'),
                 hint: t('quick.logout_hint', 'Salir de la cuenta actual'),
@@ -475,22 +514,78 @@ export class Header {
         ];
     }
 
+    _loadQuickSettingsSectionState() {
+        try {
+            const stored = window.localStorage.getItem('adming.quick.settings.collapsed');
+            return stored ? JSON.parse(stored) : {
+                interface: false,
+                security: true,
+                session: false,
+            };
+        } catch (_error) {
+            return {
+                interface: false,
+                security: true,
+                session: false,
+            };
+        }
+    }
+
+    _saveQuickSettingsSectionState() {
+        window.localStorage.setItem('adming.quick.settings.collapsed', JSON.stringify(this.quickSettingsCollapsed));
+    }
+
+    _toggleQuickSettingsSection(sectionId) {
+        this.quickSettingsCollapsed[sectionId] = !this.quickSettingsCollapsed[sectionId];
+        this._saveQuickSettingsSectionState();
+        this._renderQuickSettingsActions();
+    }
+
+    _getQuickActionSections() {
+        const actions = this._getQuickActions().filter((action) => !action.hidden);
+        return this.quickSettingsSections
+            .map((section) => ({
+                ...section,
+                items: actions.filter((action) => action.section === section.id),
+            }))
+            .filter((section) => section.items.length > 0);
+    }
 
 
     _renderQuickSettingsActions() {
         const quickSettingsList = document.getElementById('quickSettingsList');
         if (!quickSettingsList) return;
 
-        quickSettingsList.innerHTML = this._getQuickActions().map(action => `
-            <button class="quick-settings-item${action.danger ? ' danger' : ''}" data-quick-action="${action.id}">
-                <span class="quick-settings-icon">${action.icon}</span>
-                <span class="quick-settings-copy">
-                    <span class="quick-settings-label">${action.label}</span>
-                    <span class="quick-settings-hint">${action.hint}</span>
-                </span>
-                ${action.status ? `<span class="quick-settings-status">${action.status}</span>` : ''}
-            </button>
-        `).join('');
+        const sections = this._getQuickActionSections();
+        quickSettingsList.innerHTML = sections.map((section) => {
+            const isCollapsed = this.quickSettingsCollapsed[section.id];
+            return `
+                <div class="quick-settings-section${isCollapsed ? ' collapsed' : ''}">
+                    <button type="button" class="quick-settings-section-header" data-quick-settings-section="${section.id}">
+                        <span>${section.title}</span>
+                        <span class="quick-settings-section-indicator">${isCollapsed ? '+' : '−'}</span>
+                    </button>
+                    <div class="quick-settings-section-items">
+                        ${section.items.map(action => `
+                            <button class="quick-settings-item${action.danger ? ' danger' : ''}" data-quick-action="${action.id}">
+                                <span class="quick-settings-icon">${action.icon}</span>
+                                <span class="quick-settings-copy">
+                                    <span class="quick-settings-label">${action.label}</span>
+                                    <span class="quick-settings-hint">${action.hint}</span>
+                                </span>
+                                ${action.status ? `<span class="quick-settings-status">${action.status}</span>` : ''}
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        quickSettingsList.querySelectorAll('[data-quick-settings-section]').forEach((button) => {
+            button.addEventListener('click', () => {
+                this._toggleQuickSettingsSection(button.dataset.quickSettingsSection);
+            });
+        });
     }
 
     async _handleQuickAction(action) {
@@ -522,6 +617,70 @@ export class Header {
                     this._startPolling();
                 }
                 break;
+            case 'change-password': {
+                this._closeQuickSettings();
+                const modalId = `change-password-modal-${Date.now()}`;
+                const content = `
+                    <div class="form-group">
+                        <label for="${modalId}-current">${t('quick.current_password', 'Contraseña actual')}</label>
+                        <input id="${modalId}-current" type="password" class="form-control" placeholder="${t('quick.current_password_placeholder', 'Ingresa tu contraseña actual')}" />
+                    </div>
+                    <div class="form-group">
+                        <label for="${modalId}-new">${t('quick.new_password', 'Nueva contraseña')}</label>
+                        <input id="${modalId}-new" type="password" class="form-control" placeholder="${t('quick.new_password_placeholder', 'Mínimo 8 caracteres')}" />
+                    </div>
+                    <div id="${modalId}-error" class="error hidden" style="margin-top:12px;color:#c53030;font-size:13px;"></div>
+                    <div class="modal-actions" style="margin-top:18px;display:flex;justify-content:flex-end;gap:10px;">
+                        <button class="btn" data-cancel>${t('quick.cancel', 'Cancelar')}</button>
+                        <button class="btn btn-primary" data-confirm>${t('quick.save', 'Guardar')}</button>
+                    </div>
+                `;
+
+                const modalElement = modal.show({
+                    title: t('quick.change_password', 'Cambiar contraseña'),
+                    content,
+                    size: 'small',
+                });
+
+                const closeModal = () => modal.close(modalElement);
+                const showError = (message) => {
+                    const errorEl = modalElement.querySelector(`#${modalId}-error`);
+                    if (errorEl) {
+                        errorEl.textContent = message;
+                        errorEl.classList.remove('hidden');
+                    }
+                };
+
+                modalElement.addEventListener('click', async (e) => {
+                    if (e.target.closest('[data-confirm]')) {
+                        const currentPassword = modalElement.querySelector(`#${modalId}-current`)?.value || '';
+                        const newPassword = modalElement.querySelector(`#${modalId}-new`)?.value || '';
+                        if (!currentPassword || !newPassword) {
+                            showError(t('quick.password_fields_required', 'Debes completar ambos campos.'));
+                            return;
+                        }
+                        if (newPassword.length < 8) {
+                            showError(t('quick.password_min_length', 'La contraseña debe tener al menos 8 caracteres.'));
+                            return;
+                        }
+
+                        try {
+                            await apiService.changePassword(currentPassword, newPassword);
+                            closeModal();
+                            await modal.alert({
+                                title: t('quick.password_changed', 'Contraseña actualizada'),
+                                message: t('quick.password_changed_success', 'Tu contraseña se ha actualizado correctamente.'),
+                                type: 'success',
+                            });
+                        } catch (err) {
+                            showError(err.message || t('quick.password_change_failed', 'No se pudo cambiar la contraseña.'));
+                        }
+                    } else if (e.target.closest('[data-cancel]') || e.target.closest('[data-close]')) {
+                        closeModal();
+                    }
+                });
+                return;
+            }
             case '2fa-settings':
                 this._closeQuickSettings();
                 router.navigate('totp-setup');

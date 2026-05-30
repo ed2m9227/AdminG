@@ -180,6 +180,57 @@ body {
     margin-top: var(--spacing-lg);
 }
 
+.sidebar-section {
+    margin-bottom: 12px;
+    border-radius: 1rem;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.sidebar-section-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 12px var(--spacing-lg);
+    border: none;
+    background: transparent;
+    color: #e5e7eb;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.sidebar-section-header:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.sidebar-section-items {
+    display: grid;
+    gap: 0;
+}
+
+.sidebar-section.collapsed .sidebar-section-items {
+    display: none;
+}
+
+.section-icon {
+    width: 20px;
+    text-align: center;
+    font-size: 18px;
+}
+
+.section-title {
+    flex: 1;
+    text-align: left;
+}
+
+.section-chevron {
+    font-size: 14px;
+}
+
 .menu-item {
     padding: 12px var(--spacing-lg);
     cursor: pointer;
@@ -517,6 +568,49 @@ body {
     color: var(--primary);
     font-size: 11px;
     font-weight: 700;
+}
+
+.quick-settings-section {
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.quick-settings-section-header {
+    width: 100%;
+    border: 0;
+    background: rgba(15, 23, 42, 0.04);
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    color: var(--gray-800);
+    font-weight: 700;
+    cursor: pointer;
+    text-align: left;
+}
+
+.quick-settings-section-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    font-size: 16px;
+}
+
+.quick-settings-section-items {
+    display: grid;
+    gap: 4px;
+    padding: 8px 0 10px;
+}
+
+.quick-settings-section.collapsed .quick-settings-section-items {
+    display: none;
+}
+
+.quick-settings-section.collapsed .quick-settings-section-header {
+    background: rgba(15, 23, 42, 0.08);
 }
 
 .user-email {

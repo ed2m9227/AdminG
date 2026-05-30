@@ -557,11 +557,25 @@ class App {
             return;
         }
 
-        // Forzar recarga para reflejar cambios de plan/rol/tipo de negocio sin hard refresh
-        await Promise.all([
-            sidebar.loadUserFeatures(true),
-            sidebar.loadBusinessLabels(true),
-        ]);
+        // Cargar labels (necesarios) y cargar features en background para evitar retrasos
+        // Labels pueden ser necesarias para render inicial; features pueden llegar después.
+        // Cargamos features en background y re-renderizamos el sidebar cuando terminen.
+        sidebar.loadUserFeatures(true).then(() => {
+            try {
+                const sidebarEl = document.getElementById('sidebar');
+                if (sidebarEl) {
+                    const newHtml = sidebar.render();
+                    sidebarEl.outerHTML = newHtml;
+                    // Re-inicializar listeners
+                    sidebar.init();
+                    header.init();
+                }
+            } catch (err) {
+                console.warn('Could not refresh sidebar after loading features:', err);
+            }
+        }).catch(() => {});
+
+        await sidebar.loadBusinessLabels(true);
         
         // Renderizar sidebar
         const sidebarHTML = sidebar.render();

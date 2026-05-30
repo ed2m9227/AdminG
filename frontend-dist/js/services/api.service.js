@@ -263,6 +263,13 @@ export class ApiService {
         return this.post('/auth/reset-password', { token, new_password: newPassword }, false);
     }
 
+    async changePassword(currentPassword, newPassword) {
+        return this.post('/auth/change-password', {
+            current_password: currentPassword,
+            new_password: newPassword,
+        });
+    }
+
     async getVersion() {
         return this.get('/api/version', false);
     }

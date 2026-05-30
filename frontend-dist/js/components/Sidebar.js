@@ -60,6 +60,44 @@ export class Sidebar {
             { id: 'inventory-jac', icon: '📦', label: 'Inventario JAC', route: 'inventory-jac', parentId: 'governance', roles: ['admin', 'manager'], businessType: 'gobernanza' },
             { id: 'strategic', icon: '🎯', label: 'Estrategia', route: 'strategic', parentId: 'governance', roles: ['admin', 'manager'], businessType: 'gobernanza' },
         ];
+
+        const itemSectionMap = {
+            dashboard: 'basic',
+            customers: 'basic',
+            appointments: 'basic',
+            inventory: 'basic',
+            crm: 'basic',
+            payments: 'finance',
+            invoices: 'finance',
+            reports: 'finance',
+            'team-expenses': 'finance',
+            team: 'team',
+            'team-risks': 'team',
+            'team-employees': 'team',
+            'team-payroll': 'team',
+            'team-requests': 'team',
+            'team-tracking': 'team',
+            'team-movements': 'team',
+            'cashregister': 'advanced',
+            documents: 'advanced',
+            authorizations: 'advanced',
+            'admin-ia': 'advanced',
+            admin: 'advanced',
+            businessconfig: 'advanced',
+            businesstypes: 'advanced',
+            governance: 'advanced',
+            treasury: 'advanced',
+            assembly: 'advanced',
+            'projects-jac': 'advanced',
+            'inventory-jac': 'advanced',
+            strategic: 'advanced',
+        };
+
+        this.allMenuItems = this.allMenuItems.map(item => ({
+            ...item,
+            section: itemSectionMap[item.id] || 'advanced',
+        }));
+
         this.userFeatures = [];
         this.itemAccessMap = {};
         this.businessLabels = {
@@ -67,6 +105,73 @@ export class Sidebar {
             appointment: 'Citas',
         };
         this.businessLabelsLoaded = false;
+        this.sidebarSections = [
+            { id: 'basic', title: 'Básica', icon: '🧩' },
+            { id: 'team', title: 'Mi equipo', icon: '👥' },
+            { id: 'finance', title: 'Financiera', icon: '💼' },
+            { id: 'advanced', title: 'Avanzada', icon: '⚙️' },
+        ];
+        this.collapsedSections = this._loadCollapsedSections();
+    }
+
+    _loadCollapsedSections() {
+        try {
+            const stored = window.localStorage.getItem('adming.sidebar_sections_collapsed');
+            return stored ? JSON.parse(stored) : {};
+        } catch (_error) {
+            return {};
+        }
+    }
+
+    _saveCollapsedSections() {
+        window.localStorage.setItem('adming.sidebar_sections_collapsed', JSON.stringify(this.collapsedSections));
+    }
+
+    toggleSection(sectionId) {
+        this.collapsedSections[sectionId] = !this.collapsedSections[sectionId];
+        this._saveCollapsedSections();
+    }
+
+    isSectionCollapsed(sectionId) {
+        return !!this.collapsedSections[sectionId];
+    }
+
+    getSidebarSections(menuItems) {
+        const grouped = this.sidebarSections.map(section => ({
+            ...section,
+            items: [],
+        }));
+        const sectionMap = grouped.reduce((acc, section) => {
+            acc[section.id] = section;
+            return acc;
+        }, {});
+
+        menuItems.forEach(item => {
+            const sectionId = item.section || 'advanced';
+            if (!sectionMap[sectionId]) {
+                sectionMap[sectionId] = { id: sectionId, title: item.section || 'Avanzada', icon: '⚙️', items: [] };
+                grouped.push(sectionMap[sectionId]);
+            }
+            sectionMap[sectionId].items.push(item);
+        });
+
+        return grouped.filter(section => section.items.length > 0);
+    }
+
+    renderSection(section) {
+        const isCollapsed = this.isSectionCollapsed(section.id);
+        return `
+            <div class="sidebar-section${isCollapsed ? ' collapsed' : ''}" data-section="${section.id}">
+                <button type="button" class="sidebar-section-header" data-section="${section.id}">
+                    <span class="section-icon">${section.icon}</span>
+                    <span class="section-title">${section.title}</span>
+                    <span class="section-chevron">${isCollapsed ? '▸' : '▾'}</span>
+                </button>
+                <div class="sidebar-section-items"${isCollapsed ? ' style="display:none;"' : ''}>
+                    ${section.items.map(item => this.renderMenuItem(item, !!this.itemAccessMap[item.route]?.isBlocked)).join('')}
+                </div>
+            </div>
+        `;
     }
 
     getDefaultLabelsByBusinessType(businessType) {
@@ -296,6 +401,7 @@ export class Sidebar {
 
         const userPlan = user?.plan || 'free';
         const userEmail = user?.email || 'Usuario';
+        const sections = this.getSidebarSections(filteredItems);
 
         return `
             <div class="sidebar-overlay" id="sidebarOverlay"></div>
@@ -308,7 +414,7 @@ export class Sidebar {
                     </div>
                 </div>
                 <nav class="sidebar-menu">
-                    ${filteredItems.map(item => this.renderMenuItem(item, !!this.itemAccessMap[item.route]?.isBlocked)).join('')}
+                    ${sections.map(section => this.renderSection(section)).join('')}
                 </nav>
             </div>
         `;
@@ -347,8 +453,19 @@ export class Sidebar {
 
         if (!sidebar) return;
 
-        // Click en menu items
+        // Click en sección o items del menú
         sidebar.addEventListener('click', (e) => {
+            const sectionHeader = e.target.closest('.sidebar-section-header');
+            if (sectionHeader) {
+                const sectionId = sectionHeader.dataset.section;
+                if (sectionId) {
+                    this.toggleSection(sectionId);
+                    const sectionEl = sectionHeader.closest('.sidebar-section');
+                    sectionEl?.classList.toggle('collapsed');
+                }
+                return;
+            }
+
             const menuItem = e.target.closest('.menu-item');
             if (menuItem) {
                 const route = menuItem.dataset.route;
