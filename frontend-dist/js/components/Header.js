@@ -131,7 +131,7 @@ export class Header {
                                             <button type="button" class="quick-settings-section-header" data-quick-settings-section="${section.id}">
                                                 <span class="quick-settings-section-icon">${section.icon}</span>
                                                 <span>${section.title}</span>
-                                                <span class="quick-settings-section-indicator">${isCollapsed ? '+' : '−'}</span>
+                                                <span class="quick-settings-section-indicator">${isCollapsed ? '+' : '-'}</span>
                                             </button>
                                             <div class="quick-settings-section-items">
                                                 ${section.items.map(action => `
@@ -201,10 +201,26 @@ export class Header {
         const quickSettingsList = document.getElementById('quickSettingsList');
         if (quickSettingsList) {
             quickSettingsList.addEventListener('click', async (e) => {
+                const sectionBtn = e.target.closest('[data-quick-settings-section]');
+                if (sectionBtn) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this._toggleQuickSettingsSection(sectionBtn.dataset.quickSettingsSection);
+                    return;
+                }
+
                 const actionBtn = e.target.closest('[data-quick-action]');
                 if (!actionBtn) return;
                 e.preventDefault();
+                e.stopPropagation();
                 await this._handleQuickAction(actionBtn.getAttribute('data-quick-action'));
+            });
+        }
+
+        const quickSettingsDropdown = document.getElementById('quickSettingsDropdown');
+        if (quickSettingsDropdown) {
+            quickSettingsDropdown.addEventListener('click', (e) => {
+                e.stopPropagation();
             });
         }
 
@@ -563,7 +579,7 @@ export class Header {
                 <div class="quick-settings-section${isCollapsed ? ' collapsed' : ''}">
                     <button type="button" class="quick-settings-section-header" data-quick-settings-section="${section.id}">
                         <span>${section.title}</span>
-                        <span class="quick-settings-section-indicator">${isCollapsed ? '+' : '−'}</span>
+                        <span class="quick-settings-section-indicator">${isCollapsed ? '+' : '-'}</span>
                     </button>
                     <div class="quick-settings-section-items">
                         ${section.items.map(action => `
@@ -581,11 +597,6 @@ export class Header {
             `;
         }).join('');
 
-        quickSettingsList.querySelectorAll('[data-quick-settings-section]').forEach((button) => {
-            button.addEventListener('click', () => {
-                this._toggleQuickSettingsSection(button.dataset.quickSettingsSection);
-            });
-        });
     }
 
     async _handleQuickAction(action) {
