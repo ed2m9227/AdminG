@@ -167,7 +167,7 @@ export class Sidebar {
                     <span class="section-title">${section.title}</span>
                     <span class="section-chevron">${isCollapsed ? '▸' : '▾'}</span>
                 </button>
-                <div class="sidebar-section-items"${isCollapsed ? ' style="display:none;"' : ''}>
+                <div class="sidebar-section-items">
                     ${section.items.map(item => this.renderMenuItem(item, !!this.itemAccessMap[item.route]?.isBlocked)).join('')}
                 </div>
             </div>
@@ -457,11 +457,21 @@ export class Sidebar {
         sidebar.addEventListener('click', (e) => {
             const sectionHeader = e.target.closest('.sidebar-section-header');
             if (sectionHeader) {
+                e.preventDefault();
+                e.stopPropagation();
                 const sectionId = sectionHeader.dataset.section;
                 if (sectionId) {
                     this.toggleSection(sectionId);
                     const sectionEl = sectionHeader.closest('.sidebar-section');
                     sectionEl?.classList.toggle('collapsed');
+                    const sectionItems = sectionEl?.querySelector('.sidebar-section-items');
+                    if (sectionItems) {
+                        sectionItems.style.display = '';
+                    }
+                    const chevron = sectionHeader.querySelector('.section-chevron');
+                    if (chevron) {
+                        chevron.textContent = this.isSectionCollapsed(sectionId) ? '▸' : '▾';
+                    }
                 }
                 return;
             }
