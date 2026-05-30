@@ -29,6 +29,7 @@ from app.models.governance import (
     KeyRotationEvent,
 )
 from app.models.crm import Consultation, Treatment, Vaccine, MedicalRecord
+from app.models.veterinary import VeterinaryOperation
 
 # Optional domain modules: avoid startup crashes if a deployment branch does not include them yet.
 try:
@@ -98,6 +99,7 @@ __all__ = [
     "Treatment",
     "Vaccine",
     "MedicalRecord",
+    "VeterinaryOperation",
 ]
 
 if PayrollPayment is not None:

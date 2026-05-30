@@ -20,6 +20,11 @@ class ResetPasswordSchema(BaseModel):
     new_password: str
 
 
+class ChangePasswordSchema(BaseModel):
+    current_password: str
+    new_password: str
+
+
 # --- 2FA / TOTP ---
 
 class TotpVerifySchema(BaseModel):

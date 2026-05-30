@@ -27,6 +27,7 @@ from app.modules.authorizations.router import router as authorizations_router
 from app.modules.crm.router import router as crm_router
 from app.modules.onboarding.router import router as onboarding_router
 from app.modules.identity.router import router as identity_router
+from app.modules.veterinary.router import router as veterinary_router
 from app.modules.plans.service import seed_plans, seed_business_types
 from app.core.config import CORS_ALLOW_ALL_ORIGINS, CORS_ALLOW_ORIGINS, validate_runtime_config, is_module_enabled
 # Side-effect import: ensure RefreshToken table is registered with SQLAlchemy metadata
@@ -205,6 +206,7 @@ app.include_router(authorizations_router)
 app.include_router(crm_router)
 app.include_router(onboarding_router)
 app.include_router(identity_router)
+app.include_router(veterinary_router)
 
 # Routers de módulos JAC (controlados por feature flags)
 if treasury_router is not None:

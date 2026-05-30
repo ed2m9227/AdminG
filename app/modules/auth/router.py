@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException, Depends, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from app.schemas.auth import (
-    LoginSchema, ForgotPasswordSchema, ResetPasswordSchema,
+    LoginSchema, ForgotPasswordSchema, ResetPasswordSchema, ChangePasswordSchema,
     TotpChallengeSchema, TotpVerifySchema, TotpDisableSchema, RefreshTokenSchema,
 )
 from app.modules.auth.service import authenticate_user
@@ -503,8 +503,33 @@ def reset_password(payload: ResetPasswordSchema, request: Request, db: Session =
     logger.info("SECURITY reset_password_success user_id=%s email=%s ip=%s", user.id, user.email, ip)
     send_password_changed_alert(user.email)
 
-    return {"success": True, "message": "Contraseña actualizada correctamente"}
 
+@router.post("/change-password")
+def change_password(
+    payload: ChangePasswordSchema,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    user = db.query(User).filter(User.id == int(current_user["id"])) .first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    if not verify_password(payload.current_password, user.hashed_password):
+        raise HTTPException(status_code=403, detail="Contraseña actual incorrecta")
+
+    if len(payload.new_password) < 8:
+        raise HTTPException(status_code=400, detail="La nueva contraseña debe tener al menos 8 caracteres")
+
+    user.hashed_password = hash_password(payload.new_password)
+    db.add(user)
+    _revoke_all_refresh_tokens(user.id, db)
+    db.commit()
+
+    logger.info("SECURITY change_password_success user_id=%s ip=%s", user.id, _client_ip(request))
+    send_password_changed_alert(user.email)
+
+    return {"success": True, "message": "Contraseña actualizada con éxito"}
 
 
 def _client_ip(request: Request) -> str:
@@ -645,42 +670,4 @@ def forgot_password(payload: ForgotPasswordSchema, request: Request, db: Session
 
     return response
 
-
-@router.post("/reset-password")
-def reset_password(payload: ResetPasswordSchema, request: Request, db: Session = Depends(get_db)):
-    ip = _client_ip(request)
-    _enforce_rate_limit("reset_ip", ip, max_requests=20, window_seconds=900)
-
-    token = (payload.token or "").strip()
-    new_password = payload.new_password or ""
-
-    if len(token) < 20:
-        raise HTTPException(status_code=400, detail="Token inválido")
-    if len(new_password) < 6:
-        raise HTTPException(status_code=400, detail="La nueva contraseña debe tener al menos 6 caracteres")
-
-    token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
-    user = db.query(User).filter(User.password_reset_token_hash == token_hash).first()
-    if not user:
-        logger.warning("SECURITY reset_password_invalid_token ip=%s", ip)
-        raise HTTPException(status_code=400, detail="Token inválido o expirado")
-
-    expires_at = getattr(user, "password_reset_expires_at", None)
-    if not expires_at or datetime.utcnow() > expires_at:
-        setattr(user, "password_reset_token_hash", None)
-        setattr(user, "password_reset_expires_at", None)
-        db.add(user)
-        db.commit()
-        logger.warning("SECURITY reset_password_expired user_id=%s email=%s ip=%s", user.id, user.email, ip)
-        raise HTTPException(status_code=400, detail="Token inválido o expirado")
-
-    user.hashed_password = hash_password(new_password)
-    setattr(user, "password_reset_token_hash", None)
-    setattr(user, "password_reset_expires_at", None)
-    db.add(user)
-    db.commit()
-
-    logger.info("SECURITY reset_password_success user_id=%s email=%s ip=%s", user.id, user.email, ip)
-
-    return {"success": True, "message": "Contraseña actualizada correctamente"}
 

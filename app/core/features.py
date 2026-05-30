@@ -66,6 +66,10 @@ class Feature(str, Enum):
     VIEW_CRM_ANALYTICS = "view_crm_analytics"
     USE_CRM_AI_CHAT = "use_crm_ai_chat"
 
+    # Veterinary operations
+    VIEW_VETERINARY_OPERATIONS = "view_veterinary_operations"
+    MANAGE_VETERINARY_OPERATIONS = "manage_veterinary_operations"
+
     # AI assistant (all business types — intents depend on business_registry)
     USE_AI_CHAT = "use_ai_chat"
 
@@ -141,6 +145,8 @@ PLAN_FEATURES: Dict[str, Set[Feature]] = {
         # RRHH — view only for starter
         Feature.VIEW_HR,
         Feature.VIEW_HR_REQUESTS,
+        Feature.VIEW_VETERINARY_OPERATIONS,
+        Feature.MANAGE_VETERINARY_OPERATIONS,
         # NOTE: reports, documents, and authorizations intentionally excluded for starter
     },
     "pro": {
@@ -190,6 +196,8 @@ PLAN_FEATURES: Dict[str, Set[Feature]] = {
         Feature.VIEW_HR_REQUESTS,
         Feature.MANAGE_HR_REQUESTS,
         Feature.VIEW_HR_TRACKING,
+        Feature.VIEW_VETERINARY_OPERATIONS,
+        Feature.MANAGE_VETERINARY_OPERATIONS,
         # Documents & Authorizations
         Feature.VIEW_DOCUMENTS,
         Feature.CREATE_DOCUMENTS,
@@ -253,6 +261,8 @@ PLAN_FEATURES: Dict[str, Set[Feature]] = {
         Feature.VIEW_HR_REQUESTS,
         Feature.MANAGE_HR_REQUESTS,
         Feature.VIEW_HR_TRACKING,
+        Feature.VIEW_VETERINARY_OPERATIONS,
+        Feature.MANAGE_VETERINARY_OPERATIONS,
         # Documents & Authorizations
         Feature.VIEW_DOCUMENTS,
         Feature.CREATE_DOCUMENTS,
@@ -339,6 +349,8 @@ PLAN_FEATURES: Dict[str, Set[Feature]] = {
         Feature.VIEW_HR_REQUESTS,
         Feature.MANAGE_HR_REQUESTS,
         Feature.VIEW_HR_TRACKING,
+        Feature.VIEW_VETERINARY_OPERATIONS,
+        Feature.MANAGE_VETERINARY_OPERATIONS,
     },
     # Legacy plan aliases (backward compatibility)
     "basic": set(),
