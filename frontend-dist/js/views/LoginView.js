@@ -14,8 +14,8 @@ export class LoginView {
         return `
             <div class="auth-container">
                 <div class="auth-box">
-                    <h1 class="auth-title">AdminG</h1>
-                    <p class="auth-subtitle">${t('login.subtitle', 'Sistema de administracion general para pequeñas, medianas y grandes empresas publicas y privadas')}</p>
+                    <h1 class="auth-title">AdminG<br>v0.2.0</h1>
+                    <p class="auth-subtitle">${t('login.subtitle', 'Sistema de administracion general para pequeñas, medianas y grandes empresas publicas, privadas y mixtas')}</p>
                     
                     <div id="loginError" class="error hidden"></div>
                     
