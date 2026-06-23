@@ -1,0 +1,1906 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.26">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>4&nbsp; Anexo C – AdminG</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./AnexoD.html" rel="next">
+<link href="./AnexoB.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-d9ea66fcd6c317012447f26e9c021348.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script src="site_libs/quarto-diagram/mermaid-postprocess-shim.js"></script>
+
+
+<link rel="stylesheet" href="assets/css/styles.css">
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./AnexoC.html"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Anexo C</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">AdminG</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">AdminG</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./AnexoA.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Anexo A</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./AnexoB.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Anexo B</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./AnexoC.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Anexo C</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./AnexoD.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Anexo D</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./AnexoE.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Anexo E</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./AnexoF.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Anexo F</span></span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#modelo-de-datos-y-persistencia" id="toc-modelo-de-datos-y-persistencia" class="nav-link active" data-scroll-target="#modelo-de-datos-y-persistencia"><span class="header-section-number">4.1</span> Modelo de datos y persistencia</a></li>
+  <li><a href="#proposito-del-anexo" id="toc-proposito-del-anexo" class="nav-link" data-scroll-target="#proposito-del-anexo"><span class="header-section-number">4.2</span> Proposito del anexo</a></li>
+  <li><a href="#entidades-principales" id="toc-entidades-principales" class="nav-link" data-scroll-target="#entidades-principales"><span class="header-section-number">4.3</span> Entidades principales</a></li>
+  <li><a href="#modelo-entidad-relacion" id="toc-modelo-entidad-relacion" class="nav-link" data-scroll-target="#modelo-entidad-relacion"><span class="header-section-number">4.4</span> Modelo entidad-relacion</a></li>
+  <li><a href="#gestión-de-usuarios-y-subscripciones" id="toc-gestión-de-usuarios-y-subscripciones" class="nav-link" data-scroll-target="#gestión-de-usuarios-y-subscripciones"><span class="header-section-number">4.5</span> Gestión de usuarios y subscripciones</a>
+  <ul class="collapse">
+  <li><a href="#autenticación" id="toc-autenticación" class="nav-link" data-scroll-target="#autenticación"><span class="header-section-number">4.5.1</span> Autenticación</a></li>
+  <li><a href="#delegación" id="toc-delegación" class="nav-link" data-scroll-target="#delegación"><span class="header-section-number">4.5.2</span> Delegación</a></li>
+  <li><a href="#capacidades-por-plan" id="toc-capacidades-por-plan" class="nav-link" data-scroll-target="#capacidades-por-plan"><span class="header-section-number">4.5.3</span> Capacidades por plan</a></li>
+  </ul></li>
+  <li><a href="#clientes-y-gestión-comercial" id="toc-clientes-y-gestión-comercial" class="nav-link" data-scroll-target="#clientes-y-gestión-comercial"><span class="header-section-number">4.6</span> Clientes y gestión comercial</a></li>
+  <li><a href="#servicios-y-operación" id="toc-servicios-y-operación" class="nav-link" data-scroll-target="#servicios-y-operación"><span class="header-section-number">4.7</span> Servicios y operación</a></li>
+  <li><a href="#facturación-y-caja" id="toc-facturación-y-caja" class="nav-link" data-scroll-target="#facturación-y-caja"><span class="header-section-number">4.8</span> Facturación y caja</a></li>
+  <li><a href="#inventario" id="toc-inventario" class="nav-link" data-scroll-target="#inventario"><span class="header-section-number">4.9</span> Inventario</a></li>
+  <li><a href="#documentación-y-auditoría" id="toc-documentación-y-auditoría" class="nav-link" data-scroll-target="#documentación-y-auditoría"><span class="header-section-number">4.10</span> Documentación y auditoría</a></li>
+  <li><a href="#normalizacion-y-consistencia" id="toc-normalizacion-y-consistencia" class="nav-link" data-scroll-target="#normalizacion-y-consistencia"><span class="header-section-number">4.11</span> Normalizacion y consistencia</a></li>
+  <li><a href="#persistencia-en-vm-y-crecimiento" id="toc-persistencia-en-vm-y-crecimiento" class="nav-link" data-scroll-target="#persistencia-en-vm-y-crecimiento"><span class="header-section-number">4.12</span> Persistencia en VM y crecimiento</a></li>
+  <li><a href="#informacion-para-gestionar-e-introducir" id="toc-informacion-para-gestionar-e-introducir" class="nav-link" data-scroll-target="#informacion-para-gestionar-e-introducir"><span class="header-section-number">4.13</span> Informacion para gestionar e introducir</a></li>
+  <li><a href="#diccionario-resumido" id="toc-diccionario-resumido" class="nav-link" data-scroll-target="#diccionario-resumido"><span class="header-section-number">4.14</span> Diccionario resumido</a></li>
+  <li><a href="#cierre" id="toc-cierre" class="nav-link" data-scroll-target="#cierre"><span class="header-section-number">4.15</span> Cierre</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title"><span id="sec-anexo-c" class="quarto-section-identifier"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Anexo C</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="cabecera">
+
+</div>
+<section id="modelo-de-datos-y-persistencia" class="level2" data-number="4.1">
+<h2 data-number="4.1" class="anchored" data-anchor-id="modelo-de-datos-y-persistencia"><span class="header-section-number">4.1</span> Modelo de datos y persistencia</h2>
+<p><strong>Eduardo Martínez</strong></p>
+</section>
+<section id="proposito-del-anexo" class="level2" data-number="4.2">
+<h2 data-number="4.2" class="anchored" data-anchor-id="proposito-del-anexo"><span class="header-section-number">4.2</span> Proposito del anexo</h2>
+<p>Este anexo describe el modelo de datos de <strong>AdminG Systems</strong>, sus entidades principales, sus relaciones, las garantias de consistencia y la forma en que el almacenamiento soporta los requerimientos definidos en el <a href="AnexoA.html" class="quarto-xref"><span>Chapter 2</span></a> y la arquitectura del <a href="AnexoB.html" class="quarto-xref"><span>Chapter 3</span></a>. La base actual usa SQLAlchemy y migraciones Alembic, con SQLite como persistencia inicial para desarrollo y despliegue controlado en VM. Para una operacion productiva con mayor concurrencia, se requiere migrar a PostgreSQL.</p>
+<p>El modelo no solo guarda informacion. Tambien expresa reglas de negocio: que usuario posee clientes, que plan habilita caracteristicas, que cita puede generar pagos, que factura puede relacionarse con items, que inventario registra movimientos y que autorizaciones o documentos agregan trazabilidad.</p>
+</section>
+<section id="entidades-principales" class="level2" data-number="4.3">
+<h2 data-number="4.3" class="anchored" data-anchor-id="entidades-principales"><span class="header-section-number">4.3</span> Entidades principales</h2>
+<p>La entidad <code>User</code> representa el sujeto de acceso al sistema. Contiene correo, contrasena hasheada, rol, plan, estado, jerarquia de usuario padre y datos de negocio. A partir de ella se organizan clientes, pagos, inventario, configuraciones, documentos y usuarios de equipo. <code>RefreshToken</code> permite renovar sesiones sin exponer credenciales.</p>
+<p><code>Customer</code> representa la informacion de clientes. Puede conectarse con mascotas o entidades relacionadas, citas, pagos, CRM y documentos. <code>Appointment</code> administra agenda, servicios, estados y relacion con clientes. <code>Service</code> y <code>ServicePackage</code> permiten separar servicios individuales de paquetes comerciales.</p>
+<p>El bloque financiero esta formado por <code>Payment</code>, <code>PaymentItem</code>, <code>CashRegisterSession</code>, <code>CashTransaction</code>, <code>Invoice</code>, <code>InvoiceItem</code> y <code>Authorization</code>. Esta separacion evita que un pago sea confundido con una factura o con una sesion de caja. Una factura documenta una obligacion o venta; un pago registra el movimiento economico; caja agrupa movimientos en una jornada; autorizaciones registran aprobaciones.</p>
+<p>Inventario se organiza con <code>InventoryCategory</code>, <code>InventoryItem</code>, <code>InventoryMovement</code> e inventario especializado cuando aplica. Esta estructura permite controlar SKU, stock minimo, entradas, salidas y trazabilidad del producto. Planes se modela con <code>Plan</code>, <code>PlanLimit</code> y <code>PlanFeature</code>, lo que permite activar funciones sin modificar el nucleo de usuario.</p>
+</section>
+<section id="modelo-entidad-relacion" class="level2" data-number="4.4">
+<h2 data-number="4.4" class="anchored" data-anchor-id="modelo-entidad-relacion"><span class="header-section-number">4.4</span> Modelo entidad-relacion</h2>
+<div class="zoomable-diagram">
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<svg aria-roledescription="er" role="graphics-document document" viewbox="0 0 2863.75 1210" class="erDiagram" xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" width="672" id="mermaid-figure-1" height="480">
+<style>#mermaid-figure-1{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#333;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#mermaid-figure-1 .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#mermaid-figure-1 .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#mermaid-figure-1 .error-icon{fill:hsl(220.5882352941, 100%, 98.3333333333%);}#mermaid-figure-1 .error-text{fill:rgb(8.5000000002, 5.7500000001, 0);stroke:rgb(8.5000000002, 5.7500000001, 0);}#mermaid-figure-1 .edge-thickness-normal{stroke-width:1px;}#mermaid-figure-1 .edge-thickness-thick{stroke-width:3.5px;}#mermaid-figure-1 .edge-pattern-solid{stroke-dasharray:0;}#mermaid-figure-1 .edge-thickness-invisible{stroke-width:0;fill:none;}#mermaid-figure-1 .edge-pattern-dashed{stroke-dasharray:3;}#mermaid-figure-1 .edge-pattern-dotted{stroke-dasharray:2;}#mermaid-figure-1 .marker{fill:#0b0b0b;stroke:#0b0b0b;}#mermaid-figure-1 .marker.cross{stroke:#0b0b0b;}#mermaid-figure-1 svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#mermaid-figure-1 p{margin:0;}#mermaid-figure-1 .entityBox{fill:#fff4dd;stroke:hsl(40.5882352941, 60%, 83.3333333333%);}#mermaid-figure-1 .relationshipLabelBox{fill:hsl(220.5882352941, 100%, 98.3333333333%);opacity:0.7;background-color:hsl(220.5882352941, 100%, 98.3333333333%);}#mermaid-figure-1 .relationshipLabelBox rect{opacity:0.5;}#mermaid-figure-1 .labelBkg{background-color:rgba(246.4999999998, 249.2499999999, 255, 0.5);}#mermaid-figure-1 .edgeLabel .label{fill:hsl(40.5882352941, 60%, 83.3333333333%);font-size:14px;}#mermaid-figure-1 .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#333;}#mermaid-figure-1 .edge-pattern-dashed{stroke-dasharray:8,8;}#mermaid-figure-1 .node rect,#mermaid-figure-1 .node circle,#mermaid-figure-1 .node ellipse,#mermaid-figure-1 .node polygon{fill:#fff4dd;stroke:hsl(40.5882352941, 60%, 83.3333333333%);stroke-width:1px;}#mermaid-figure-1 .relationshipLine{stroke:#0b0b0b;stroke-width:1;fill:none;}#mermaid-figure-1 .marker{fill:none!important;stroke:#0b0b0b!important;stroke-width:1;}#mermaid-figure-1 :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style>
+<g><defs><marker orient="auto" markerheight="18" markerwidth="18" refy="9" refx="0" class="marker onlyOne er" id="mermaid-figure-1-mermaid-1782227729082_er-onlyOneStart"><path d="M9,0 L9,18 M15,0 L15,18"></path></marker></defs><defs><marker orient="auto" markerheight="18" markerwidth="18" refy="9" refx="18" class="marker onlyOne er" id="mermaid-figure-1-mermaid-1782227729082_er-onlyOneEnd"><path d="M3,0 L3,18 M9,0 L9,18"></path></marker></defs><defs><marker orient="auto" markerheight="18" markerwidth="30" refy="9" refx="0" class="marker zeroOrOne er" id="mermaid-figure-1-mermaid-1782227729082_er-zeroOrOneStart"><circle r="6" cy="9" cx="21" fill="white"></circle><path d="M9,0 L9,18"></path></marker></defs><defs><marker orient="auto" markerheight="18" markerwidth="30" refy="9" refx="30" class="marker zeroOrOne er" id="mermaid-figure-1-mermaid-1782227729082_er-zeroOrOneEnd"><circle r="6" cy="9" cx="9" fill="white"></circle><path d="M21,0 L21,18"></path></marker></defs><defs><marker orient="auto" markerheight="36" markerwidth="45" refy="18" refx="18" class="marker oneOrMore er" id="mermaid-figure-1-mermaid-1782227729082_er-oneOrMoreStart"><path d="M0,18 Q 18,0 36,18 Q 18,36 0,18 M42,9 L42,27"></path></marker></defs><defs><marker orient="auto" markerheight="36" markerwidth="45" refy="18" refx="27" class="marker oneOrMore er" id="mermaid-figure-1-mermaid-1782227729082_er-oneOrMoreEnd"><path d="M3,9 L3,27 M9,18 Q27,0 45,18 Q27,36 9,18"></path></marker></defs><defs><marker orient="auto" markerheight="36" markerwidth="57" refy="18" refx="18" class="marker zeroOrMore er" id="mermaid-figure-1-mermaid-1782227729082_er-zeroOrMoreStart"><circle r="6" cy="18" cx="48" fill="white"></circle><path d="M0,18 Q18,0 36,18 Q18,36 0,18"></path></marker></defs><defs><marker orient="auto" markerheight="36" markerwidth="57" refy="18" refx="39" class="marker zeroOrMore er" id="mermaid-figure-1-mermaid-1782227729082_er-zeroOrMoreEnd"><circle r="6" cy="18" cx="9" fill="white"></circle><path d="M21,18 Q39,0 57,18 Q39,36 21,18"></path></marker></defs><g class="root"><g class="clusters"></g><g class="edgePaths"><path marker-end="url(#mermaid-figure-1-mermaid-1782227729082_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-1-mermaid-1782227729082_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-USERS-0_entity-REFRESH_TOKENS-1_0" d="M1008.5,239.778L855.5,254.398C702.5,269.019,396.5,298.259,243.5,321.296C90.5,344.333,90.5,361.167,90.5,369.583L90.5,378"></path><path marker-end="url(#mermaid-figure-1-mermaid-1782227729082_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-1-mermaid-1782227729082_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-USERS-0_entity-TEAM_USERS-2_1" d="M1008.5,241.796L903.417,256.08C798.333,270.364,588.167,298.932,483.083,321.633C378,344.333,378,361.167,378,369.583L378,378"></path><path marker-end="url(#mermaid-figure-1-mermaid-1782227729082_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-1-mermaid-1782227729082_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-USERS-0_entity-CUSTOMERS-3_2" d="M1108.5,239.312L1278.917,254.01C1449.333,268.708,1790.167,298.104,1960.583,321.219C2131,344.333,2131,361.167,2131,369.583L2131,378"></path><path marker-end="url(#mermaid-figure-1-mermaid-1782227729082_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-1-mermaid-1782227729082_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-USERS-0_entity-BUSINESS_CONFIGS-4_3" d="M1008.5,248.827L961.083,261.939C913.667,275.051,818.833,301.276,771.417,322.804C724,344.333,724,361.167,724,369.583L724,378"></path><path marker-end="url(#mermaid-figure-1-mermaid-1782227729082_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-1-mermaid-1782227729082_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-USERS-0_entity-PAYMENTS-5_4" d="M1108.5,241.395L1220.708,255.746C1332.917,270.096,1557.333,298.798,1669.542,328.566C1781.75,358.333,1781.75,389.167,1781.75,420C1781.75,450.833,1781.75,481.667,1781.75,512.5C1781.75,543.333,1781.75,574.167,1781.75,605C1781.75,635.833,1781.75,666.667,1781.75,697.5C1781.75,728.333,1781.75,759.167,1781.75,790C1781.75,820.833,1781.75,851.667,1896.917,881.363C2012.083,911.06,2242.417,939.62,2357.583,953.9L2472.75,968.18"></path><path marker-end="url(#mermaid-figure-1-mermaid-1782227729082_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-1-mermaid-1782227729082_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-USERS-0_entity-INVENTORY_CATEGORIES-6_5" d="M1058.5,277L1058.5,285.417C1058.5,293.833,1058.5,310.667,1058.5,327.5C1058.5,344.333,1058.5,361.167,1058.5,369.583L1058.5,378"></path><path marker-end="url(#mermaid-figure-1-mermaid-1782227729082_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-1-mermaid-1782227729082_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-USERS-0_entity-INVENTORY_ITEMS-7_6" d="M1008.5,243.911L930.333,257.843C852.167,271.774,695.833,299.637,617.667,328.985C539.5,358.333,539.5,389.167,539.5,420C539.5,450.833,539.5,481.667,562.333,506.662C585.167,531.657,630.833,550.814,653.667,560.393L676.5,569.972"></path><path marker-end="url(#mermaid-figure-1-mermaid-1782227729082_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-1-mermaid-1782227729082_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-USERS-0_entity-DOCUMENTS-8_7" d="M1108.5,246.867L1165.125,260.305C1221.75,273.744,1335,300.622,1391.625,322.478C1448.25,344.333,1448.25,361.167,1448.25,369.583L1448.25,378"></path><path marker-end="url(#mermaid-figure-1-mermaid-1782227729082_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-1-mermaid-1782227729082_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-USERS-0_entity-AUTHORIZATIONS-9_8" d="M1108.5,256.612L1135.833,268.427C1163.167,280.241,1217.833,303.871,1245.167,331.102C1272.5,358.333,1272.5,389.167,1272.5,420C1272.5,450.833,1272.5,481.667,1280.302,505.5C1288.105,529.333,1303.71,546.167,1311.512,554.583L1319.315,563"></path><path marker-end="url(#mermaid-figure-1-mermaid-1782227729082_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-1-mermaid-1782227729082_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-PLANS-10_entity-PLAN_LIMITS-11_9" d="M1312.5,92L1312.5,100.417C1312.5,108.833,1312.5,125.667,1312.5,142.5C1312.5,159.333,1312.5,176.167,1312.5,184.583L1312.5,193"></path><path marker-end="url(#mermaid-figure-1-mermaid-1782227729082_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-1-mermaid-1782227729082_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-PLANS-10_entity-PLAN_FEATURES-12_10" d="M1362.5,66.488L1400.917,79.157C1439.333,91.826,1516.167,117.163,1554.583,138.248C1593,159.333,1593,176.167,1593,184.583L1593,193"></path><path marker-end="url(#mermaid-figure-1-mermaid-1782227729082_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-1-mermaid-1782227729082_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-PLANS-10_entity-USERS-0_11" d="M1262.5,68.209L1228.5,80.591C1194.5,92.972,1126.5,117.736,1092.5,138.535C1058.5,159.333,1058.5,176.167,1058.5,184.583L1058.5,193"></path><path marker-end="url(#mermaid-figure-1-mermaid-1782227729082_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-1-mermaid-1782227729082_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-CUSTOMERS-3_entity-PETS-13_12" d="M2069,431.407L1995.542,444.923C1922.083,458.438,1775.167,485.469,1701.708,507.401C1628.25,529.333,1628.25,546.167,1628.25,554.583L1628.25,563"></path><path marker-end="url(#mermaid-figure-1-mermaid-1782227729082_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-1-mermaid-1782227729082_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-CUSTOMERS-3_entity-APPOINTMENTS-14_13" d="M2163.124,462L2169.562,470.417C2176,478.833,2188.875,495.667,2215.646,513.679C2242.417,531.692,2283.083,550.884,2303.417,560.48L2323.75,570.077"></path><path marker-end="url(#mermaid-figure-1-mermaid-1782227729082_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-1-mermaid-1782227729082_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-CUSTOMERS-3_entity-PAYMENTS-5_14" d="M2193,429.741L2280.792,443.534C2368.583,457.327,2544.167,484.914,2631.958,514.123C2719.75,543.333,2719.75,574.167,2719.75,605C2719.75,635.833,2719.75,666.667,2719.75,697.5C2719.75,728.333,2719.75,759.167,2719.75,790C2719.75,820.833,2719.75,851.667,2696.917,878.084C2674.083,904.501,2628.417,926.502,2605.583,937.502L2582.75,948.503"></path><path marker-end="url(#mermaid-figure-1-mermaid-1782227729082_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-1-mermaid-1782227729082_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-CUSTOMERS-3_entity-INVOICES-15_15" d="M2127.708,462L2127.048,470.417C2126.389,478.833,2125.069,495.667,2124.41,519.5C2123.75,543.333,2123.75,574.167,2123.75,605C2123.75,635.833,2123.75,666.667,2132.258,690.5C2140.765,714.333,2157.781,731.167,2166.288,739.583L2174.796,748"></path><path marker-end="url(#mermaid-figure-1-mermaid-1782227729082_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-1-mermaid-1782227729082_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-CUSTOMERS-3_entity-CRM_EVENTS-16_16" d="M2069,451.905L2049.375,462.005C2029.75,472.104,1990.5,492.302,1970.875,510.818C1951.25,529.333,1951.25,546.167,1951.25,554.583L1951.25,563"></path><path marker-end="url(#mermaid-figure-1-mermaid-1782227729082_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-1-mermaid-1782227729082_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-SERVICES-17_entity-APPOINTMENTS-14_17" d="M2392.705,462L2384.13,470.417C2375.554,478.833,2358.402,495.667,2354.967,512.5C2351.532,529.333,2361.814,546.167,2366.955,554.583L2372.096,563"></path><path marker-end="url(#mermaid-figure-1-mermaid-1782227729082_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-1-mermaid-1782227729082_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-SERVICE_PACKAGES-18_entity-APPOINTMENTS-14_18" d="M2673.705,462L2665.13,470.417C2656.554,478.833,2639.402,495.667,2605.743,514.418C2572.083,533.17,2521.917,553.84,2496.833,564.175L2471.75,574.51"></path><path marker-end="url(#mermaid-figure-1-mermaid-1782227729082_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-1-mermaid-1782227729082_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-APPOINTMENTS-14_entity-PAYMENTS-5_19" d="M2471.75,623.45L2521.25,635.792C2570.75,648.133,2669.75,672.817,2719.25,700.575C2768.75,728.333,2768.75,759.167,2768.75,790C2768.75,820.833,2768.75,851.667,2737.75,878.982C2706.75,906.297,2644.75,930.093,2613.75,941.992L2582.75,953.89"></path><path marker-end="url(#mermaid-figure-1-mermaid-1782227729082_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-1-mermaid-1782227729082_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-APPOINTMENTS-14_entity-INVOICES-15_20" d="M2397.75,647L2397.75,655.417C2397.75,663.833,2397.75,680.667,2376.417,700.016C2355.083,719.365,2312.417,741.23,2291.083,752.163L2269.75,763.096"></path><path marker-end="url(#mermaid-figure-1-mermaid-1782227729082_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-1-mermaid-1782227729082_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-INVOICES-15_entity-INVOICE_ITEMS-19_21" d="M2164.75,793.094L1911.875,807.995C1659,822.896,1153.25,852.698,902.513,876.016C651.777,899.333,656.053,916.167,658.191,924.583L660.33,933"></path><path marker-end="url(#mermaid-figure-1-mermaid-1782227729082_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-1-mermaid-1782227729082_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-INVOICES-15_entity-PAYMENTS-5_22" d="M2269.75,798.027L2361.833,812.106C2453.917,826.185,2638.083,854.342,2690.25,880.959C2742.417,907.575,2662.583,932.65,2622.667,945.187L2582.75,957.725"></path><path marker-end="url(#mermaid-figure-1-mermaid-1782227729082_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-1-mermaid-1782227729082_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-PAYMENTS-5_entity-PAYMENT_ITEMS-20_23" d="M2546.707,1017L2550.506,1025.417C2554.305,1033.833,2561.902,1050.667,2565.701,1067.5C2569.5,1084.333,2569.5,1101.167,2569.5,1109.583L2569.5,1118"></path><path marker-end="url(#mermaid-figure-1-mermaid-1782227729082_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-1-mermaid-1782227729082_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-CASH_REGISTER_SESSIONS-21_entity-CASH_TRANSACTIONS-22_24" d="M344.5,1017L344.5,1025.417C344.5,1033.833,344.5,1050.667,344.568,1067.5C344.636,1084.333,344.773,1101.167,344.841,1109.583L344.909,1118"></path><path marker-end="url(#mermaid-figure-1-mermaid-1782227729082_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-1-mermaid-1782227729082_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-PAYMENTS-5_entity-CASH_TRANSACTIONS-22_25" d="M2472.75,978.688L2252,993.49C2031.25,1008.292,1589.75,1037.896,1251.083,1066.281C912.417,1094.666,676.583,1121.833,558.667,1135.416L440.75,1148.999"></path><path marker-end="url(#mermaid-figure-1-mermaid-1782227729082_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-1-mermaid-1782227729082_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-INVENTORY_CATEGORIES-6_entity-INVENTORY_ITEMS-7_26" d="M1058.5,462L1058.5,470.417C1058.5,478.833,1058.5,495.667,1022.667,515.187C986.833,534.708,915.167,556.917,879.333,568.021L843.5,579.125"></path><path marker-end="url(#mermaid-figure-1-mermaid-1782227729082_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-1-mermaid-1782227729082_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-INVENTORY_ITEMS-7_entity-INVENTORY_MOVEMENTS-23_27" d="M843.5,635.864L871.292,646.137C899.083,656.409,954.667,676.955,982.458,695.644C1010.25,714.333,1010.25,731.167,1010.25,739.583L1010.25,748"></path><path marker-end="url(#mermaid-figure-1-mermaid-1782227729082_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-1-mermaid-1782227729082_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-INVENTORY_ITEMS-7_entity-INVOICE_ITEMS-19_28" d="M730.259,647L724.3,655.417C718.34,663.833,706.42,680.667,700.46,704.5C694.5,728.333,694.5,759.167,694.5,790C694.5,820.833,694.5,851.667,692.362,875.5C690.223,899.333,685.947,916.167,683.809,924.583L681.67,933"></path><path marker-end="url(#mermaid-figure-1-mermaid-1782227729082_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-1-mermaid-1782227729082_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-DOCUMENTS-8_entity-AUTHORIZATIONS-9_29" d="M1448.25,462L1448.25,470.417C1448.25,478.833,1448.25,495.667,1440.061,512.5C1431.872,529.333,1415.493,546.167,1407.304,554.583L1399.115,563"></path><path marker-end="url(#mermaid-figure-1-mermaid-1782227729082_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-1-mermaid-1782227729082_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-AUTHORIZATIONS-9_entity-AUDIT_LOGS-24_30" d="M1358.25,647L1358.25,655.417C1358.25,663.833,1358.25,680.667,1358.25,697.5C1358.25,714.333,1358.25,731.167,1358.25,739.583L1358.25,748"></path></g><g class="edgeLabels"><g transform="translate(90.5, 327.5)" class="edgeLabel"><g transform="translate(-16.5, -10.5)" class="label"><foreignobject height="21" width="33">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+owns
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(378, 327.5)" class="edgeLabel"><g transform="translate(-30.5, -10.5)" class="label"><foreignobject height="21" width="61">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+delegates
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(2131, 327.5)" class="edgeLabel"><g transform="translate(-16.5, -10.5)" class="label"><foreignobject height="21" width="33">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+owns
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(724, 327.5)" class="edgeLabel"><g transform="translate(-33, -10.5)" class="label"><foreignobject height="21" width="66">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+configures
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(1781.75, 605)" class="edgeLabel"><g transform="translate(-23.5, -10.5)" class="label"><foreignobject height="21" width="47">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+records
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(1058.5, 327.5)" class="edgeLabel"><g transform="translate(-16.5, -10.5)" class="label"><foreignobject height="21" width="33">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+owns
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(539.5, 420)" class="edgeLabel"><g transform="translate(-16.5, -10.5)" class="label"><foreignobject height="21" width="33">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+owns
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(1448.25, 327.5)" class="edgeLabel"><g transform="translate(-19, -10.5)" class="label"><foreignobject height="21" width="38">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+issues
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(1272.5, 420)" class="edgeLabel"><g transform="translate(-27.5, -10.5)" class="label"><foreignobject height="21" width="55">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+requests
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(1312.5, 142.5)" class="edgeLabel"><g transform="translate(-23.5, -10.5)" class="label"><foreignobject height="21" width="47">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+defines
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(1593, 142.5)" class="edgeLabel"><g transform="translate(-24, -10.5)" class="label"><foreignobject height="21" width="48">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+enables
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(1058.5, 142.5)" class="edgeLabel"><g transform="translate(-37.5, -10.5)" class="label"><foreignobject height="21" width="75">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+assigned_to
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(1628.25, 512.5)" class="edgeLabel"><g transform="translate(-31, -10.5)" class="label"><foreignobject height="21" width="62">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+may_have
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(2201.75, 512.5)" class="edgeLabel"><g transform="translate(-31, -10.5)" class="label"><foreignobject height="21" width="62">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+schedules
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(2719.75, 697.5)" class="edgeLabel"><g transform="translate(-14, -10.5)" class="label"><foreignobject height="21" width="28">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+pays
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(2123.75, 605)" class="edgeLabel"><g transform="translate(-26.5, -10.5)" class="label"><foreignobject height="21" width="53">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+receives
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(1951.25, 512.5)" class="edgeLabel"><g transform="translate(-31.5, -10.5)" class="label"><foreignobject height="21" width="63">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+generates
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(2341.25, 512.5)" class="edgeLabel"><g transform="translate(-24.5, -10.5)" class="label"><foreignobject height="21" width="49">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+used_in
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(2622.25, 512.5)" class="edgeLabel"><g transform="translate(-21, -10.5)" class="label"><foreignobject height="21" width="42">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+groups
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(2768.75, 790)" class="edgeLabel"><g transform="translate(-29, -10.5)" class="label"><foreignobject height="21" width="58">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+produces
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(2397.75, 697.5)" class="edgeLabel"><g transform="translate(-27.5, -10.5)" class="label"><foreignobject height="21" width="55">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+supports
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(647.5, 882.5)" class="edgeLabel"><g transform="translate(-27, -10.5)" class="label"><foreignobject height="21" width="54">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+contains
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(2822.25, 882.5)" class="edgeLabel"><g transform="translate(-33.5, -10.5)" class="label"><foreignobject height="21" width="67">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+settled_by
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(2569.5, 1067.5)" class="edgeLabel"><g transform="translate(-27, -10.5)" class="label"><foreignobject height="21" width="54">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+contains
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(344.5, 1067.5)" class="edgeLabel"><g transform="translate(-21, -10.5)" class="label"><foreignobject height="21" width="42">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+groups
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(1148.25, 1067.5)" class="edgeLabel"><g transform="translate(-36.5, -10.5)" class="label"><foreignobject height="21" width="73">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+may_create
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(1058.5, 512.5)" class="edgeLabel"><g transform="translate(-28, -10.5)" class="label"><foreignobject height="21" width="56">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+classifies
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(1010.25, 697.5)" class="edgeLabel"><g transform="translate(-19, -10.5)" class="label"><foreignobject height="21" width="38">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+tracks
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(694.5, 790)" class="edgeLabel"><g transform="translate(-22.5, -10.5)" class="label"><foreignobject height="21" width="45">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+sold_as
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(1448.25, 512.5)" class="edgeLabel"><g transform="translate(-39, -10.5)" class="label"><foreignobject height="21" width="78">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+may_require
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(1358.25, 697.5)" class="edgeLabel"><g transform="translate(-23.5, -10.5)" class="label"><foreignobject height="21" width="47">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+records
+</p>
+</span>
+</div>
+</foreignobject></g></g></g><g class="nodes"><g transform="translate(1058.5, 235)" id="entity-USERS-0" class="node default"><rect height="84" width="100" y="-42" x="-50" style="" class="basic label-container"></rect><g transform="translate(-22, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="44">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 100px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+USERS
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(90.5, 420)" id="entity-REFRESH_TOKENS-1" class="node default"><rect height="84" width="165" y="-42" x="-82.5" style="" class="basic label-container"></rect><g transform="translate(-62.5, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="125">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+REFRESH_TOKENS
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(378, 420)" id="entity-TEAM_USERS-2" class="node default"><rect height="84" width="130" y="-42" x="-65" style="" class="basic label-container"></rect><g transform="translate(-45, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="90">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+TEAM_USERS
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(2131, 420)" id="entity-CUSTOMERS-3" class="node default"><rect height="84" width="124" y="-42" x="-62" style="" class="basic label-container"></rect><g transform="translate(-42, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="84">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+CUSTOMERS
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(724, 420)" id="entity-BUSINESS_CONFIGS-4" class="node default"><rect height="84" width="176" y="-42" x="-88" style="" class="basic label-container"></rect><g transform="translate(-68, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="136">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+BUSINESS_CONFIGS
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(2527.75, 975)" id="entity-PAYMENTS-5" class="node default"><rect height="84" width="110" y="-42" x="-55" style="" class="basic label-container"></rect><g transform="translate(-35, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="70">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+PAYMENTS
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(1058.5, 420)" id="entity-INVENTORY_CATEGORIES-6" class="node default"><rect height="84" width="213" y="-42" x="-106.5" style="" class="basic label-container"></rect><g transform="translate(-86.5, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="173">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+INVENTORY_CATEGORIES
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(760, 605)" id="entity-INVENTORY_ITEMS-7" class="node default"><rect height="84" width="167" y="-42" x="-83.5" style="" class="basic label-container"></rect><g transform="translate(-63.5, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="127">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+INVENTORY_ITEMS
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(1448.25, 420)" id="entity-DOCUMENTS-8" class="node default"><rect height="84" width="128" y="-42" x="-64" style="" class="basic label-container"></rect><g transform="translate(-44, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="88">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+DOCUMENTS
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(1358.25, 605)" id="entity-AUTHORIZATIONS-9" class="node default"><rect height="84" width="160" y="-42" x="-80" style="" class="basic label-container"></rect><g transform="translate(-60, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="120">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+AUTHORIZATIONS
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(1312.5, 50)" id="entity-PLANS-10" class="node default"><rect height="84" width="100" y="-42" x="-50" style="" class="basic label-container"></rect><g transform="translate(-22, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="44">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 100px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+PLANS
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(1312.5, 235)" id="entity-PLAN_LIMITS-11" class="node default"><rect height="84" width="128" y="-42" x="-64" style="" class="basic label-container"></rect><g transform="translate(-44, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="88">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+PLAN_LIMITS
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(1593, 235)" id="entity-PLAN_FEATURES-12" class="node default"><rect height="84" width="153" y="-42" x="-76.5" style="" class="basic label-container"></rect><g transform="translate(-56.5, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="113">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+PLAN_FEATURES
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(1628.25, 605)" id="entity-PETS-13" class="node default"><rect height="84" width="100" y="-42" x="-50" style="" class="basic label-container"></rect><g transform="translate(-17.5, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="35">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 100px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+PETS
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(2397.75, 605)" id="entity-APPOINTMENTS-14" class="node default"><rect height="84" width="148" y="-42" x="-74" style="" class="basic label-container"></rect><g transform="translate(-54, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="108">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+APPOINTMENTS
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(2217.25, 790)" id="entity-INVOICES-15" class="node default"><rect height="84" width="105" y="-42" x="-52.5" style="" class="basic label-container"></rect><g transform="translate(-32.5, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="65">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+INVOICES
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(1951.25, 605)" id="entity-CRM_EVENTS-16" class="node default"><rect height="84" width="132" y="-42" x="-66" style="" class="basic label-container"></rect><g transform="translate(-46, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="92">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+CRM_EVENTS
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(2435.5, 420)" id="entity-SERVICES-17" class="node default"><rect height="84" width="105" y="-42" x="-52.5" style="" class="basic label-container"></rect><g transform="translate(-32.5, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="65">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+SERVICES
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(2716.5, 420)" id="entity-SERVICE_PACKAGES-18" class="node default"><rect height="84" width="177" y="-42" x="-88.5" style="" class="basic label-container"></rect><g transform="translate(-68.5, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="137">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+SERVICE_PACKAGES
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(671, 975)" id="entity-INVOICE_ITEMS-19" class="node default"><rect height="84" width="146" y="-42" x="-73" style="" class="basic label-container"></rect><g transform="translate(-53, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="106">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+INVOICE_ITEMS
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(2569.5, 1160)" id="entity-PAYMENT_ITEMS-20" class="node default"><rect height="84" width="151" y="-42" x="-75.5" style="" class="basic label-container"></rect><g transform="translate(-55.5, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="111">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+PAYMENT_ITEMS
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(344.5, 975)" id="entity-CASH_REGISTER_SESSIONS-21" class="node default"><rect height="84" width="227" y="-42" x="-113.5" style="" class="basic label-container"></rect><g transform="translate(-93.5, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="187">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+CASH_REGISTER_SESSIONS
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(345.25, 1160)" id="entity-CASH_TRANSACTIONS-22" class="node default"><rect height="84" width="191" y="-42" x="-95.5" style="" class="basic label-container"></rect><g transform="translate(-75.5, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="151">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+CASH_TRANSACTIONS
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(1010.25, 790)" id="entity-INVENTORY_MOVEMENTS-23" class="node default"><rect height="84" width="213" y="-42" x="-106.5" style="" class="basic label-container"></rect><g transform="translate(-86.5, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="173">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+INVENTORY_MOVEMENTS
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(1358.25, 790)" id="entity-AUDIT_LOGS-24" class="node default"><rect height="84" width="128" y="-42" x="-64" style="" class="basic label-container"></rect><g transform="translate(-44, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="88">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+AUDIT_LOGS
+</p>
+</span>
+</div>
+</foreignobject></g></g></g></g></g>
+</svg>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="gestión-de-usuarios-y-subscripciones" class="level2" data-number="4.5">
+<h2 data-number="4.5" class="anchored" data-anchor-id="gestión-de-usuarios-y-subscripciones"><span class="header-section-number">4.5</span> Gestión de usuarios y subscripciones</h2>
+<p>Este subconjunto modela la autenticación, delegación de usuarios y control de capacidades según el plan contratado. Constituye la base de acceso y gobierno funcional de la plataforma.</p>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<svg aria-roledescription="er" role="graphics-document document" viewbox="0 0 853.25 470" class="erDiagram" xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" width="672" id="mermaid-figure-13" height="480">
+<style>#mermaid-figure-13{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#333;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#mermaid-figure-13 .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#mermaid-figure-13 .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#mermaid-figure-13 .error-icon{fill:#552222;}#mermaid-figure-13 .error-text{fill:#552222;stroke:#552222;}#mermaid-figure-13 .edge-thickness-normal{stroke-width:1px;}#mermaid-figure-13 .edge-thickness-thick{stroke-width:3.5px;}#mermaid-figure-13 .edge-pattern-solid{stroke-dasharray:0;}#mermaid-figure-13 .edge-thickness-invisible{stroke-width:0;fill:none;}#mermaid-figure-13 .edge-pattern-dashed{stroke-dasharray:3;}#mermaid-figure-13 .edge-pattern-dotted{stroke-dasharray:2;}#mermaid-figure-13 .marker{fill:#333333;stroke:#333333;}#mermaid-figure-13 .marker.cross{stroke:#333333;}#mermaid-figure-13 svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#mermaid-figure-13 p{margin:0;}#mermaid-figure-13 .entityBox{fill:#ECECFF;stroke:#9370DB;}#mermaid-figure-13 .relationshipLabelBox{fill:hsl(80, 100%, 96.2745098039%);opacity:0.7;background-color:hsl(80, 100%, 96.2745098039%);}#mermaid-figure-13 .relationshipLabelBox rect{opacity:0.5;}#mermaid-figure-13 .labelBkg{background-color:rgba(248.6666666666, 255, 235.9999999999, 0.5);}#mermaid-figure-13 .edgeLabel .label{fill:#9370DB;font-size:14px;}#mermaid-figure-13 .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#333;}#mermaid-figure-13 .edge-pattern-dashed{stroke-dasharray:8,8;}#mermaid-figure-13 .node rect,#mermaid-figure-13 .node circle,#mermaid-figure-13 .node ellipse,#mermaid-figure-13 .node polygon{fill:#ECECFF;stroke:#9370DB;stroke-width:1px;}#mermaid-figure-13 .relationshipLine{stroke:#333333;stroke-width:1;fill:none;}#mermaid-figure-13 .marker{fill:none!important;stroke:#333333!important;stroke-width:1;}#mermaid-figure-13 :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style>
+<g><defs><marker orient="auto" markerheight="18" markerwidth="18" refy="9" refx="0" class="marker onlyOne er" id="mermaid-figure-13-mermaid-1782227790790_er-onlyOneStart"><path d="M9,0 L9,18 M15,0 L15,18"></path></marker></defs><defs><marker orient="auto" markerheight="18" markerwidth="18" refy="9" refx="18" class="marker onlyOne er" id="mermaid-figure-13-mermaid-1782227790790_er-onlyOneEnd"><path d="M3,0 L3,18 M9,0 L9,18"></path></marker></defs><defs><marker orient="auto" markerheight="18" markerwidth="30" refy="9" refx="0" class="marker zeroOrOne er" id="mermaid-figure-13-mermaid-1782227790790_er-zeroOrOneStart"><circle r="6" cy="9" cx="21" fill="white"></circle><path d="M9,0 L9,18"></path></marker></defs><defs><marker orient="auto" markerheight="18" markerwidth="30" refy="9" refx="30" class="marker zeroOrOne er" id="mermaid-figure-13-mermaid-1782227790790_er-zeroOrOneEnd"><circle r="6" cy="9" cx="9" fill="white"></circle><path d="M21,0 L21,18"></path></marker></defs><defs><marker orient="auto" markerheight="36" markerwidth="45" refy="18" refx="18" class="marker oneOrMore er" id="mermaid-figure-13-mermaid-1782227790790_er-oneOrMoreStart"><path d="M0,18 Q 18,0 36,18 Q 18,36 0,18 M42,9 L42,27"></path></marker></defs><defs><marker orient="auto" markerheight="36" markerwidth="45" refy="18" refx="27" class="marker oneOrMore er" id="mermaid-figure-13-mermaid-1782227790790_er-oneOrMoreEnd"><path d="M3,9 L3,27 M9,18 Q27,0 45,18 Q27,36 9,18"></path></marker></defs><defs><marker orient="auto" markerheight="36" markerwidth="57" refy="18" refx="18" class="marker zeroOrMore er" id="mermaid-figure-13-mermaid-1782227790790_er-zeroOrMoreStart"><circle r="6" cy="18" cx="48" fill="white"></circle><path d="M0,18 Q18,0 36,18 Q18,36 0,18"></path></marker></defs><defs><marker orient="auto" markerheight="36" markerwidth="57" refy="18" refx="39" class="marker zeroOrMore er" id="mermaid-figure-13-mermaid-1782227790790_er-zeroOrMoreEnd"><circle r="6" cy="18" cx="9" fill="white"></circle><path d="M21,18 Q39,0 57,18 Q39,36 21,18"></path></marker></defs><g class="root"><g class="clusters"></g><g class="edgePaths"><path marker-end="url(#mermaid-figure-13-mermaid-1782227790790_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-13-mermaid-1782227790790_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-USERS-0_entity-REFRESH_TOKENS-1_0" d="M184.25,267.174L168.625,277.228C153,287.283,121.75,307.391,106.125,325.862C90.5,344.333,90.5,361.167,90.5,369.583L90.5,378"></path><path marker-end="url(#mermaid-figure-13-mermaid-1782227790790_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-13-mermaid-1782227790790_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-USERS-0_entity-TEAM_USERS-2_1" d="M284.25,267.174L299.875,277.228C315.5,287.283,346.75,307.391,362.375,325.862C378,344.333,378,361.167,378,369.583L378,378"></path><path marker-end="url(#mermaid-figure-13-mermaid-1782227790790_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-13-mermaid-1782227790790_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-PLANS-3_entity-PLAN_LIMITS-4_2" d="M488.25,92L488.25,100.417C488.25,108.833,488.25,125.667,488.25,142.5C488.25,159.333,488.25,176.167,488.25,184.583L488.25,193"></path><path marker-end="url(#mermaid-figure-13-mermaid-1782227790790_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-13-mermaid-1782227790790_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-PLANS-3_entity-PLAN_FEATURES-5_3" d="M538.25,66.488L576.667,79.157C615.083,91.826,691.917,117.163,730.333,138.248C768.75,159.333,768.75,176.167,768.75,184.583L768.75,193"></path><path marker-end="url(#mermaid-figure-13-mermaid-1782227790790_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-13-mermaid-1782227790790_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-PLANS-3_entity-USERS-0_4" d="M438.25,68.209L404.25,80.591C370.25,92.972,302.25,117.736,268.25,138.535C234.25,159.333,234.25,176.167,234.25,184.583L234.25,193"></path></g><g class="edgeLabels"><g transform="translate(90.5, 327.5)" class="edgeLabel"><g transform="translate(-16.5, -10.5)" class="label"><foreignobject height="21" width="33">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+owns
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(378, 327.5)" class="edgeLabel"><g transform="translate(-30.5, -10.5)" class="label"><foreignobject height="21" width="61">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+delegates
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(488.25, 142.5)" class="edgeLabel"><g transform="translate(-23.5, -10.5)" class="label"><foreignobject height="21" width="47">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+defines
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(768.75, 142.5)" class="edgeLabel"><g transform="translate(-24, -10.5)" class="label"><foreignobject height="21" width="48">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+enables
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(234.25, 142.5)" class="edgeLabel"><g transform="translate(-37.5, -10.5)" class="label"><foreignobject height="21" width="75">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+assigned_to
+</p>
+</span>
+</div>
+</foreignobject></g></g></g><g class="nodes"><g transform="translate(234.25, 235)" id="entity-USERS-0" class="node default"><rect height="84" width="100" y="-42" x="-50" style="" class="basic label-container"></rect><g transform="translate(-22, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="44">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 100px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+USERS
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(90.5, 420)" id="entity-REFRESH_TOKENS-1" class="node default"><rect height="84" width="165" y="-42" x="-82.5" style="" class="basic label-container"></rect><g transform="translate(-62.5, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="125">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+REFRESH_TOKENS
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(378, 420)" id="entity-TEAM_USERS-2" class="node default"><rect height="84" width="130" y="-42" x="-65" style="" class="basic label-container"></rect><g transform="translate(-45, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="90">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+TEAM_USERS
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(488.25, 50)" id="entity-PLANS-3" class="node default"><rect height="84" width="100" y="-42" x="-50" style="" class="basic label-container"></rect><g transform="translate(-22, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="44">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 100px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+PLANS
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(488.25, 235)" id="entity-PLAN_LIMITS-4" class="node default"><rect height="84" width="128" y="-42" x="-64" style="" class="basic label-container"></rect><g transform="translate(-44, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="88">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+PLAN_LIMITS
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(768.75, 235)" id="entity-PLAN_FEATURES-5" class="node default"><rect height="84" width="153" y="-42" x="-76.5" style="" class="basic label-container"></rect><g transform="translate(-56.5, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="113">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+PLAN_FEATURES
+</p>
+</span>
+</div>
+</foreignobject></g></g></g></g></g>
+</svg>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+<section id="autenticación" class="level3" data-number="4.5.1">
+<h3 data-number="4.5.1" class="anchored" data-anchor-id="autenticación"><span class="header-section-number">4.5.1</span> Autenticación</h3>
+<p>El modelo de autenticación se basa en la entidad <code>User</code>, que almacena credenciales, rol, plan y jerarquía. <code>RefreshToken</code> permite renovar sesiones sin exponer contraseñas. La relación entre <code>User</code> y <code>Plan</code> habilita o restringe características según la suscripción. La entidad <code>TeamUser</code> facilita la delegación de acceso dentro de una organización, permitiendo queun usuario principal administre subusuarios con permisos específicos. Esta estructura soporta un control de acceso granular.</p>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<svg aria-roledescription="er" role="graphics-document document" viewbox="0 0 181 470" class="erDiagram" xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" width="672" id="mermaid-figure-12" height="480">
+<style>#mermaid-figure-12{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#333;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#mermaid-figure-12 .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#mermaid-figure-12 .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#mermaid-figure-12 .error-icon{fill:#552222;}#mermaid-figure-12 .error-text{fill:#552222;stroke:#552222;}#mermaid-figure-12 .edge-thickness-normal{stroke-width:1px;}#mermaid-figure-12 .edge-thickness-thick{stroke-width:3.5px;}#mermaid-figure-12 .edge-pattern-solid{stroke-dasharray:0;}#mermaid-figure-12 .edge-thickness-invisible{stroke-width:0;fill:none;}#mermaid-figure-12 .edge-pattern-dashed{stroke-dasharray:3;}#mermaid-figure-12 .edge-pattern-dotted{stroke-dasharray:2;}#mermaid-figure-12 .marker{fill:#333333;stroke:#333333;}#mermaid-figure-12 .marker.cross{stroke:#333333;}#mermaid-figure-12 svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#mermaid-figure-12 p{margin:0;}#mermaid-figure-12 .entityBox{fill:#ECECFF;stroke:#9370DB;}#mermaid-figure-12 .relationshipLabelBox{fill:hsl(80, 100%, 96.2745098039%);opacity:0.7;background-color:hsl(80, 100%, 96.2745098039%);}#mermaid-figure-12 .relationshipLabelBox rect{opacity:0.5;}#mermaid-figure-12 .labelBkg{background-color:rgba(248.6666666666, 255, 235.9999999999, 0.5);}#mermaid-figure-12 .edgeLabel .label{fill:#9370DB;font-size:14px;}#mermaid-figure-12 .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#333;}#mermaid-figure-12 .edge-pattern-dashed{stroke-dasharray:8,8;}#mermaid-figure-12 .node rect,#mermaid-figure-12 .node circle,#mermaid-figure-12 .node ellipse,#mermaid-figure-12 .node polygon{fill:#ECECFF;stroke:#9370DB;stroke-width:1px;}#mermaid-figure-12 .relationshipLine{stroke:#333333;stroke-width:1;fill:none;}#mermaid-figure-12 .marker{fill:none!important;stroke:#333333!important;stroke-width:1;}#mermaid-figure-12 :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style>
+<g><defs><marker orient="auto" markerheight="18" markerwidth="18" refy="9" refx="0" class="marker onlyOne er" id="mermaid-figure-12-mermaid-1782227785679_er-onlyOneStart"><path d="M9,0 L9,18 M15,0 L15,18"></path></marker></defs><defs><marker orient="auto" markerheight="18" markerwidth="18" refy="9" refx="18" class="marker onlyOne er" id="mermaid-figure-12-mermaid-1782227785679_er-onlyOneEnd"><path d="M3,0 L3,18 M9,0 L9,18"></path></marker></defs><defs><marker orient="auto" markerheight="18" markerwidth="30" refy="9" refx="0" class="marker zeroOrOne er" id="mermaid-figure-12-mermaid-1782227785679_er-zeroOrOneStart"><circle r="6" cy="9" cx="21" fill="white"></circle><path d="M9,0 L9,18"></path></marker></defs><defs><marker orient="auto" markerheight="18" markerwidth="30" refy="9" refx="30" class="marker zeroOrOne er" id="mermaid-figure-12-mermaid-1782227785679_er-zeroOrOneEnd"><circle r="6" cy="9" cx="9" fill="white"></circle><path d="M21,0 L21,18"></path></marker></defs><defs><marker orient="auto" markerheight="36" markerwidth="45" refy="18" refx="18" class="marker oneOrMore er" id="mermaid-figure-12-mermaid-1782227785679_er-oneOrMoreStart"><path d="M0,18 Q 18,0 36,18 Q 18,36 0,18 M42,9 L42,27"></path></marker></defs><defs><marker orient="auto" markerheight="36" markerwidth="45" refy="18" refx="27" class="marker oneOrMore er" id="mermaid-figure-12-mermaid-1782227785679_er-oneOrMoreEnd"><path d="M3,9 L3,27 M9,18 Q27,0 45,18 Q27,36 9,18"></path></marker></defs><defs><marker orient="auto" markerheight="36" markerwidth="57" refy="18" refx="18" class="marker zeroOrMore er" id="mermaid-figure-12-mermaid-1782227785679_er-zeroOrMoreStart"><circle r="6" cy="18" cx="48" fill="white"></circle><path d="M0,18 Q18,0 36,18 Q18,36 0,18"></path></marker></defs><defs><marker orient="auto" markerheight="36" markerwidth="57" refy="18" refx="39" class="marker zeroOrMore er" id="mermaid-figure-12-mermaid-1782227785679_er-zeroOrMoreEnd"><circle r="6" cy="18" cx="9" fill="white"></circle><path d="M21,18 Q39,0 57,18 Q39,36 21,18"></path></marker></defs><g class="root"><g class="clusters"></g><g class="edgePaths"><path marker-end="url(#mermaid-figure-12-mermaid-1782227785679_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-12-mermaid-1782227785679_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-USERS-0_entity-REFRESH_TOKENS-1_0" d="M90.5,277L90.5,285.417C90.5,293.833,90.5,310.667,90.5,327.5C90.5,344.333,90.5,361.167,90.5,369.583L90.5,378"></path><path marker-end="url(#mermaid-figure-12-mermaid-1782227785679_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-12-mermaid-1782227785679_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-PLANS-2_entity-USERS-0_1" d="M90.5,92L90.5,100.417C90.5,108.833,90.5,125.667,90.5,142.5C90.5,159.333,90.5,176.167,90.5,184.583L90.5,193"></path></g><g class="edgeLabels"><g transform="translate(90.5, 327.5)" class="edgeLabel"><g transform="translate(-16.5, -10.5)" class="label"><foreignobject height="21" width="33">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+owns
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(90.5, 142.5)" class="edgeLabel"><g transform="translate(-37.5, -10.5)" class="label"><foreignobject height="21" width="75">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+assigned_to
+</p>
+</span>
+</div>
+</foreignobject></g></g></g><g class="nodes"><g transform="translate(90.5, 235)" id="entity-USERS-0" class="node default"><rect height="84" width="100" y="-42" x="-50" style="" class="basic label-container"></rect><g transform="translate(-22, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="44">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 100px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+USERS
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(90.5, 420)" id="entity-REFRESH_TOKENS-1" class="node default"><rect height="84" width="165" y="-42" x="-82.5" style="" class="basic label-container"></rect><g transform="translate(-62.5, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="125">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+REFRESH_TOKENS
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(90.5, 50)" id="entity-PLANS-2" class="node default"><rect height="84" width="100" y="-42" x="-50" style="" class="basic label-container"></rect><g transform="translate(-22, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="44">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 100px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+PLANS
+</p>
+</span>
+</div>
+</foreignobject></g></g></g></g></g>
+</svg>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+</section>
+<section id="delegación" class="level3" data-number="4.5.2">
+<h3 data-number="4.5.2" class="anchored" data-anchor-id="delegación"><span class="header-section-number">4.5.2</span> Delegación</h3>
+<p>La relación <code>TEAM_USERS</code> permite que un usuario principal delegue acceso a otros usuarios dentro de su organización. Esto es crucial para empresas que requieren múltiples usuarios con diferentes niveles de acceso. Por ejemplo, un gerente puede tener acceso completo, mientras que un empleado solo puede gestionar clientes o citas.</p>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<svg aria-roledescription="er" role="graphics-document document" viewbox="0 0 146 285" class="erDiagram" xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" width="672" id="mermaid-figure-11" height="480">
+<style>#mermaid-figure-11{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#333;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#mermaid-figure-11 .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#mermaid-figure-11 .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#mermaid-figure-11 .error-icon{fill:#552222;}#mermaid-figure-11 .error-text{fill:#552222;stroke:#552222;}#mermaid-figure-11 .edge-thickness-normal{stroke-width:1px;}#mermaid-figure-11 .edge-thickness-thick{stroke-width:3.5px;}#mermaid-figure-11 .edge-pattern-solid{stroke-dasharray:0;}#mermaid-figure-11 .edge-thickness-invisible{stroke-width:0;fill:none;}#mermaid-figure-11 .edge-pattern-dashed{stroke-dasharray:3;}#mermaid-figure-11 .edge-pattern-dotted{stroke-dasharray:2;}#mermaid-figure-11 .marker{fill:#333333;stroke:#333333;}#mermaid-figure-11 .marker.cross{stroke:#333333;}#mermaid-figure-11 svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#mermaid-figure-11 p{margin:0;}#mermaid-figure-11 .entityBox{fill:#ECECFF;stroke:#9370DB;}#mermaid-figure-11 .relationshipLabelBox{fill:hsl(80, 100%, 96.2745098039%);opacity:0.7;background-color:hsl(80, 100%, 96.2745098039%);}#mermaid-figure-11 .relationshipLabelBox rect{opacity:0.5;}#mermaid-figure-11 .labelBkg{background-color:rgba(248.6666666666, 255, 235.9999999999, 0.5);}#mermaid-figure-11 .edgeLabel .label{fill:#9370DB;font-size:14px;}#mermaid-figure-11 .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#333;}#mermaid-figure-11 .edge-pattern-dashed{stroke-dasharray:8,8;}#mermaid-figure-11 .node rect,#mermaid-figure-11 .node circle,#mermaid-figure-11 .node ellipse,#mermaid-figure-11 .node polygon{fill:#ECECFF;stroke:#9370DB;stroke-width:1px;}#mermaid-figure-11 .relationshipLine{stroke:#333333;stroke-width:1;fill:none;}#mermaid-figure-11 .marker{fill:none!important;stroke:#333333!important;stroke-width:1;}#mermaid-figure-11 :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style>
+<g><defs><marker orient="auto" markerheight="18" markerwidth="18" refy="9" refx="0" class="marker onlyOne er" id="mermaid-figure-11-mermaid-1782227780584_er-onlyOneStart"><path d="M9,0 L9,18 M15,0 L15,18"></path></marker></defs><defs><marker orient="auto" markerheight="18" markerwidth="18" refy="9" refx="18" class="marker onlyOne er" id="mermaid-figure-11-mermaid-1782227780584_er-onlyOneEnd"><path d="M3,0 L3,18 M9,0 L9,18"></path></marker></defs><defs><marker orient="auto" markerheight="18" markerwidth="30" refy="9" refx="0" class="marker zeroOrOne er" id="mermaid-figure-11-mermaid-1782227780584_er-zeroOrOneStart"><circle r="6" cy="9" cx="21" fill="white"></circle><path d="M9,0 L9,18"></path></marker></defs><defs><marker orient="auto" markerheight="18" markerwidth="30" refy="9" refx="30" class="marker zeroOrOne er" id="mermaid-figure-11-mermaid-1782227780584_er-zeroOrOneEnd"><circle r="6" cy="9" cx="9" fill="white"></circle><path d="M21,0 L21,18"></path></marker></defs><defs><marker orient="auto" markerheight="36" markerwidth="45" refy="18" refx="18" class="marker oneOrMore er" id="mermaid-figure-11-mermaid-1782227780584_er-oneOrMoreStart"><path d="M0,18 Q 18,0 36,18 Q 18,36 0,18 M42,9 L42,27"></path></marker></defs><defs><marker orient="auto" markerheight="36" markerwidth="45" refy="18" refx="27" class="marker oneOrMore er" id="mermaid-figure-11-mermaid-1782227780584_er-oneOrMoreEnd"><path d="M3,9 L3,27 M9,18 Q27,0 45,18 Q27,36 9,18"></path></marker></defs><defs><marker orient="auto" markerheight="36" markerwidth="57" refy="18" refx="18" class="marker zeroOrMore er" id="mermaid-figure-11-mermaid-1782227780584_er-zeroOrMoreStart"><circle r="6" cy="18" cx="48" fill="white"></circle><path d="M0,18 Q18,0 36,18 Q18,36 0,18"></path></marker></defs><defs><marker orient="auto" markerheight="36" markerwidth="57" refy="18" refx="39" class="marker zeroOrMore er" id="mermaid-figure-11-mermaid-1782227780584_er-zeroOrMoreEnd"><circle r="6" cy="18" cx="9" fill="white"></circle><path d="M21,18 Q39,0 57,18 Q39,36 21,18"></path></marker></defs><g class="root"><g class="clusters"></g><g class="edgePaths"><path marker-end="url(#mermaid-figure-11-mermaid-1782227780584_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-11-mermaid-1782227780584_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-USERS-0_entity-TEAM_USERS-1_0" d="M73,92L73,100.417C73,108.833,73,125.667,73,142.5C73,159.333,73,176.167,73,184.583L73,193"></path></g><g class="edgeLabels"><g transform="translate(73, 142.5)" class="edgeLabel"><g transform="translate(-30.5, -10.5)" class="label"><foreignobject height="21" width="61">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+delegates
+</p>
+</span>
+</div>
+</foreignobject></g></g></g><g class="nodes"><g transform="translate(73, 50)" id="entity-USERS-0" class="node default"><rect height="84" width="100" y="-42" x="-50" style="" class="basic label-container"></rect><g transform="translate(-22, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="44">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 100px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+USERS
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(73, 235)" id="entity-TEAM_USERS-1" class="node default"><rect height="84" width="130" y="-42" x="-65" style="" class="basic label-container"></rect><g transform="translate(-45, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="90">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+TEAM_USERS
+</p>
+</span>
+</div>
+</foreignobject></g></g></g></g></g>
+</svg>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+</section>
+<section id="capacidades-por-plan" class="level3" data-number="4.5.3">
+<h3 data-number="4.5.3" class="anchored" data-anchor-id="capacidades-por-plan"><span class="header-section-number">4.5.3</span> Capacidades por plan</h3>
+<p>La relación <code>PLANS</code> con <code>PLAN_LIMITS</code> y <code>PLAN_FEATURES</code> permite definir y habilitar características específicas según el plan contratado por cada usuario.</p>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<svg aria-roledescription="er" role="graphics-document document" viewbox="0 0 437 285" class="erDiagram" xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" width="672" id="mermaid-figure-10" height="480">
+<style>#mermaid-figure-10{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#333;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#mermaid-figure-10 .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#mermaid-figure-10 .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#mermaid-figure-10 .error-icon{fill:#552222;}#mermaid-figure-10 .error-text{fill:#552222;stroke:#552222;}#mermaid-figure-10 .edge-thickness-normal{stroke-width:1px;}#mermaid-figure-10 .edge-thickness-thick{stroke-width:3.5px;}#mermaid-figure-10 .edge-pattern-solid{stroke-dasharray:0;}#mermaid-figure-10 .edge-thickness-invisible{stroke-width:0;fill:none;}#mermaid-figure-10 .edge-pattern-dashed{stroke-dasharray:3;}#mermaid-figure-10 .edge-pattern-dotted{stroke-dasharray:2;}#mermaid-figure-10 .marker{fill:#333333;stroke:#333333;}#mermaid-figure-10 .marker.cross{stroke:#333333;}#mermaid-figure-10 svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#mermaid-figure-10 p{margin:0;}#mermaid-figure-10 .entityBox{fill:#ECECFF;stroke:#9370DB;}#mermaid-figure-10 .relationshipLabelBox{fill:hsl(80, 100%, 96.2745098039%);opacity:0.7;background-color:hsl(80, 100%, 96.2745098039%);}#mermaid-figure-10 .relationshipLabelBox rect{opacity:0.5;}#mermaid-figure-10 .labelBkg{background-color:rgba(248.6666666666, 255, 235.9999999999, 0.5);}#mermaid-figure-10 .edgeLabel .label{fill:#9370DB;font-size:14px;}#mermaid-figure-10 .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#333;}#mermaid-figure-10 .edge-pattern-dashed{stroke-dasharray:8,8;}#mermaid-figure-10 .node rect,#mermaid-figure-10 .node circle,#mermaid-figure-10 .node ellipse,#mermaid-figure-10 .node polygon{fill:#ECECFF;stroke:#9370DB;stroke-width:1px;}#mermaid-figure-10 .relationshipLine{stroke:#333333;stroke-width:1;fill:none;}#mermaid-figure-10 .marker{fill:none!important;stroke:#333333!important;stroke-width:1;}#mermaid-figure-10 :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style>
+<g><defs><marker orient="auto" markerheight="18" markerwidth="18" refy="9" refx="0" class="marker onlyOne er" id="mermaid-figure-10-mermaid-1782227775460_er-onlyOneStart"><path d="M9,0 L9,18 M15,0 L15,18"></path></marker></defs><defs><marker orient="auto" markerheight="18" markerwidth="18" refy="9" refx="18" class="marker onlyOne er" id="mermaid-figure-10-mermaid-1782227775460_er-onlyOneEnd"><path d="M3,0 L3,18 M9,0 L9,18"></path></marker></defs><defs><marker orient="auto" markerheight="18" markerwidth="30" refy="9" refx="0" class="marker zeroOrOne er" id="mermaid-figure-10-mermaid-1782227775460_er-zeroOrOneStart"><circle r="6" cy="9" cx="21" fill="white"></circle><path d="M9,0 L9,18"></path></marker></defs><defs><marker orient="auto" markerheight="18" markerwidth="30" refy="9" refx="30" class="marker zeroOrOne er" id="mermaid-figure-10-mermaid-1782227775460_er-zeroOrOneEnd"><circle r="6" cy="9" cx="9" fill="white"></circle><path d="M21,0 L21,18"></path></marker></defs><defs><marker orient="auto" markerheight="36" markerwidth="45" refy="18" refx="18" class="marker oneOrMore er" id="mermaid-figure-10-mermaid-1782227775460_er-oneOrMoreStart"><path d="M0,18 Q 18,0 36,18 Q 18,36 0,18 M42,9 L42,27"></path></marker></defs><defs><marker orient="auto" markerheight="36" markerwidth="45" refy="18" refx="27" class="marker oneOrMore er" id="mermaid-figure-10-mermaid-1782227775460_er-oneOrMoreEnd"><path d="M3,9 L3,27 M9,18 Q27,0 45,18 Q27,36 9,18"></path></marker></defs><defs><marker orient="auto" markerheight="36" markerwidth="57" refy="18" refx="18" class="marker zeroOrMore er" id="mermaid-figure-10-mermaid-1782227775460_er-zeroOrMoreStart"><circle r="6" cy="18" cx="48" fill="white"></circle><path d="M0,18 Q18,0 36,18 Q18,36 0,18"></path></marker></defs><defs><marker orient="auto" markerheight="36" markerwidth="57" refy="18" refx="39" class="marker zeroOrMore er" id="mermaid-figure-10-mermaid-1782227775460_er-zeroOrMoreEnd"><circle r="6" cy="18" cx="9" fill="white"></circle><path d="M21,18 Q39,0 57,18 Q39,36 21,18"></path></marker></defs><g class="root"><g class="clusters"></g><g class="edgePaths"><path marker-end="url(#mermaid-figure-10-mermaid-1782227775460_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-10-mermaid-1782227775460_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-PLANS-0_entity-PLAN_LIMITS-1_0" d="M162.25,82.977L147.208,92.897C132.167,102.818,102.083,122.659,87.042,140.996C72,159.333,72,176.167,72,184.583L72,193"></path><path marker-end="url(#mermaid-figure-10-mermaid-1782227775460_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-10-mermaid-1782227775460_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-PLANS-0_entity-PLAN_FEATURES-2_1" d="M262.25,82.977L277.292,92.897C292.333,102.818,322.417,122.659,337.458,140.996C352.5,159.333,352.5,176.167,352.5,184.583L352.5,193"></path></g><g class="edgeLabels"><g transform="translate(72, 142.5)" class="edgeLabel"><g transform="translate(-23.5, -10.5)" class="label"><foreignobject height="21" width="47">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+defines
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(352.5, 142.5)" class="edgeLabel"><g transform="translate(-24, -10.5)" class="label"><foreignobject height="21" width="48">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+enables
+</p>
+</span>
+</div>
+</foreignobject></g></g></g><g class="nodes"><g transform="translate(212.25, 50)" id="entity-PLANS-0" class="node default"><rect height="84" width="100" y="-42" x="-50" style="" class="basic label-container"></rect><g transform="translate(-22, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="44">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 100px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+PLANS
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(72, 235)" id="entity-PLAN_LIMITS-1" class="node default"><rect height="84" width="128" y="-42" x="-64" style="" class="basic label-container"></rect><g transform="translate(-44, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="88">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+PLAN_LIMITS
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(352.5, 235)" id="entity-PLAN_FEATURES-2" class="node default"><rect height="84" width="153" y="-42" x="-76.5" style="" class="basic label-container"></rect><g transform="translate(-56.5, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="113">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+PLAN_FEATURES
+</p>
+</span>
+</div>
+</foreignobject></g></g></g></g></g>
+</svg>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="clientes-y-gestión-comercial" class="level2" data-number="4.6">
+<h2 data-number="4.6" class="anchored" data-anchor-id="clientes-y-gestión-comercial"><span class="header-section-number">4.6</span> Clientes y gestión comercial</h2>
+<p>Modela la relación entre clientes, mascotas, citas y eventos de seguimiento comercial</p>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<svg aria-roledescription="er" role="graphics-document document" viewbox="0 0 676 470" class="erDiagram" xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" width="672" id="mermaid-figure-9" height="480">
+<style>#mermaid-figure-9{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#333;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#mermaid-figure-9 .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#mermaid-figure-9 .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#mermaid-figure-9 .error-icon{fill:#552222;}#mermaid-figure-9 .error-text{fill:#552222;stroke:#552222;}#mermaid-figure-9 .edge-thickness-normal{stroke-width:1px;}#mermaid-figure-9 .edge-thickness-thick{stroke-width:3.5px;}#mermaid-figure-9 .edge-pattern-solid{stroke-dasharray:0;}#mermaid-figure-9 .edge-thickness-invisible{stroke-width:0;fill:none;}#mermaid-figure-9 .edge-pattern-dashed{stroke-dasharray:3;}#mermaid-figure-9 .edge-pattern-dotted{stroke-dasharray:2;}#mermaid-figure-9 .marker{fill:#333333;stroke:#333333;}#mermaid-figure-9 .marker.cross{stroke:#333333;}#mermaid-figure-9 svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#mermaid-figure-9 p{margin:0;}#mermaid-figure-9 .entityBox{fill:#ECECFF;stroke:#9370DB;}#mermaid-figure-9 .relationshipLabelBox{fill:hsl(80, 100%, 96.2745098039%);opacity:0.7;background-color:hsl(80, 100%, 96.2745098039%);}#mermaid-figure-9 .relationshipLabelBox rect{opacity:0.5;}#mermaid-figure-9 .labelBkg{background-color:rgba(248.6666666666, 255, 235.9999999999, 0.5);}#mermaid-figure-9 .edgeLabel .label{fill:#9370DB;font-size:14px;}#mermaid-figure-9 .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#333;}#mermaid-figure-9 .edge-pattern-dashed{stroke-dasharray:8,8;}#mermaid-figure-9 .node rect,#mermaid-figure-9 .node circle,#mermaid-figure-9 .node ellipse,#mermaid-figure-9 .node polygon{fill:#ECECFF;stroke:#9370DB;stroke-width:1px;}#mermaid-figure-9 .relationshipLine{stroke:#333333;stroke-width:1;fill:none;}#mermaid-figure-9 .marker{fill:none!important;stroke:#333333!important;stroke-width:1;}#mermaid-figure-9 :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style>
+<g><defs><marker orient="auto" markerheight="18" markerwidth="18" refy="9" refx="0" class="marker onlyOne er" id="mermaid-figure-9-mermaid-1782227770395_er-onlyOneStart"><path d="M9,0 L9,18 M15,0 L15,18"></path></marker></defs><defs><marker orient="auto" markerheight="18" markerwidth="18" refy="9" refx="18" class="marker onlyOne er" id="mermaid-figure-9-mermaid-1782227770395_er-onlyOneEnd"><path d="M3,0 L3,18 M9,0 L9,18"></path></marker></defs><defs><marker orient="auto" markerheight="18" markerwidth="30" refy="9" refx="0" class="marker zeroOrOne er" id="mermaid-figure-9-mermaid-1782227770395_er-zeroOrOneStart"><circle r="6" cy="9" cx="21" fill="white"></circle><path d="M9,0 L9,18"></path></marker></defs><defs><marker orient="auto" markerheight="18" markerwidth="30" refy="9" refx="30" class="marker zeroOrOne er" id="mermaid-figure-9-mermaid-1782227770395_er-zeroOrOneEnd"><circle r="6" cy="9" cx="9" fill="white"></circle><path d="M21,0 L21,18"></path></marker></defs><defs><marker orient="auto" markerheight="36" markerwidth="45" refy="18" refx="18" class="marker oneOrMore er" id="mermaid-figure-9-mermaid-1782227770395_er-oneOrMoreStart"><path d="M0,18 Q 18,0 36,18 Q 18,36 0,18 M42,9 L42,27"></path></marker></defs><defs><marker orient="auto" markerheight="36" markerwidth="45" refy="18" refx="27" class="marker oneOrMore er" id="mermaid-figure-9-mermaid-1782227770395_er-oneOrMoreEnd"><path d="M3,9 L3,27 M9,18 Q27,0 45,18 Q27,36 9,18"></path></marker></defs><defs><marker orient="auto" markerheight="36" markerwidth="57" refy="18" refx="18" class="marker zeroOrMore er" id="mermaid-figure-9-mermaid-1782227770395_er-zeroOrMoreStart"><circle r="6" cy="18" cx="48" fill="white"></circle><path d="M0,18 Q18,0 36,18 Q18,36 0,18"></path></marker></defs><defs><marker orient="auto" markerheight="36" markerwidth="57" refy="18" refx="39" class="marker zeroOrMore er" id="mermaid-figure-9-mermaid-1782227770395_er-zeroOrMoreEnd"><circle r="6" cy="18" cx="9" fill="white"></circle><path d="M21,18 Q39,0 57,18 Q39,36 21,18"></path></marker></defs><g class="root"><g class="clusters"></g><g class="edgePaths"><path marker-end="url(#mermaid-figure-9-mermaid-1782227770395_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-9-mermaid-1782227770395_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-USERS-0_entity-CUSTOMERS-1_0" d="M314,92L314,100.417C314,108.833,314,125.667,314,142.5C314,159.333,314,176.167,314,184.583L314,193"></path><path marker-end="url(#mermaid-figure-9-mermaid-1782227770395_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-9-mermaid-1782227770395_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-CUSTOMERS-1_entity-PETS-2_1" d="M252,257.402L219.667,269.085C187.333,280.768,122.667,304.134,90.333,324.234C58,344.333,58,361.167,58,369.583L58,378"></path><path marker-end="url(#mermaid-figure-9-mermaid-1782227770395_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-9-mermaid-1782227770395_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-CUSTOMERS-1_entity-CRM_EVENTS-3_2" d="M314,277L314,285.417C314,293.833,314,310.667,314,327.5C314,344.333,314,361.167,314,369.583L314,378"></path><path marker-end="url(#mermaid-figure-9-mermaid-1782227770395_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-9-mermaid-1782227770395_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-CUSTOMERS-1_entity-APPOINTMENTS-4_3" d="M376,255.482L412.333,267.485C448.667,279.488,521.333,303.494,557.667,323.914C594,344.333,594,361.167,594,369.583L594,378"></path></g><g class="edgeLabels"><g transform="translate(314, 142.5)" class="edgeLabel"><g transform="translate(-16.5, -10.5)" class="label"><foreignobject height="21" width="33">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+owns
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(58, 327.5)" class="edgeLabel"><g transform="translate(-31, -10.5)" class="label"><foreignobject height="21" width="62">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+may_have
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(314, 327.5)" class="edgeLabel"><g transform="translate(-31.5, -10.5)" class="label"><foreignobject height="21" width="63">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+generates
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(594, 327.5)" class="edgeLabel"><g transform="translate(-31, -10.5)" class="label"><foreignobject height="21" width="62">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+schedules
+</p>
+</span>
+</div>
+</foreignobject></g></g></g><g class="nodes"><g transform="translate(314, 50)" id="entity-USERS-0" class="node default"><rect height="84" width="100" y="-42" x="-50" style="" class="basic label-container"></rect><g transform="translate(-22, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="44">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 100px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+USERS
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(314, 235)" id="entity-CUSTOMERS-1" class="node default"><rect height="84" width="124" y="-42" x="-62" style="" class="basic label-container"></rect><g transform="translate(-42, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="84">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+CUSTOMERS
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(58, 420)" id="entity-PETS-2" class="node default"><rect height="84" width="100" y="-42" x="-50" style="" class="basic label-container"></rect><g transform="translate(-17.5, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="35">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 100px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+PETS
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(314, 420)" id="entity-CRM_EVENTS-3" class="node default"><rect height="84" width="132" y="-42" x="-66" style="" class="basic label-container"></rect><g transform="translate(-46, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="92">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+CRM_EVENTS
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(594, 420)" id="entity-APPOINTMENTS-4" class="node default"><rect height="84" width="148" y="-42" x="-74" style="" class="basic label-container"></rect><g transform="translate(-54, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="108">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+APPOINTMENTS
+</p>
+</span>
+</div>
+</foreignobject></g></g></g></g></g>
+</svg>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+</section>
+<section id="servicios-y-operación" class="level2" data-number="4.7">
+<h2 data-number="4.7" class="anchored" data-anchor-id="servicios-y-operación"><span class="header-section-number">4.7</span> Servicios y operación</h2>
+<p>Modela la ejecución de servicios, reservas, paquetes comerciales y la generación de transacciones derivadas de la operación diaria.</p>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<svg aria-roledescription="er" role="graphics-document document" viewbox="0 0 438 470" class="erDiagram" xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" width="672" id="mermaid-figure-8" height="480">
+<style>#mermaid-figure-8{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#333;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#mermaid-figure-8 .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#mermaid-figure-8 .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#mermaid-figure-8 .error-icon{fill:#552222;}#mermaid-figure-8 .error-text{fill:#552222;stroke:#552222;}#mermaid-figure-8 .edge-thickness-normal{stroke-width:1px;}#mermaid-figure-8 .edge-thickness-thick{stroke-width:3.5px;}#mermaid-figure-8 .edge-pattern-solid{stroke-dasharray:0;}#mermaid-figure-8 .edge-thickness-invisible{stroke-width:0;fill:none;}#mermaid-figure-8 .edge-pattern-dashed{stroke-dasharray:3;}#mermaid-figure-8 .edge-pattern-dotted{stroke-dasharray:2;}#mermaid-figure-8 .marker{fill:#333333;stroke:#333333;}#mermaid-figure-8 .marker.cross{stroke:#333333;}#mermaid-figure-8 svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#mermaid-figure-8 p{margin:0;}#mermaid-figure-8 .entityBox{fill:#ECECFF;stroke:#9370DB;}#mermaid-figure-8 .relationshipLabelBox{fill:hsl(80, 100%, 96.2745098039%);opacity:0.7;background-color:hsl(80, 100%, 96.2745098039%);}#mermaid-figure-8 .relationshipLabelBox rect{opacity:0.5;}#mermaid-figure-8 .labelBkg{background-color:rgba(248.6666666666, 255, 235.9999999999, 0.5);}#mermaid-figure-8 .edgeLabel .label{fill:#9370DB;font-size:14px;}#mermaid-figure-8 .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#333;}#mermaid-figure-8 .edge-pattern-dashed{stroke-dasharray:8,8;}#mermaid-figure-8 .node rect,#mermaid-figure-8 .node circle,#mermaid-figure-8 .node ellipse,#mermaid-figure-8 .node polygon{fill:#ECECFF;stroke:#9370DB;stroke-width:1px;}#mermaid-figure-8 .relationshipLine{stroke:#333333;stroke-width:1;fill:none;}#mermaid-figure-8 .marker{fill:none!important;stroke:#333333!important;stroke-width:1;}#mermaid-figure-8 :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style>
+<g><defs><marker orient="auto" markerheight="18" markerwidth="18" refy="9" refx="0" class="marker onlyOne er" id="mermaid-figure-8-mermaid-1782227765359_er-onlyOneStart"><path d="M9,0 L9,18 M15,0 L15,18"></path></marker></defs><defs><marker orient="auto" markerheight="18" markerwidth="18" refy="9" refx="18" class="marker onlyOne er" id="mermaid-figure-8-mermaid-1782227765359_er-onlyOneEnd"><path d="M3,0 L3,18 M9,0 L9,18"></path></marker></defs><defs><marker orient="auto" markerheight="18" markerwidth="30" refy="9" refx="0" class="marker zeroOrOne er" id="mermaid-figure-8-mermaid-1782227765359_er-zeroOrOneStart"><circle r="6" cy="9" cx="21" fill="white"></circle><path d="M9,0 L9,18"></path></marker></defs><defs><marker orient="auto" markerheight="18" markerwidth="30" refy="9" refx="30" class="marker zeroOrOne er" id="mermaid-figure-8-mermaid-1782227765359_er-zeroOrOneEnd"><circle r="6" cy="9" cx="9" fill="white"></circle><path d="M21,0 L21,18"></path></marker></defs><defs><marker orient="auto" markerheight="36" markerwidth="45" refy="18" refx="18" class="marker oneOrMore er" id="mermaid-figure-8-mermaid-1782227765359_er-oneOrMoreStart"><path d="M0,18 Q 18,0 36,18 Q 18,36 0,18 M42,9 L42,27"></path></marker></defs><defs><marker orient="auto" markerheight="36" markerwidth="45" refy="18" refx="27" class="marker oneOrMore er" id="mermaid-figure-8-mermaid-1782227765359_er-oneOrMoreEnd"><path d="M3,9 L3,27 M9,18 Q27,0 45,18 Q27,36 9,18"></path></marker></defs><defs><marker orient="auto" markerheight="36" markerwidth="57" refy="18" refx="18" class="marker zeroOrMore er" id="mermaid-figure-8-mermaid-1782227765359_er-zeroOrMoreStart"><circle r="6" cy="18" cx="48" fill="white"></circle><path d="M0,18 Q18,0 36,18 Q18,36 0,18"></path></marker></defs><defs><marker orient="auto" markerheight="36" markerwidth="57" refy="18" refx="39" class="marker zeroOrMore er" id="mermaid-figure-8-mermaid-1782227765359_er-zeroOrMoreEnd"><circle r="6" cy="18" cx="9" fill="white"></circle><path d="M21,18 Q39,0 57,18 Q39,36 21,18"></path></marker></defs><g class="root"><g class="clusters"></g><g class="edgePaths"><path marker-end="url(#mermaid-figure-8-mermaid-1782227765359_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-8-mermaid-1782227765359_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-SERVICES-0_entity-APPOINTMENTS-1_0" d="M60.5,92L60.5,100.417C60.5,108.833,60.5,125.667,73.284,142.5C86.068,159.333,111.637,176.167,124.421,184.583L137.205,193"></path><path marker-end="url(#mermaid-figure-8-mermaid-1782227765359_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-8-mermaid-1782227765359_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-SERVICE_PACKAGES-2_entity-APPOINTMENTS-1_1" d="M341.5,92L341.5,100.417C341.5,108.833,341.5,125.667,328.716,142.5C315.932,159.333,290.363,176.167,277.579,184.583L264.795,193"></path><path marker-end="url(#mermaid-figure-8-mermaid-1782227765359_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-8-mermaid-1782227765359_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-APPOINTMENTS-1_entity-PAYMENTS-3_2" d="M144.811,277L133.551,285.417C122.291,293.833,99.77,310.667,88.51,327.5C77.25,344.333,77.25,361.167,77.25,369.583L77.25,378"></path><path marker-end="url(#mermaid-figure-8-mermaid-1782227765359_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-8-mermaid-1782227765359_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-APPOINTMENTS-1_entity-INVOICES-4_3" d="M257.189,277L268.449,285.417C279.709,293.833,302.23,310.667,313.49,327.5C324.75,344.333,324.75,361.167,324.75,369.583L324.75,378"></path></g><g class="edgeLabels"><g transform="translate(60.5, 142.5)" class="edgeLabel"><g transform="translate(-24.5, -10.5)" class="label"><foreignobject height="21" width="49">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+used_in
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(341.5, 142.5)" class="edgeLabel"><g transform="translate(-21, -10.5)" class="label"><foreignobject height="21" width="42">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+groups
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(77.25, 327.5)" class="edgeLabel"><g transform="translate(-29, -10.5)" class="label"><foreignobject height="21" width="58">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+produces
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(324.75, 327.5)" class="edgeLabel"><g transform="translate(-27.5, -10.5)" class="label"><foreignobject height="21" width="55">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+supports
+</p>
+</span>
+</div>
+</foreignobject></g></g></g><g class="nodes"><g transform="translate(60.5, 50)" id="entity-SERVICES-0" class="node default"><rect height="84" width="105" y="-42" x="-52.5" style="" class="basic label-container"></rect><g transform="translate(-32.5, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="65">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+SERVICES
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(201, 235)" id="entity-APPOINTMENTS-1" class="node default"><rect height="84" width="148" y="-42" x="-74" style="" class="basic label-container"></rect><g transform="translate(-54, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="108">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+APPOINTMENTS
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(341.5, 50)" id="entity-SERVICE_PACKAGES-2" class="node default"><rect height="84" width="177" y="-42" x="-88.5" style="" class="basic label-container"></rect><g transform="translate(-68.5, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="137">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+SERVICE_PACKAGES
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(77.25, 420)" id="entity-PAYMENTS-3" class="node default"><rect height="84" width="110" y="-42" x="-55" style="" class="basic label-container"></rect><g transform="translate(-35, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="70">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+PAYMENTS
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(324.75, 420)" id="entity-INVOICES-4" class="node default"><rect height="84" width="105" y="-42" x="-52.5" style="" class="basic label-container"></rect><g transform="translate(-32.5, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="65">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+INVOICES
+</p>
+</span>
+</div>
+</foreignobject></g></g></g></g></g>
+</svg>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+</section>
+<section id="facturación-y-caja" class="level2" data-number="4.8">
+<h2 data-number="4.8" class="anchored" data-anchor-id="facturación-y-caja"><span class="header-section-number">4.8</span> Facturación y caja</h2>
+<p>Agrupa la lógica financiera de la plataforma, permitiendo el registro de cobros, facturación, conciliación de pagos y control de caja.</p>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<svg aria-roledescription="er" role="graphics-document document" viewbox="0 0 800 655" class="erDiagram" xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" width="672" id="mermaid-figure-5" height="480">
+<style>#mermaid-figure-5{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#333;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#mermaid-figure-5 .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#mermaid-figure-5 .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#mermaid-figure-5 .error-icon{fill:#552222;}#mermaid-figure-5 .error-text{fill:#552222;stroke:#552222;}#mermaid-figure-5 .edge-thickness-normal{stroke-width:1px;}#mermaid-figure-5 .edge-thickness-thick{stroke-width:3.5px;}#mermaid-figure-5 .edge-pattern-solid{stroke-dasharray:0;}#mermaid-figure-5 .edge-thickness-invisible{stroke-width:0;fill:none;}#mermaid-figure-5 .edge-pattern-dashed{stroke-dasharray:3;}#mermaid-figure-5 .edge-pattern-dotted{stroke-dasharray:2;}#mermaid-figure-5 .marker{fill:#333333;stroke:#333333;}#mermaid-figure-5 .marker.cross{stroke:#333333;}#mermaid-figure-5 svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#mermaid-figure-5 p{margin:0;}#mermaid-figure-5 .entityBox{fill:#ECECFF;stroke:#9370DB;}#mermaid-figure-5 .relationshipLabelBox{fill:hsl(80, 100%, 96.2745098039%);opacity:0.7;background-color:hsl(80, 100%, 96.2745098039%);}#mermaid-figure-5 .relationshipLabelBox rect{opacity:0.5;}#mermaid-figure-5 .labelBkg{background-color:rgba(248.6666666666, 255, 235.9999999999, 0.5);}#mermaid-figure-5 .edgeLabel .label{fill:#9370DB;font-size:14px;}#mermaid-figure-5 .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#333;}#mermaid-figure-5 .edge-pattern-dashed{stroke-dasharray:8,8;}#mermaid-figure-5 .node rect,#mermaid-figure-5 .node circle,#mermaid-figure-5 .node ellipse,#mermaid-figure-5 .node polygon{fill:#ECECFF;stroke:#9370DB;stroke-width:1px;}#mermaid-figure-5 .relationshipLine{stroke:#333333;stroke-width:1;fill:none;}#mermaid-figure-5 .marker{fill:none!important;stroke:#333333!important;stroke-width:1;}#mermaid-figure-5 :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style>
+<g><defs><marker orient="auto" markerheight="18" markerwidth="18" refy="9" refx="0" class="marker onlyOne er" id="mermaid-figure-5-mermaid-1782227749325_er-onlyOneStart"><path d="M9,0 L9,18 M15,0 L15,18"></path></marker></defs><defs><marker orient="auto" markerheight="18" markerwidth="18" refy="9" refx="18" class="marker onlyOne er" id="mermaid-figure-5-mermaid-1782227749325_er-onlyOneEnd"><path d="M3,0 L3,18 M9,0 L9,18"></path></marker></defs><defs><marker orient="auto" markerheight="18" markerwidth="30" refy="9" refx="0" class="marker zeroOrOne er" id="mermaid-figure-5-mermaid-1782227749325_er-zeroOrOneStart"><circle r="6" cy="9" cx="21" fill="white"></circle><path d="M9,0 L9,18"></path></marker></defs><defs><marker orient="auto" markerheight="18" markerwidth="30" refy="9" refx="30" class="marker zeroOrOne er" id="mermaid-figure-5-mermaid-1782227749325_er-zeroOrOneEnd"><circle r="6" cy="9" cx="9" fill="white"></circle><path d="M21,0 L21,18"></path></marker></defs><defs><marker orient="auto" markerheight="36" markerwidth="45" refy="18" refx="18" class="marker oneOrMore er" id="mermaid-figure-5-mermaid-1782227749325_er-oneOrMoreStart"><path d="M0,18 Q 18,0 36,18 Q 18,36 0,18 M42,9 L42,27"></path></marker></defs><defs><marker orient="auto" markerheight="36" markerwidth="45" refy="18" refx="27" class="marker oneOrMore er" id="mermaid-figure-5-mermaid-1782227749325_er-oneOrMoreEnd"><path d="M3,9 L3,27 M9,18 Q27,0 45,18 Q27,36 9,18"></path></marker></defs><defs><marker orient="auto" markerheight="36" markerwidth="57" refy="18" refx="18" class="marker zeroOrMore er" id="mermaid-figure-5-mermaid-1782227749325_er-zeroOrMoreStart"><circle r="6" cy="18" cx="48" fill="white"></circle><path d="M0,18 Q18,0 36,18 Q18,36 0,18"></path></marker></defs><defs><marker orient="auto" markerheight="36" markerwidth="57" refy="18" refx="39" class="marker zeroOrMore er" id="mermaid-figure-5-mermaid-1782227749325_er-zeroOrMoreEnd"><circle r="6" cy="18" cx="9" fill="white"></circle><path d="M21,18 Q39,0 57,18 Q39,36 21,18"></path></marker></defs><g class="root"><g class="clusters"></g><g class="edgePaths"><path marker-end="url(#mermaid-figure-5-mermaid-1782227749325_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-5-mermaid-1782227749325_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-CUSTOMERS-0_entity-PAYMENTS-1_0" d="M156.657,92L144.464,100.417C132.271,108.833,107.886,125.667,95.693,149.5C83.5,173.333,83.5,204.167,83.5,235C83.5,265.833,83.5,296.667,83.5,320.5C83.5,344.333,83.5,361.167,83.5,369.583L83.5,378"></path><path marker-end="url(#mermaid-figure-5-mermaid-1782227749325_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-5-mermaid-1782227749325_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-CUSTOMERS-0_entity-INVOICES-2_1" d="M260.068,92L268.598,100.417C277.128,108.833,294.189,125.667,302.72,142.5C311.25,159.333,311.25,176.167,311.25,184.583L311.25,193"></path><path marker-end="url(#mermaid-figure-5-mermaid-1782227749325_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-5-mermaid-1782227749325_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-INVOICES-2_entity-INVOICE_ITEMS-3_2" d="M329.526,277L333.188,285.417C336.85,293.833,344.175,310.667,347.838,327.5C351.5,344.333,351.5,361.167,351.5,369.583L351.5,378"></path><path marker-end="url(#mermaid-figure-5-mermaid-1782227749325_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-5-mermaid-1782227749325_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-INVOICES-2_entity-PAYMENTS-1_3" d="M268.001,277L259.334,285.417C250.668,293.833,233.334,310.667,211.75,328.101C190.167,345.535,164.333,363.569,151.417,372.586L138.5,381.604"></path><path marker-end="url(#mermaid-figure-5-mermaid-1782227749325_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-5-mermaid-1782227749325_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-PAYMENTS-1_entity-PAYMENT_ITEMS-4_4" d="M83.5,462L83.5,470.417C83.5,478.833,83.5,495.667,83.5,512.5C83.5,529.333,83.5,546.167,83.5,554.583L83.5,563"></path><path marker-end="url(#mermaid-figure-5-mermaid-1782227749325_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-5-mermaid-1782227749325_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-CASH_REGISTER_SESSIONS-5_entity-CASH_TRANSACTIONS-6_5" d="M678,462L678,470.417C678,478.833,678,495.667,678,512.5C678,529.333,678,546.167,678,554.583L678,563"></path><path marker-end="url(#mermaid-figure-5-mermaid-1782227749325_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-5-mermaid-1782227749325_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-PAYMENTS-1_entity-CASH_TRANSACTIONS-6_6" d="M138.5,427.571L241.333,441.726C344.167,455.88,549.833,484.19,645.615,506.762C741.396,529.333,727.293,546.167,720.241,554.583L713.189,563"></path></g><g class="edgeLabels"><g transform="translate(83.5, 235)" class="edgeLabel"><g transform="translate(-14, -10.5)" class="label"><foreignobject height="21" width="28">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+pays
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(311.25, 142.5)" class="edgeLabel"><g transform="translate(-26.5, -10.5)" class="label"><foreignobject height="21" width="53">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+receives
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(351.5, 327.5)" class="edgeLabel"><g transform="translate(-27, -10.5)" class="label"><foreignobject height="21" width="54">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+contains
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(216, 327.5)" class="edgeLabel"><g transform="translate(-33.5, -10.5)" class="label"><foreignobject height="21" width="67">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+settled_by
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(83.5, 512.5)" class="edgeLabel"><g transform="translate(-27, -10.5)" class="label"><foreignobject height="21" width="54">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+contains
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(678, 512.5)" class="edgeLabel"><g transform="translate(-21, -10.5)" class="label"><foreignobject height="21" width="42">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+groups
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(755.5, 512.5)" class="edgeLabel"><g transform="translate(-36.5, -10.5)" class="label"><foreignobject height="21" width="73">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+may_create
+</p>
+</span>
+</div>
+</foreignobject></g></g></g><g class="nodes"><g transform="translate(217.5, 50)" id="entity-CUSTOMERS-0" class="node default"><rect height="84" width="124" y="-42" x="-62" style="" class="basic label-container"></rect><g transform="translate(-42, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="84">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+CUSTOMERS
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(83.5, 420)" id="entity-PAYMENTS-1" class="node default"><rect height="84" width="110" y="-42" x="-55" style="" class="basic label-container"></rect><g transform="translate(-35, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="70">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+PAYMENTS
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(311.25, 235)" id="entity-INVOICES-2" class="node default"><rect height="84" width="105" y="-42" x="-52.5" style="" class="basic label-container"></rect><g transform="translate(-32.5, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="65">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+INVOICES
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(351.5, 420)" id="entity-INVOICE_ITEMS-3" class="node default"><rect height="84" width="146" y="-42" x="-73" style="" class="basic label-container"></rect><g transform="translate(-53, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="106">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+INVOICE_ITEMS
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(83.5, 605)" id="entity-PAYMENT_ITEMS-4" class="node default"><rect height="84" width="151" y="-42" x="-75.5" style="" class="basic label-container"></rect><g transform="translate(-55.5, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="111">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+PAYMENT_ITEMS
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(678, 420)" id="entity-CASH_REGISTER_SESSIONS-5" class="node default"><rect height="84" width="227" y="-42" x="-113.5" style="" class="basic label-container"></rect><g transform="translate(-93.5, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="187">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+CASH_REGISTER_SESSIONS
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(678, 605)" id="entity-CASH_TRANSACTIONS-6" class="node default"><rect height="84" width="191" y="-42" x="-95.5" style="" class="basic label-container"></rect><g transform="translate(-75.5, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="151">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+CASH_TRANSACTIONS
+</p>
+</span>
+</div>
+</foreignobject></g></g></g></g></g>
+</svg>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+</section>
+<section id="inventario" class="level2" data-number="4.9">
+<h2 data-number="4.9" class="anchored" data-anchor-id="inventario"><span class="header-section-number">4.9</span> Inventario</h2>
+<p>Representa la clasificación, control y trazabilidad de los elementos inventariables</p>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<svg aria-roledescription="er" role="graphics-document document" viewbox="0 0 515 470" class="erDiagram" xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" width="672" id="mermaid-figure-3" height="480">
+<style>#mermaid-figure-3{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#333;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#mermaid-figure-3 .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#mermaid-figure-3 .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#mermaid-figure-3 .error-icon{fill:#552222;}#mermaid-figure-3 .error-text{fill:#552222;stroke:#552222;}#mermaid-figure-3 .edge-thickness-normal{stroke-width:1px;}#mermaid-figure-3 .edge-thickness-thick{stroke-width:3.5px;}#mermaid-figure-3 .edge-pattern-solid{stroke-dasharray:0;}#mermaid-figure-3 .edge-thickness-invisible{stroke-width:0;fill:none;}#mermaid-figure-3 .edge-pattern-dashed{stroke-dasharray:3;}#mermaid-figure-3 .edge-pattern-dotted{stroke-dasharray:2;}#mermaid-figure-3 .marker{fill:#333333;stroke:#333333;}#mermaid-figure-3 .marker.cross{stroke:#333333;}#mermaid-figure-3 svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#mermaid-figure-3 p{margin:0;}#mermaid-figure-3 .entityBox{fill:#ECECFF;stroke:#9370DB;}#mermaid-figure-3 .relationshipLabelBox{fill:hsl(80, 100%, 96.2745098039%);opacity:0.7;background-color:hsl(80, 100%, 96.2745098039%);}#mermaid-figure-3 .relationshipLabelBox rect{opacity:0.5;}#mermaid-figure-3 .labelBkg{background-color:rgba(248.6666666666, 255, 235.9999999999, 0.5);}#mermaid-figure-3 .edgeLabel .label{fill:#9370DB;font-size:14px;}#mermaid-figure-3 .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#333;}#mermaid-figure-3 .edge-pattern-dashed{stroke-dasharray:8,8;}#mermaid-figure-3 .node rect,#mermaid-figure-3 .node circle,#mermaid-figure-3 .node ellipse,#mermaid-figure-3 .node polygon{fill:#ECECFF;stroke:#9370DB;stroke-width:1px;}#mermaid-figure-3 .relationshipLine{stroke:#333333;stroke-width:1;fill:none;}#mermaid-figure-3 .marker{fill:none!important;stroke:#333333!important;stroke-width:1;}#mermaid-figure-3 :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style>
+<g><defs><marker orient="auto" markerheight="18" markerwidth="18" refy="9" refx="0" class="marker onlyOne er" id="mermaid-figure-3-mermaid-1782227739902_er-onlyOneStart"><path d="M9,0 L9,18 M15,0 L15,18"></path></marker></defs><defs><marker orient="auto" markerheight="18" markerwidth="18" refy="9" refx="18" class="marker onlyOne er" id="mermaid-figure-3-mermaid-1782227739902_er-onlyOneEnd"><path d="M3,0 L3,18 M9,0 L9,18"></path></marker></defs><defs><marker orient="auto" markerheight="18" markerwidth="30" refy="9" refx="0" class="marker zeroOrOne er" id="mermaid-figure-3-mermaid-1782227739902_er-zeroOrOneStart"><circle r="6" cy="9" cx="21" fill="white"></circle><path d="M9,0 L9,18"></path></marker></defs><defs><marker orient="auto" markerheight="18" markerwidth="30" refy="9" refx="30" class="marker zeroOrOne er" id="mermaid-figure-3-mermaid-1782227739902_er-zeroOrOneEnd"><circle r="6" cy="9" cx="9" fill="white"></circle><path d="M21,0 L21,18"></path></marker></defs><defs><marker orient="auto" markerheight="36" markerwidth="45" refy="18" refx="18" class="marker oneOrMore er" id="mermaid-figure-3-mermaid-1782227739902_er-oneOrMoreStart"><path d="M0,18 Q 18,0 36,18 Q 18,36 0,18 M42,9 L42,27"></path></marker></defs><defs><marker orient="auto" markerheight="36" markerwidth="45" refy="18" refx="27" class="marker oneOrMore er" id="mermaid-figure-3-mermaid-1782227739902_er-oneOrMoreEnd"><path d="M3,9 L3,27 M9,18 Q27,0 45,18 Q27,36 9,18"></path></marker></defs><defs><marker orient="auto" markerheight="36" markerwidth="57" refy="18" refx="18" class="marker zeroOrMore er" id="mermaid-figure-3-mermaid-1782227739902_er-zeroOrMoreStart"><circle r="6" cy="18" cx="48" fill="white"></circle><path d="M0,18 Q18,0 36,18 Q18,36 0,18"></path></marker></defs><defs><marker orient="auto" markerheight="36" markerwidth="57" refy="18" refx="39" class="marker zeroOrMore er" id="mermaid-figure-3-mermaid-1782227739902_er-zeroOrMoreEnd"><circle r="6" cy="18" cx="9" fill="white"></circle><path d="M21,18 Q39,0 57,18 Q39,36 21,18"></path></marker></defs><g class="root"><g class="clusters"></g><g class="edgePaths"><path marker-end="url(#mermaid-figure-3-mermaid-1782227739902_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-3-mermaid-1782227739902_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-INVENTORY_CATEGORIES-0_entity-INVENTORY_ITEMS-1_0" d="M274.25,92L274.25,100.417C274.25,108.833,274.25,125.667,274.25,142.5C274.25,159.333,274.25,176.167,274.25,184.583L274.25,193"></path><path marker-end="url(#mermaid-figure-3-mermaid-1782227739902_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-3-mermaid-1782227739902_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-INVENTORY_ITEMS-1_entity-INVENTORY_MOVEMENTS-2_1" d="M201.715,277L187.179,285.417C172.643,293.833,143.572,310.667,129.036,327.5C114.5,344.333,114.5,361.167,114.5,369.583L114.5,378"></path><path marker-end="url(#mermaid-figure-3-mermaid-1782227739902_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-3-mermaid-1782227739902_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-INVENTORY_ITEMS-1_entity-INVOICE_ITEMS-3_2" d="M346.785,277L361.321,285.417C375.857,293.833,404.928,310.667,419.464,327.5C434,344.333,434,361.167,434,369.583L434,378"></path></g><g class="edgeLabels"><g transform="translate(274.25, 142.5)" class="edgeLabel"><g transform="translate(-28, -10.5)" class="label"><foreignobject height="21" width="56">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+classifies
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(114.5, 327.5)" class="edgeLabel"><g transform="translate(-19, -10.5)" class="label"><foreignobject height="21" width="38">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+tracks
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(434, 327.5)" class="edgeLabel"><g transform="translate(-22.5, -10.5)" class="label"><foreignobject height="21" width="45">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+sold_as
+</p>
+</span>
+</div>
+</foreignobject></g></g></g><g class="nodes"><g transform="translate(274.25, 50)" id="entity-INVENTORY_CATEGORIES-0" class="node default"><rect height="84" width="213" y="-42" x="-106.5" style="" class="basic label-container"></rect><g transform="translate(-86.5, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="173">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+INVENTORY_CATEGORIES
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(274.25, 235)" id="entity-INVENTORY_ITEMS-1" class="node default"><rect height="84" width="167" y="-42" x="-83.5" style="" class="basic label-container"></rect><g transform="translate(-63.5, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="127">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+INVENTORY_ITEMS
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(114.5, 420)" id="entity-INVENTORY_MOVEMENTS-2" class="node default"><rect height="84" width="213" y="-42" x="-106.5" style="" class="basic label-container"></rect><g transform="translate(-86.5, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="173">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+INVENTORY_MOVEMENTS
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(434, 420)" id="entity-INVOICE_ITEMS-3" class="node default"><rect height="84" width="146" y="-42" x="-73" style="" class="basic label-container"></rect><g transform="translate(-53, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="106">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+INVOICE_ITEMS
+</p>
+</span>
+</div>
+</foreignobject></g></g></g></g></g>
+</svg>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+</section>
+<section id="documentación-y-auditoría" class="level2" data-number="4.10">
+<h2 data-number="4.10" class="anchored" data-anchor-id="documentación-y-auditoría"><span class="header-section-number">4.10</span> Documentación y auditoría</h2>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<svg aria-roledescription="er" role="graphics-document document" viewbox="0 0 176 470" class="erDiagram" xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" width="672" id="mermaid-figure-2" height="480">
+<style>#mermaid-figure-2{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#333;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#mermaid-figure-2 .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#mermaid-figure-2 .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#mermaid-figure-2 .error-icon{fill:#552222;}#mermaid-figure-2 .error-text{fill:#552222;stroke:#552222;}#mermaid-figure-2 .edge-thickness-normal{stroke-width:1px;}#mermaid-figure-2 .edge-thickness-thick{stroke-width:3.5px;}#mermaid-figure-2 .edge-pattern-solid{stroke-dasharray:0;}#mermaid-figure-2 .edge-thickness-invisible{stroke-width:0;fill:none;}#mermaid-figure-2 .edge-pattern-dashed{stroke-dasharray:3;}#mermaid-figure-2 .edge-pattern-dotted{stroke-dasharray:2;}#mermaid-figure-2 .marker{fill:#333333;stroke:#333333;}#mermaid-figure-2 .marker.cross{stroke:#333333;}#mermaid-figure-2 svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#mermaid-figure-2 p{margin:0;}#mermaid-figure-2 .entityBox{fill:#ECECFF;stroke:#9370DB;}#mermaid-figure-2 .relationshipLabelBox{fill:hsl(80, 100%, 96.2745098039%);opacity:0.7;background-color:hsl(80, 100%, 96.2745098039%);}#mermaid-figure-2 .relationshipLabelBox rect{opacity:0.5;}#mermaid-figure-2 .labelBkg{background-color:rgba(248.6666666666, 255, 235.9999999999, 0.5);}#mermaid-figure-2 .edgeLabel .label{fill:#9370DB;font-size:14px;}#mermaid-figure-2 .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#333;}#mermaid-figure-2 .edge-pattern-dashed{stroke-dasharray:8,8;}#mermaid-figure-2 .node rect,#mermaid-figure-2 .node circle,#mermaid-figure-2 .node ellipse,#mermaid-figure-2 .node polygon{fill:#ECECFF;stroke:#9370DB;stroke-width:1px;}#mermaid-figure-2 .relationshipLine{stroke:#333333;stroke-width:1;fill:none;}#mermaid-figure-2 .marker{fill:none!important;stroke:#333333!important;stroke-width:1;}#mermaid-figure-2 :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style>
+<g><defs><marker orient="auto" markerheight="18" markerwidth="18" refy="9" refx="0" class="marker onlyOne er" id="mermaid-figure-2-mermaid-1782227735674_er-onlyOneStart"><path d="M9,0 L9,18 M15,0 L15,18"></path></marker></defs><defs><marker orient="auto" markerheight="18" markerwidth="18" refy="9" refx="18" class="marker onlyOne er" id="mermaid-figure-2-mermaid-1782227735674_er-onlyOneEnd"><path d="M3,0 L3,18 M9,0 L9,18"></path></marker></defs><defs><marker orient="auto" markerheight="18" markerwidth="30" refy="9" refx="0" class="marker zeroOrOne er" id="mermaid-figure-2-mermaid-1782227735674_er-zeroOrOneStart"><circle r="6" cy="9" cx="21" fill="white"></circle><path d="M9,0 L9,18"></path></marker></defs><defs><marker orient="auto" markerheight="18" markerwidth="30" refy="9" refx="30" class="marker zeroOrOne er" id="mermaid-figure-2-mermaid-1782227735674_er-zeroOrOneEnd"><circle r="6" cy="9" cx="9" fill="white"></circle><path d="M21,0 L21,18"></path></marker></defs><defs><marker orient="auto" markerheight="36" markerwidth="45" refy="18" refx="18" class="marker oneOrMore er" id="mermaid-figure-2-mermaid-1782227735674_er-oneOrMoreStart"><path d="M0,18 Q 18,0 36,18 Q 18,36 0,18 M42,9 L42,27"></path></marker></defs><defs><marker orient="auto" markerheight="36" markerwidth="45" refy="18" refx="27" class="marker oneOrMore er" id="mermaid-figure-2-mermaid-1782227735674_er-oneOrMoreEnd"><path d="M3,9 L3,27 M9,18 Q27,0 45,18 Q27,36 9,18"></path></marker></defs><defs><marker orient="auto" markerheight="36" markerwidth="57" refy="18" refx="18" class="marker zeroOrMore er" id="mermaid-figure-2-mermaid-1782227735674_er-zeroOrMoreStart"><circle r="6" cy="18" cx="48" fill="white"></circle><path d="M0,18 Q18,0 36,18 Q18,36 0,18"></path></marker></defs><defs><marker orient="auto" markerheight="36" markerwidth="57" refy="18" refx="39" class="marker zeroOrMore er" id="mermaid-figure-2-mermaid-1782227735674_er-zeroOrMoreEnd"><circle r="6" cy="18" cx="9" fill="white"></circle><path d="M21,18 Q39,0 57,18 Q39,36 21,18"></path></marker></defs><g class="root"><g class="clusters"></g><g class="edgePaths"><path marker-end="url(#mermaid-figure-2-mermaid-1782227735674_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-2-mermaid-1782227735674_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-DOCUMENTS-0_entity-AUTHORIZATIONS-1_0" d="M88,92L88,100.417C88,108.833,88,125.667,88,142.5C88,159.333,88,176.167,88,184.583L88,193"></path><path marker-end="url(#mermaid-figure-2-mermaid-1782227735674_er-zeroOrMoreEnd)" marker-start="url(#mermaid-figure-2-mermaid-1782227735674_er-onlyOneStart)" style="undefined;" class="edge-thickness-normal edge-pattern-solid relationshipLine" id="id_entity-AUTHORIZATIONS-1_entity-AUDIT_LOGS-2_1" d="M88,277L88,285.417C88,293.833,88,310.667,88,327.5C88,344.333,88,361.167,88,369.583L88,378"></path></g><g class="edgeLabels"><g transform="translate(88, 142.5)" class="edgeLabel"><g transform="translate(-39, -10.5)" class="label"><foreignobject height="21" width="78">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+may_require
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(88, 327.5)" class="edgeLabel"><g transform="translate(-23.5, -10.5)" class="label"><foreignobject height="21" width="47">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+records
+</p>
+</span>
+</div>
+</foreignobject></g></g></g><g class="nodes"><g transform="translate(88, 50)" id="entity-DOCUMENTS-0" class="node default"><rect height="84" width="128" y="-42" x="-64" style="" class="basic label-container"></rect><g transform="translate(-44, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="88">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+DOCUMENTS
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(88, 235)" id="entity-AUTHORIZATIONS-1" class="node default"><rect height="84" width="160" y="-42" x="-80" style="" class="basic label-container"></rect><g transform="translate(-60, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="120">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+AUTHORIZATIONS
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(88, 420)" id="entity-AUDIT_LOGS-2" class="node default"><rect height="84" width="128" y="-42" x="-64" style="" class="basic label-container"></rect><g transform="translate(-44, -12)" style="" class="label"><rect></rect><foreignobject height="24" width="88">
+<div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="nodeLabel">
+<p>
+AUDIT_LOGS
+</p>
+</span>
+</div>
+</foreignobject></g></g></g></g></g>
+</svg>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+</section>
+<section id="normalizacion-y-consistencia" class="level2" data-number="4.11">
+<h2 data-number="4.11" class="anchored" data-anchor-id="normalizacion-y-consistencia"><span class="header-section-number">4.11</span> Normalizacion y consistencia</h2>
+<p>El modelo separa entidades con responsabilidades distintas. <code>Plan</code> no almacena todas sus reglas en una columna extensa, sino que delega limites y caracteristicas a tablas relacionadas. <code>Payment</code> no debe reemplazar a <code>Invoice</code>, porque el documento legal y el movimiento de dinero tienen ciclos de vida diferentes. <code>InventoryMovement</code> evita sobrescribir la historia del stock: cada entrada o salida queda registrada.</p>
+<p>Las garantias ACID se aplican especialmente en pagos, facturas e inventario. Si una factura descarga inventario y registra un pago, la operacion debe confirmarse completa o revertirse completa. SQLAlchemy facilita esta unidad de trabajo mediante sesiones y commits controlados. Las claves foraneas y validaciones de schemas reducen inconsistencias entre clientes, citas, pagos y usuarios.</p>
+</section>
+<section id="persistencia-en-vm-y-crecimiento" class="level2" data-number="4.12">
+<h2 data-number="4.12" class="anchored" data-anchor-id="persistencia-en-vm-y-crecimiento"><span class="header-section-number">4.12</span> Persistencia en VM y crecimiento</h2>
+<p>En la etapa evidenciada por las capturas, SQLite es util porque simplifica el despliegue en Oracle Free Tier. El archivo <code>app.db</code> puede vivir en disco persistente de la VM, con copias de seguridad programadas. Sin embargo, el uso de SQLite requiere prudencia: no es ideal para alta concurrencia, multiples instancias o analitica pesada. La ruta de evolucion natural es PostgreSQL, conservando SQLAlchemy y Alembic para minimizar cambios.</p>
+</section>
+<section id="informacion-para-gestionar-e-introducir" class="level2" data-number="4.13">
+<h2 data-number="4.13" class="anchored" data-anchor-id="informacion-para-gestionar-e-introducir"><span class="header-section-number">4.13</span> Informacion para gestionar e introducir</h2>
+<ul>
+<li>Indicar ruta real de <code>app.db</code> en la VM Ubuntu.</li>
+<li>Documentar politica de backup: frecuencia, ubicacion y prueba de restauracion.</li>
+<li>Confirmar si se mantiene SQLite o se migra a PostgreSQL.</li>
+<li>Insertar captura del dashboard donde se observan clientes, citas, productos e ingresos.</li>
+</ul>
+</section>
+<section id="diccionario-resumido" class="level2" data-number="4.14">
+<h2 data-number="4.14" class="anchored" data-anchor-id="diccionario-resumido"><span class="header-section-number">4.14</span> Diccionario resumido</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 29%">
+<col style="width: 70%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Entidad</th>
+<th>Funcion</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>User</code></td>
+<td>Identidad, rol, plan y jerarquia.</td>
+</tr>
+<tr class="even">
+<td><code>Customer</code></td>
+<td>Cliente administrado por usuario u organizacion.</td>
+</tr>
+<tr class="odd">
+<td><code>Appointment</code></td>
+<td>Agenda y relacion con servicios.</td>
+</tr>
+<tr class="even">
+<td><code>Payment</code></td>
+<td>Movimiento economico y estado de pago.</td>
+</tr>
+<tr class="odd">
+<td><code>Invoice</code></td>
+<td>Documento comercial/fiscal con items.</td>
+</tr>
+<tr class="even">
+<td><code>InventoryItem</code></td>
+<td>Producto o SKU con stock.</td>
+</tr>
+<tr class="odd">
+<td><code>InventoryMovement</code></td>
+<td>Historial de entradas y salidas.</td>
+</tr>
+<tr class="even">
+<td><code>PlanFeature</code></td>
+<td>Caracteristica habilitada por plan.</td>
+</tr>
+<tr class="odd">
+<td><code>Authorization</code></td>
+<td>Aprobacion formal de acciones sensibles.</td>
+</tr>
+<tr class="even">
+<td><code>AuditLog</code></td>
+<td>Evidencia de cambios y trazabilidad.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="cierre" class="level2" data-number="4.15">
+<h2 data-number="4.15" class="anchored" data-anchor-id="cierre"><span class="header-section-number">4.15</span> Cierre</h2>
+<p>El modelo de datos de AdminG es el puente entre la arquitectura y la operacion real. Si las entidades se mantienen separadas, las reglas de negocio pueden crecer sin duplicidad. El proximo anexo toma este modelo como base para definir pruebas, seguridad, control de cambios y criterios de calidad.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script src="assets/js/site.js"></script>
+
+<script src="assets/js/diagram-modal.js"></script>
+
+<script src="assets/js/diagram-zoom.js"></script>
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./AnexoB.html" class="pagination-link" aria-label="Anexo B">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Anexo B</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./AnexoD.html" class="pagination-link" aria-label="Anexo D">
+        <span class="nav-page-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Anexo D</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

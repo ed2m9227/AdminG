@@ -1,0 +1,532 @@
+[
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "AdminG",
+    "section": "",
+    "text": "Documentacion técnica AdminG",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>AdminG</span>"
+    ]
+  },
+  {
+    "objectID": "index.html#anexos-a-e",
+    "href": "index.html#anexos-a-e",
+    "title": "AdminG",
+    "section": "Anexos A-E",
+    "text": "Anexos A-E\nLa documentación técnica constituye el conjunto de registros, especificaciones, procedimientos y criterios que permiten comprender, operar, mantener y desarrollar un sistema de manera consistente y trazable. Su finalidad es preservar el conocimiento institucional del proyecto, facilitar la continuidad operativa y establecer un marco de referencia para la toma de decisiones técnicas presentes y futuras.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>AdminG</span>"
+    ]
+  },
+  {
+    "objectID": "index.html#estructura-documental",
+    "href": "index.html#estructura-documental",
+    "title": "AdminG",
+    "section": "0.1 Estructura documental",
+    "text": "0.1 Estructura documental\n\nAnexo A. Requerimientos y alcance\n\nAnexo B. Arquitectura y despliegue\nAnexo C. Modelo de datos y persistencia\nAnexo D. Calidad, seguridad y gobernanza\nAnexo E. implementación, evidencia y operación\nAnexo F. Firmas",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>AdminG</span>"
+    ]
+  },
+  {
+    "objectID": "AnexoA.html",
+    "href": "AnexoA.html",
+    "title": "2  Anexo A",
+    "section": "",
+    "text": "2.1 Requerimientos y alcance de AdminG Systems\nEduardo Martínez",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Anexo A</span>"
+    ]
+  },
+  {
+    "objectID": "AnexoA.html#proposito-del-anexo",
+    "href": "AnexoA.html#proposito-del-anexo",
+    "title": "2  Anexo A",
+    "section": "2.2 Proposito del anexo",
+    "text": "2.2 Proposito del anexo\nEste anexo organiza los requerimientos funcionales y no funcionales de AdminG Systems, una plataforma de administracion general orientada a pequenas, medianas y grandes empresas, publicas, privadas y mixtas. Su funcion dentro del conjunto documental es definir que necesita resolver el sistema antes de explicar como se estructura, como persiste la informacion, como se valida su calidad y como se implementa en un entorno real. Por esa razon, este documento se conecta directamente con el Chapter 3 , donde se traduce el alcance en arquitectura, con el Chapter 4, donde se concreta el modelo de datos, con el Chapter 5, donde se verifican criterios de calidad, y con el Chapter 6, donde se documenta la evidencia de implementacion y despliegue en adming-systems.online.\nAdminG combina autenticacion, gestion de usuarios, clientes, citas, servicios, pagos, inventario, reportes, documentos, autorizaciones, CRM, onboarding y control de planes. El objetivo no es construir un modulo aislado, sino una base SaaS progresiva: una aplicacion que pueda empezar con operaciones pequenas y crecer hacia control financiero, trazabilidad documental, gestion de equipos y reglas de negocio por plan.",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Anexo A</span>"
+    ]
+  },
+  {
+    "objectID": "AnexoA.html#alcance-funcional",
+    "href": "AnexoA.html#alcance-funcional",
+    "title": "2  Anexo A",
+    "section": "2.3 Alcance funcional",
+    "text": "2.3 Alcance funcional\nEl sistema debe permitir registro e inicio de sesion mediante credenciales seguras, emision de tokens JWT, refresh tokens y control de acceso por usuario, rol y plan. Una vez autenticado, el usuario accede a un tablero de trabajo donde puede consultar metricas operativas, administrar clientes, programar citas, registrar servicios, manejar pagos, emitir facturas, controlar inventario y revisar reportes.\nTambien se requiere un esquema comercial flexible. AdminG no debe tratar a todos los usuarios igual: un plan gratuito o basico puede habilitar clientes y agenda, mientras que planes superiores pueden activar inventario, pagos, reportes avanzados, CRM, facturacion, documentos o funciones de equipo. Esta regla exige que la autorizacion no dependa solo del rol, sino tambien del plan contratado, del estado de prueba, de los limites definidos y de las caracteristicas habilitadas.",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Anexo A</span>"
+    ]
+  },
+  {
+    "objectID": "AnexoA.html#requerimientos-funcionales-y-no-funcionales",
+    "href": "AnexoA.html#requerimientos-funcionales-y-no-funcionales",
+    "title": "2  Anexo A",
+    "section": "2.4 Requerimientos funcionales y no funcionales",
+    "text": "2.4 Requerimientos funcionales y no funcionales\nA continuación se detallan los requerimientos con su clasificación explícita como funcional o no funcional.\n\n\n\n\n\n\n\n\n\n#\nCategoria\nTipo\nRequerimiento\n\n\n\n\n1\nAutenticacion\nFuncional\nRegistro, login, recuperacion de contrasena, JWT, refresh token, usuario activo y cierre seguro de sesion.\n\n\n2\nUsuarios y roles\nFuncional\nAdministrador, manager, miembros de equipo, subusuarios, permisos y jerarquia por organizacion.\n\n\n3\nClientes y CRM\nFuncional\nCRUD de clientes, seguimiento, historial, datos de contacto, mascotas o entidades relacionadas segun tipo de negocio.\n\n\n4\nOperacion\nFuncional\nAgenda de citas, servicios, paquetes, pagos, facturas, caja, inventario y movimientos.\n\n\n5\nPlanes\nFuncional\nCatalogo Free, Basic, Plus, Start, Max o equivalentes, limites y caracteristicas activables.\n\n\n6\nReportes\nFuncional\nDashboard, metricas de clientes, citas, productos, ingresos y comportamiento operativo.\n\n\n7\nDocumentos\nFuncional\nFacturas, autorizaciones, documentos trazables y posibilidad de evolucionar hacia QR o auditoria formal.\n\n\n8\nSeguridad\nNo funcional\nHash de contrasenas, CORS estricto, secretos fuera del codigo, validacion Pydantic y control de acceso por recurso.\n\n\n9\nDisponibilidad\nNo funcional\nDespliegue en VM Ubuntu con backend FastAPI sirviendo API y frontend estatico.\n\n\n10\nMantenibilidad\nNo funcional\nArquitectura modular, pruebas automatizadas, migraciones, documentacion viva y ramas Git controladas.",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Anexo A</span>"
+    ]
+  },
+  {
+    "objectID": "AnexoA.html#mapa-de-requerimientos",
+    "href": "AnexoA.html#mapa-de-requerimientos",
+    "title": "2  Anexo A",
+    "section": "2.5 Mapa de requerimientos",
+    "text": "2.5 Mapa de requerimientos\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nSi\n\n\n\n\n\n\n\nNo\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nUsuario\n\n\n\n\n\n\n\nLogin\n\n\n\n\n\n\n\nJWT OK?\n\n\n\n\n\n\n\nDashboard\n\n\n\n\n\n\n\nError\n\n\n\n\n\n\n\nClientes\n\n\n\n\n\n\n\nCitas\n\n\n\n\n\n\n\nPagos\n\n\n\n\n\n\n\nInventario\n\n\n\n\n\n\n\nReportes\n\n\n\n\n\n\n\nEquipo\n\n\n\n\n\n\n\nDatos\n\n\n\n\n\n\n\nTests & QA\n\n\n\n\n\n\n\nAnexos A-E\n\n\n\n\n\n\n\nA\n\n\n\n\n\n\n\nB\n\n\n\n\n\n\n\nC\n\n\n\n\n\n\n\nD\n\n\n\n\n\n\n\nE",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Anexo A</span>"
+    ]
+  },
+  {
+    "objectID": "AnexoA.html#criterios-de-aceptacion",
+    "href": "AnexoA.html#criterios-de-aceptacion",
+    "title": "2  Anexo A",
+    "section": "2.6 Criterios de aceptacion",
+    "text": "2.6 Criterios de aceptacion\nUn requerimiento se considera aceptado cuando existe una ruta o vista que lo soporte, un modelo o esquema que lo represente, una regla de permisos que limite su uso si aplica y una evidencia documental que lo conecte con los anexos. Por ejemplo, el login requiere pantalla visible, endpoint de autenticacion, hash de contrasena, token emitido, usuario persistido y evidencia de acceso al dashboard. El inventario requiere categorias, items, cantidades, movimientos, validaciones y reglas por plan.\nEl despliegue en Oracle Free Tier agrega un requerimiento operativo: la aplicacion debe poder ejecutarse en una VM Micro Ubuntu con recursos limitados, por lo que el diseño debe ser prudente con memoria, procesos, logs, base de datos y dependencias. Para desarrollo en produccion controlada, SQLite puede ser aceptable como etapa inicial si se acompana de backups, pero el crecimiento natural del sistema debe contemplar PostgreSQL.",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Anexo A</span>"
+    ]
+  },
+  {
+    "objectID": "AnexoA.html#cierre",
+    "href": "AnexoA.html#cierre",
+    "title": "2  Anexo A",
+    "section": "2.7 Cierre",
+    "text": "2.7 Cierre\nEl Anexo A define a AdminG como una plataforma modular, segura y escalable. Su valor esta en integrar funciones administrativas que suelen estar separadas: clientes, agenda, pagos, inventario, reportes y documentos. La evidencia visual del login y dashboard demuestra que el alcance no es solo teorico; ya existe una interfaz desplegada y operable. Los anexos siguientes explican como esa necesidad se convierte en arquitectura, datos, calidad e implementacion.",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Anexo A</span>"
+    ]
+  },
+  {
+    "objectID": "AnexoB.html",
+    "href": "AnexoB.html",
+    "title": "3  Anexo B",
+    "section": "",
+    "text": "3.1 Arquitectura y despliegue de AdminG Systems\nEduardo Martínez",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Anexo B</span>"
+    ]
+  },
+  {
+    "objectID": "AnexoB.html#proposito-del-anexo",
+    "href": "AnexoB.html#proposito-del-anexo",
+    "title": "3  Anexo B",
+    "section": "3.2 Proposito del anexo",
+    "text": "3.2 Proposito del anexo\nEste anexo documenta la arquitectura de AdminG Systems y su despliegue en una VM Micro Ubuntu de Oracle Cloud Free Tier. Mientras el Chapter 2 define los requerimientos, este documento explica como se organizan los componentes para cumplirlos: frontend, backend, base de datos, seguridad, modulos de negocio, archivos estaticos, configuracion de entorno y publicacion.\nLa arquitectura actual combina FastAPI como backend, SQLAlchemy como capa ORM, Alembic para migraciones, Pydantic para validacion, routers modulares por dominio y un frontend distribuido desde frontend-dist. En desarrollo local se accede por http://localhost:8000/; en el despliegue mostrado se accede por la IP publica http://157.151.206.208. Esta dualidad es importante: permite validar cambios localmente y luego observar la misma experiencia en la VM. Se continua el proceso con dominio adming-systems.online y encriptado.",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Anexo B</span>"
+    ]
+  },
+  {
+    "objectID": "AnexoB.html#arquitectura-logica",
+    "href": "AnexoB.html#arquitectura-logica",
+    "title": "3  Anexo B",
+    "section": "3.3 Arquitectura logica",
+    "text": "3.3 Arquitectura logica\nAdminG usa una arquitectura por capas con separacion clara de responsabilidades. La capa de presentacion renderiza las vistas, administra la sesion del usuario y consume la API. La capa de aplicacion recibe solicitudes HTTP, valida tokens, aplica reglas de plan y ejecuta casos de uso. La capa de persistencia guarda usuarios, clientes, citas, pagos, inventario, facturas, documentos y reglas comerciales.\nLos routers principales incluyen autenticacion, usuarios, clientes, mascotas, negocio, citas, servicios, planes, inventario, pagos, caja, facturas, notificaciones, documentos, autorizaciones, CRM, onboarding e identidad. Tambien existen routers opcionales para tesoreria, ensamble, proyectos, inventario JAC, estrategia, reportes, administracion, inteligencia artificial, operaciones y EOE, cargados por feature flags o disponibilidad de modulo.\n\n\n\n\n\n\n\n\n\n\n\n\nOracle Free Tier VM\n\n\n\n\n\n\n\nMódulos de Negocio\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nUsuario\n\n\n\n\n\n\n\nBrowser\n\n\n\n\n\n\n\nFrontend Estático\n\n\n\n\n\n\n\nFastAPI\n\n\n\n\n\n\n\nAuth\n\n\n\n\n\n\n\nClientes\n\n\n\n\n\n\n\nServicios y Citas\n\n\n\n\n\n\n\nFacturación\n\n\n\n\n\n\n\nInventario\n\n\n\n\n\n\n\nDocumentos\n\n\n\n\n\n\n\nPlanes\n\n\n\n\n\n\n\nSQLite / PostgreSQL\n\n\n\n\n\n\n\nLogs",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Anexo B</span>"
+    ]
+  },
+  {
+    "objectID": "AnexoB.html#modulos-operativos",
+    "href": "AnexoB.html#modulos-operativos",
+    "title": "3  Anexo B",
+    "section": "3.4 Modulos operativos",
+    "text": "3.4 Modulos operativos\nLos módulos operativos soportan la gestión diaria del negocio, incluyendo atención de clientes, programación de servicios y control de inventario\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nFastAPI\n\n\n\n\n\n\n\nClientes CRM\n\n\n\n\n\n\n\nServicios y Citas\n\n\n\n\n\n\n\nInventario\n\n\n\n\n\n\n\nDocumentos",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Anexo B</span>"
+    ]
+  },
+  {
+    "objectID": "AnexoB.html#administración-y-control",
+    "href": "AnexoB.html#administración-y-control",
+    "title": "3  Anexo B",
+    "section": "3.5 Administración y control",
+    "text": "3.5 Administración y control\nLos componentes administrativos gestionan la autenticación, los usuarios, los planes contratados y las operaciones financieras de la plataforma.\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nFastAPI\n\n\n\n\n\n\n\nAutenticación\n\n\n\n\n\n\n\nUsuarios\n\n\n\n\n\n\n\nPlanes y Permisos\n\n\n\n\n\n\n\nCaja y Facturación",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Anexo B</span>"
+    ]
+  },
+  {
+    "objectID": "AnexoB.html#seguridad-y-control-de-acceso",
+    "href": "AnexoB.html#seguridad-y-control-de-acceso",
+    "title": "3  Anexo B",
+    "section": "3.6 Seguridad y control de acceso",
+    "text": "3.6 Seguridad y control de acceso\nLa seguridad se implementa mediante autenticación basada en JWT, control de acceso mediante permisos, protección criptográfica de credenciales y configuración segura mediante variables de entorno.\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nUsuario\n\n\n\n\n\n\n\nInicio de Sesión\n\n\n\n\n\n\n\nJWT\n\n\n\n\n\n\n\nRefresh Token\n\n\n\n\n\n\n\nFastAPI\n\n\n\n\n\n\n\nCORS\n\n\n\n\n\n\n\nVariables .env\n\n\n\n\n\n\n\nBcrypt",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Anexo B</span>"
+    ]
+  },
+  {
+    "objectID": "AnexoB.html#despliegue-en-oracle-free-tier",
+    "href": "AnexoB.html#despliegue-en-oracle-free-tier",
+    "title": "3  Anexo B",
+    "section": "3.7 Despliegue en Oracle Free Tier",
+    "text": "3.7 Despliegue en Oracle Free Tier\nEl despliegue en Oracle Free Tier es adecuado para desarrollo en produccion controlada porque ofrece una VM siempre gratuita, acceso SSH, disco persistente y libertad para ejecutar FastAPI como proceso del sistema. Frente a plataformas serverless, esta opcion permite conservar SQLite temporalmente, servir el frontend estatico desde la misma aplicacion y controlar configuraciones de red, puertos, firewall y logs.\nLa VM debe considerarse un entorno productivo de baja escala, no un simple laboratorio. Por ello, aunque la captura muestre Not secure, el cierre tecnico debe incluir HTTPS, dominio, CORS restringido, variables de entorno reales, secretos robustos, bloqueo de endpoints administrativos de desarrollo y backups de app.db. Si el proyecto crece o se habilita multiusuario intensivo, la persistencia debe migrarse a PostgreSQL.",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Anexo B</span>"
+    ]
+  },
+  {
+    "objectID": "AnexoB.html#arquitectura-de-despliegue",
+    "href": "AnexoB.html#arquitectura-de-despliegue",
+    "title": "3  Anexo B",
+    "section": "3.8 Arquitectura de despliegue",
+    "text": "3.8 Arquitectura de despliegue\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nUsuario\n\n\n\n\n\n\n\nBrowser\n\n\n\n\n\n\n\nOracle Free Tier VM\n\n\n\n\n\n\n\nFrontend\n\n\n\n\n\n\n\nFastAPI\n\n\n\n\n\n\n\nSQLite / PostgreSQL",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Anexo B</span>"
+    ]
+  },
+  {
+    "objectID": "AnexoB.html#ciclo-de-solicitud",
+    "href": "AnexoB.html#ciclo-de-solicitud",
+    "title": "3  Anexo B",
+    "section": "3.9 Ciclo de solicitud",
+    "text": "3.9 Ciclo de solicitud\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nAcceso por dominio o IP\n\n\n\n\n\n\n\nCarga Frontend\n\n\n\n\n\n\n\nInicio de sesión\n\n\n\n\n\n\n\nValidación usuario\n\n\n\n\n\n\n\nGeneración JWT\n\n\n\n\n\n\n\nValidación permisos\n\n\n\n\n\n\n\nConsulta datos\n\n\n\n\n\n\n\nRespuesta Dashboard",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Anexo B</span>"
+    ]
+  },
+  {
+    "objectID": "AnexoB.html#flujo-de-datos-y-persistencia",
+    "href": "AnexoB.html#flujo-de-datos-y-persistencia",
+    "title": "3  Anexo B",
+    "section": "3.10 Flujo de datos y persistencia",
+    "text": "3.10 Flujo de datos y persistencia\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nBrowser\n\n\n\n\n\n\n\nFastAPI\n\n\n\n\n\n\n\nBase de Datos\n\n\n\n\n\n\n\nReportes\n\n\n\n\n\n\n\nDocumentos\n\n\n\n\n\n\n\nLogs",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Anexo B</span>"
+    ]
+  },
+  {
+    "objectID": "AnexoB.html#decisiones-arquitectonicas",
+    "href": "AnexoB.html#decisiones-arquitectonicas",
+    "title": "3  Anexo B",
+    "section": "3.11 Decisiones arquitectonicas",
+    "text": "3.11 Decisiones arquitectonicas\nSe eligio FastAPI por su rendimiento, tipado, documentacion automatica y compatibilidad con Pydantic. SQLAlchemy permite mantener independencia parcial frente al motor de base de datos y Alembic permite evolucionar esquemas. El frontend distribuido como archivos estaticos simplifica el despliegue inicial: la misma app sirve API y SPA, evitando configurar un servidor web adicional en la primera etapa.\nLa modularidad es el punto central. Cada dominio tiene router, schemas, modelos y reglas propias. Esto evita que autenticacion, inventario, pagos o CRM se mezclen en una unica capa dificil de mantener. Ademas, los routers opcionales permiten que el sistema crezca sin obligar a cargar todos los modulos siempre.",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Anexo B</span>"
+    ]
+  },
+  {
+    "objectID": "AnexoB.html#conexiones-documentales",
+    "href": "AnexoB.html#conexiones-documentales",
+    "title": "3  Anexo B",
+    "section": "3.12 Conexiones documentales",
+    "text": "3.12 Conexiones documentales\nLa arquitectura responde a los requerimientos del Chapter 2, depende del modelo de datos descrito en el Chapter 4, debe verificarse con los criterios del Chapter 5 y se evidencia en la implementacion del Chapter 6. Cualquier cambio en despliegue, dominio, HTTPS, base de datos o proceso de arranque debe actualizar este anexo y reflejarse en los demas.",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Anexo B</span>"
+    ]
+  },
+  {
+    "objectID": "AnexoC.html",
+    "href": "AnexoC.html",
+    "title": "4  Anexo C",
+    "section": "",
+    "text": "4.1 Modelo de datos y persistencia\nEduardo Martínez",
+    "crumbs": [
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Anexo C</span>"
+    ]
+  },
+  {
+    "objectID": "AnexoC.html#proposito-del-anexo",
+    "href": "AnexoC.html#proposito-del-anexo",
+    "title": "4  Anexo C",
+    "section": "4.2 Proposito del anexo",
+    "text": "4.2 Proposito del anexo\nEste anexo describe el modelo de datos de AdminG Systems, sus entidades principales, sus relaciones, las garantias de consistencia y la forma en que el almacenamiento soporta los requerimientos definidos en el Chapter 2 y la arquitectura del Chapter 3. La base actual usa SQLAlchemy y migraciones Alembic, con SQLite como persistencia inicial para desarrollo y despliegue controlado en VM. Para una operacion productiva con mayor concurrencia, se requiere migrar a PostgreSQL.\nEl modelo no solo guarda informacion. Tambien expresa reglas de negocio: que usuario posee clientes, que plan habilita caracteristicas, que cita puede generar pagos, que factura puede relacionarse con items, que inventario registra movimientos y que autorizaciones o documentos agregan trazabilidad.",
+    "crumbs": [
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Anexo C</span>"
+    ]
+  },
+  {
+    "objectID": "AnexoC.html#entidades-principales",
+    "href": "AnexoC.html#entidades-principales",
+    "title": "4  Anexo C",
+    "section": "4.3 Entidades principales",
+    "text": "4.3 Entidades principales\nLa entidad User representa el sujeto de acceso al sistema. Contiene correo, contrasena hasheada, rol, plan, estado, jerarquia de usuario padre y datos de negocio. A partir de ella se organizan clientes, pagos, inventario, configuraciones, documentos y usuarios de equipo. RefreshToken permite renovar sesiones sin exponer credenciales.\nCustomer representa la informacion de clientes. Puede conectarse con mascotas o entidades relacionadas, citas, pagos, CRM y documentos. Appointment administra agenda, servicios, estados y relacion con clientes. Service y ServicePackage permiten separar servicios individuales de paquetes comerciales.\nEl bloque financiero esta formado por Payment, PaymentItem, CashRegisterSession, CashTransaction, Invoice, InvoiceItem y Authorization. Esta separacion evita que un pago sea confundido con una factura o con una sesion de caja. Una factura documenta una obligacion o venta; un pago registra el movimiento economico; caja agrupa movimientos en una jornada; autorizaciones registran aprobaciones.\nInventario se organiza con InventoryCategory, InventoryItem, InventoryMovement e inventario especializado cuando aplica. Esta estructura permite controlar SKU, stock minimo, entradas, salidas y trazabilidad del producto. Planes se modela con Plan, PlanLimit y PlanFeature, lo que permite activar funciones sin modificar el nucleo de usuario.",
+    "crumbs": [
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Anexo C</span>"
+    ]
+  },
+  {
+    "objectID": "AnexoC.html#modelo-entidad-relacion",
+    "href": "AnexoC.html#modelo-entidad-relacion",
+    "title": "4  Anexo C",
+    "section": "4.4 Modelo entidad-relacion",
+    "text": "4.4 Modelo entidad-relacion\n\n\n\n\n\n\n\n\n\n\n\n\nowns\n\n\n\n\n\n\n\ndelegates\n\n\n\n\n\n\n\nowns\n\n\n\n\n\n\n\nconfigures\n\n\n\n\n\n\n\nrecords\n\n\n\n\n\n\n\nowns\n\n\n\n\n\n\n\nowns\n\n\n\n\n\n\n\nissues\n\n\n\n\n\n\n\nrequests\n\n\n\n\n\n\n\ndefines\n\n\n\n\n\n\n\nenables\n\n\n\n\n\n\n\nassigned_to\n\n\n\n\n\n\n\nmay_have\n\n\n\n\n\n\n\nschedules\n\n\n\n\n\n\n\npays\n\n\n\n\n\n\n\nreceives\n\n\n\n\n\n\n\ngenerates\n\n\n\n\n\n\n\nused_in\n\n\n\n\n\n\n\ngroups\n\n\n\n\n\n\n\nproduces\n\n\n\n\n\n\n\nsupports\n\n\n\n\n\n\n\ncontains\n\n\n\n\n\n\n\nsettled_by\n\n\n\n\n\n\n\ncontains\n\n\n\n\n\n\n\ngroups\n\n\n\n\n\n\n\nmay_create\n\n\n\n\n\n\n\nclassifies\n\n\n\n\n\n\n\ntracks\n\n\n\n\n\n\n\nsold_as\n\n\n\n\n\n\n\nmay_require\n\n\n\n\n\n\n\nrecords\n\n\n\n\n\n\n\nUSERS\n\n\n\n\n\n\n\nREFRESH_TOKENS\n\n\n\n\n\n\n\nTEAM_USERS\n\n\n\n\n\n\n\nCUSTOMERS\n\n\n\n\n\n\n\nBUSINESS_CONFIGS\n\n\n\n\n\n\n\nPAYMENTS\n\n\n\n\n\n\n\nINVENTORY_CATEGORIES\n\n\n\n\n\n\n\nINVENTORY_ITEMS\n\n\n\n\n\n\n\nDOCUMENTS\n\n\n\n\n\n\n\nAUTHORIZATIONS\n\n\n\n\n\n\n\nPLANS\n\n\n\n\n\n\n\nPLAN_LIMITS\n\n\n\n\n\n\n\nPLAN_FEATURES\n\n\n\n\n\n\n\nPETS\n\n\n\n\n\n\n\nAPPOINTMENTS\n\n\n\n\n\n\n\nINVOICES\n\n\n\n\n\n\n\nCRM_EVENTS\n\n\n\n\n\n\n\nSERVICES\n\n\n\n\n\n\n\nSERVICE_PACKAGES\n\n\n\n\n\n\n\nINVOICE_ITEMS\n\n\n\n\n\n\n\nPAYMENT_ITEMS\n\n\n\n\n\n\n\nCASH_REGISTER_SESSIONS\n\n\n\n\n\n\n\nCASH_TRANSACTIONS\n\n\n\n\n\n\n\nINVENTORY_MOVEMENTS\n\n\n\n\n\n\n\nAUDIT_LOGS",
+    "crumbs": [
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Anexo C</span>"
+    ]
+  },
+  {
+    "objectID": "AnexoC.html#gestión-de-usuarios-y-subscripciones",
+    "href": "AnexoC.html#gestión-de-usuarios-y-subscripciones",
+    "title": "4  Anexo C",
+    "section": "4.5 Gestión de usuarios y subscripciones",
+    "text": "4.5 Gestión de usuarios y subscripciones\nEste subconjunto modela la autenticación, delegación de usuarios y control de capacidades según el plan contratado. Constituye la base de acceso y gobierno funcional de la plataforma.\n\n\n\n\n\n\n\n\n\n\n\nowns\n\n\n\n\n\n\n\ndelegates\n\n\n\n\n\n\n\ndefines\n\n\n\n\n\n\n\nenables\n\n\n\n\n\n\n\nassigned_to\n\n\n\n\n\n\n\nUSERS\n\n\n\n\n\n\n\nREFRESH_TOKENS\n\n\n\n\n\n\n\nTEAM_USERS\n\n\n\n\n\n\n\nPLANS\n\n\n\n\n\n\n\nPLAN_LIMITS\n\n\n\n\n\n\n\nPLAN_FEATURES\n\n\n\n\n\n\n\n\n\n\n\n4.5.1 Autenticación\nEl modelo de autenticación se basa en la entidad User, que almacena credenciales, rol, plan y jerarquía. RefreshToken permite renovar sesiones sin exponer contraseñas. La relación entre User y Plan habilita o restringe características según la suscripción. La entidad TeamUser facilita la delegación de acceso dentro de una organización, permitiendo queun usuario principal administre subusuarios con permisos específicos. Esta estructura soporta un control de acceso granular.\n\n\n\n\n\n\n\n\n\n\n\nowns\n\n\n\n\n\n\n\nassigned_to\n\n\n\n\n\n\n\nUSERS\n\n\n\n\n\n\n\nREFRESH_TOKENS\n\n\n\n\n\n\n\nPLANS\n\n\n\n\n\n\n\n\n\n\n\n\n4.5.2 Delegación\nLa relación TEAM_USERS permite que un usuario principal delegue acceso a otros usuarios dentro de su organización. Esto es crucial para empresas que requieren múltiples usuarios con diferentes niveles de acceso. Por ejemplo, un gerente puede tener acceso completo, mientras que un empleado solo puede gestionar clientes o citas.\n\n\n\n\n\n\n\n\n\n\n\ndelegates\n\n\n\n\n\n\n\nUSERS\n\n\n\n\n\n\n\nTEAM_USERS\n\n\n\n\n\n\n\n\n\n\n\n\n4.5.3 Capacidades por plan\nLa relación PLANS con PLAN_LIMITS y PLAN_FEATURES permite definir y habilitar características específicas según el plan contratado por cada usuario.\n\n\n\n\n\n\n\n\n\n\n\ndefines\n\n\n\n\n\n\n\nenables\n\n\n\n\n\n\n\nPLANS\n\n\n\n\n\n\n\nPLAN_LIMITS\n\n\n\n\n\n\n\nPLAN_FEATURES",
+    "crumbs": [
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Anexo C</span>"
+    ]
+  },
+  {
+    "objectID": "AnexoC.html#clientes-y-gestión-comercial",
+    "href": "AnexoC.html#clientes-y-gestión-comercial",
+    "title": "4  Anexo C",
+    "section": "4.6 Clientes y gestión comercial",
+    "text": "4.6 Clientes y gestión comercial\nModela la relación entre clientes, mascotas, citas y eventos de seguimiento comercial\n\n\n\n\n\n\n\n\n\n\n\nowns\n\n\n\n\n\n\n\nmay_have\n\n\n\n\n\n\n\ngenerates\n\n\n\n\n\n\n\nschedules\n\n\n\n\n\n\n\nUSERS\n\n\n\n\n\n\n\nCUSTOMERS\n\n\n\n\n\n\n\nPETS\n\n\n\n\n\n\n\nCRM_EVENTS\n\n\n\n\n\n\n\nAPPOINTMENTS",
+    "crumbs": [
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Anexo C</span>"
+    ]
+  },
+  {
+    "objectID": "AnexoC.html#servicios-y-operación",
+    "href": "AnexoC.html#servicios-y-operación",
+    "title": "4  Anexo C",
+    "section": "4.7 Servicios y operación",
+    "text": "4.7 Servicios y operación\nModela la ejecución de servicios, reservas, paquetes comerciales y la generación de transacciones derivadas de la operación diaria.\n\n\n\n\n\n\n\n\n\n\n\nused_in\n\n\n\n\n\n\n\ngroups\n\n\n\n\n\n\n\nproduces\n\n\n\n\n\n\n\nsupports\n\n\n\n\n\n\n\nSERVICES\n\n\n\n\n\n\n\nAPPOINTMENTS\n\n\n\n\n\n\n\nSERVICE_PACKAGES\n\n\n\n\n\n\n\nPAYMENTS\n\n\n\n\n\n\n\nINVOICES",
+    "crumbs": [
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Anexo C</span>"
+    ]
+  },
+  {
+    "objectID": "AnexoC.html#facturación-y-caja",
+    "href": "AnexoC.html#facturación-y-caja",
+    "title": "4  Anexo C",
+    "section": "4.8 Facturación y caja",
+    "text": "4.8 Facturación y caja\nAgrupa la lógica financiera de la plataforma, permitiendo el registro de cobros, facturación, conciliación de pagos y control de caja.\n\n\n\n\n\n\n\n\n\n\n\npays\n\n\n\n\n\n\n\nreceives\n\n\n\n\n\n\n\ncontains\n\n\n\n\n\n\n\nsettled_by\n\n\n\n\n\n\n\ncontains\n\n\n\n\n\n\n\ngroups\n\n\n\n\n\n\n\nmay_create\n\n\n\n\n\n\n\nCUSTOMERS\n\n\n\n\n\n\n\nPAYMENTS\n\n\n\n\n\n\n\nINVOICES\n\n\n\n\n\n\n\nINVOICE_ITEMS\n\n\n\n\n\n\n\nPAYMENT_ITEMS\n\n\n\n\n\n\n\nCASH_REGISTER_SESSIONS\n\n\n\n\n\n\n\nCASH_TRANSACTIONS",
+    "crumbs": [
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Anexo C</span>"
+    ]
+  },
+  {
+    "objectID": "AnexoC.html#inventario",
+    "href": "AnexoC.html#inventario",
+    "title": "4  Anexo C",
+    "section": "4.9 Inventario",
+    "text": "4.9 Inventario\nRepresenta la clasificación, control y trazabilidad de los elementos inventariables\n\n\n\n\n\n\n\n\n\n\n\nclassifies\n\n\n\n\n\n\n\ntracks\n\n\n\n\n\n\n\nsold_as\n\n\n\n\n\n\n\nINVENTORY_CATEGORIES\n\n\n\n\n\n\n\nINVENTORY_ITEMS\n\n\n\n\n\n\n\nINVENTORY_MOVEMENTS\n\n\n\n\n\n\n\nINVOICE_ITEMS",
+    "crumbs": [
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Anexo C</span>"
+    ]
+  },
+  {
+    "objectID": "AnexoC.html#documentación-y-auditoría",
+    "href": "AnexoC.html#documentación-y-auditoría",
+    "title": "4  Anexo C",
+    "section": "4.10 Documentación y auditoría",
+    "text": "4.10 Documentación y auditoría\n\n\n\n\n\n\n\n\n\n\n\nmay_require\n\n\n\n\n\n\n\nrecords\n\n\n\n\n\n\n\nDOCUMENTS\n\n\n\n\n\n\n\nAUTHORIZATIONS\n\n\n\n\n\n\n\nAUDIT_LOGS",
+    "crumbs": [
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Anexo C</span>"
+    ]
+  },
+  {
+    "objectID": "AnexoC.html#normalizacion-y-consistencia",
+    "href": "AnexoC.html#normalizacion-y-consistencia",
+    "title": "4  Anexo C",
+    "section": "4.11 Normalizacion y consistencia",
+    "text": "4.11 Normalizacion y consistencia\nEl modelo separa entidades con responsabilidades distintas. Plan no almacena todas sus reglas en una columna extensa, sino que delega limites y caracteristicas a tablas relacionadas. Payment no debe reemplazar a Invoice, porque el documento legal y el movimiento de dinero tienen ciclos de vida diferentes. InventoryMovement evita sobrescribir la historia del stock: cada entrada o salida queda registrada.\nLas garantias ACID se aplican especialmente en pagos, facturas e inventario. Si una factura descarga inventario y registra un pago, la operacion debe confirmarse completa o revertirse completa. SQLAlchemy facilita esta unidad de trabajo mediante sesiones y commits controlados. Las claves foraneas y validaciones de schemas reducen inconsistencias entre clientes, citas, pagos y usuarios.",
+    "crumbs": [
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Anexo C</span>"
+    ]
+  },
+  {
+    "objectID": "AnexoC.html#persistencia-en-vm-y-crecimiento",
+    "href": "AnexoC.html#persistencia-en-vm-y-crecimiento",
+    "title": "4  Anexo C",
+    "section": "4.12 Persistencia en VM y crecimiento",
+    "text": "4.12 Persistencia en VM y crecimiento\nEn la etapa evidenciada por las capturas, SQLite es util porque simplifica el despliegue en Oracle Free Tier. El archivo app.db puede vivir en disco persistente de la VM, con copias de seguridad programadas. Sin embargo, el uso de SQLite requiere prudencia: no es ideal para alta concurrencia, multiples instancias o analitica pesada. La ruta de evolucion natural es PostgreSQL, conservando SQLAlchemy y Alembic para minimizar cambios.",
+    "crumbs": [
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Anexo C</span>"
+    ]
+  },
+  {
+    "objectID": "AnexoC.html#informacion-para-gestionar-e-introducir",
+    "href": "AnexoC.html#informacion-para-gestionar-e-introducir",
+    "title": "4  Anexo C",
+    "section": "4.13 Informacion para gestionar e introducir",
+    "text": "4.13 Informacion para gestionar e introducir\n\nIndicar ruta real de app.db en la VM Ubuntu.\nDocumentar politica de backup: frecuencia, ubicacion y prueba de restauracion.\nConfirmar si se mantiene SQLite o se migra a PostgreSQL.\nInsertar captura del dashboard donde se observan clientes, citas, productos e ingresos.",
+    "crumbs": [
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Anexo C</span>"
+    ]
+  },
+  {
+    "objectID": "AnexoC.html#diccionario-resumido",
+    "href": "AnexoC.html#diccionario-resumido",
+    "title": "4  Anexo C",
+    "section": "4.14 Diccionario resumido",
+    "text": "4.14 Diccionario resumido\n\n\n\n\n\n\n\nEntidad\nFuncion\n\n\n\n\nUser\nIdentidad, rol, plan y jerarquia.\n\n\nCustomer\nCliente administrado por usuario u organizacion.\n\n\nAppointment\nAgenda y relacion con servicios.\n\n\nPayment\nMovimiento economico y estado de pago.\n\n\nInvoice\nDocumento comercial/fiscal con items.\n\n\nInventoryItem\nProducto o SKU con stock.\n\n\nInventoryMovement\nHistorial de entradas y salidas.\n\n\nPlanFeature\nCaracteristica habilitada por plan.\n\n\nAuthorization\nAprobacion formal de acciones sensibles.\n\n\nAuditLog\nEvidencia de cambios y trazabilidad.",
+    "crumbs": [
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Anexo C</span>"
+    ]
+  },
+  {
+    "objectID": "AnexoC.html#cierre",
+    "href": "AnexoC.html#cierre",
+    "title": "4  Anexo C",
+    "section": "4.15 Cierre",
+    "text": "4.15 Cierre\nEl modelo de datos de AdminG es el puente entre la arquitectura y la operacion real. Si las entidades se mantienen separadas, las reglas de negocio pueden crecer sin duplicidad. El proximo anexo toma este modelo como base para definir pruebas, seguridad, control de cambios y criterios de calidad.",
+    "crumbs": [
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Anexo C</span>"
+    ]
+  },
+  {
+    "objectID": "AnexoD.html",
+    "href": "AnexoD.html",
+    "title": "5  Anexo D",
+    "section": "",
+    "text": "5.1 Calidad, seguridad y gobernanza\nEduardo Martínez",
+    "crumbs": [
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Anexo D</span>"
+    ]
+  },
+  {
+    "objectID": "AnexoD.html#proposito-del-anexo",
+    "href": "AnexoD.html#proposito-del-anexo",
+    "title": "5  Anexo D",
+    "section": "5.2 Proposito del anexo",
+    "text": "5.2 Proposito del anexo\nEste anexo define la estrategia de calidad para AdminG Systems. Su funcion es verificar que los requerimientos del Chapter 2, la arquitectura del Chapter 3 y el modelo de datos del Chapter 4 se mantengan confiables cuando el sistema evoluciona. La calidad no se limita a pruebas; incluye seguridad, control de versiones, configuracion de produccion, revisiones, trazabilidad, documentacion y criterios de despliegue.\nAdminG se ejecuta en un contexto sensible: administra usuarios, clientes, pagos, facturas, inventario y datos de negocio. Por ello, la calidad debe tratarse como una condicion de operacion, no como una actividad final. Cada cambio debe responder tres preguntas: que comportamiento modifica, que riesgo introduce y que evidencia demuestra que sigue funcionando.",
+    "crumbs": [
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Anexo D</span>"
+    ]
+  },
+  {
+    "objectID": "AnexoD.html#estrategia-de-calidad",
+    "href": "AnexoD.html#estrategia-de-calidad",
+    "title": "5  Anexo D",
+    "section": "5.3 Estrategia de calidad",
+    "text": "5.3 Estrategia de calidad\nLa calidad se organiza en cinco frentes. El primero es calidad de codigo: modulos pequeños, responsabilidades separadas, nombres claros, routers por dominio, schemas de entrada y salida, y menor duplicidad posible. El segundo es calidad funcional: cada flujo principal debe poder probarse desde la interfaz o por API. El tercero es calidad de datos: transacciones, claves foraneas, migraciones y validaciones. El cuarto es seguridad: autenticacion, autorizacion, secretos, CORS y proteccion de endpoints. El quinto es operacion: despliegue reproducible, logs, backups, monitoreo minimo y rollback documentado.\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nSi\n\n\n\n\n\n\n\nNo\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nCambio en codigo o documento\n\n\n\n\n\n\n\nRevision tecnica\n\n\n\n\n\n\n\nValidacion Clean Code y arquitectura\n\n\n\n\n\n\n\nPytest integracion smoke\n\n\n\n\n\n\n\nValidacion seguridad\n\n\n\n\n\n\n\nMigraciones consistencia\n\n\n\n\n\n\n\nDespliegue VM Oracle\n\n\n\n\n\n\n\nHealthcheck monitoreo\n\n\n\n\n\n\n\nCapturas logs resultados\n\n\n\n\n\n\n\nRiesgo alto?\n\n\n\n\n\n\n\nPruebas ampliadas rollback\n\n\n\n\n\n\n\nContinuar flujo\n\n\n\n\n\n\n\nActualizar anexos A-E\n\n\n\n\n\n\n\nTrazabilidad version",
+    "crumbs": [
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Anexo D</span>"
+    ]
+  },
+  {
+    "objectID": "AnexoD.html#seguridad-aplicada",
+    "href": "AnexoD.html#seguridad-aplicada",
+    "title": "5  Anexo D",
+    "section": "5.4 Seguridad aplicada",
+    "text": "5.4 Seguridad aplicada\nEl sistema debe validar la configuracion al iniciar en produccion. Las variables criticas incluyen APP_ENV, SECRET_KEY, politica de CORS, origen del frontend, SMTP si se usa recuperacion de contrasena y exposicion del reset token. En produccion, CORS_ALLOW_ALL_ORIGINS debe estar desactivado y reemplazado por una allowlist. Los secretos no deben quedar en el repositorio ni en capturas.\nLa autenticacion usa contrasenas hasheadas y tokens JWT. La autorizacion se apoya en rol, plan, limites y caracteristicas. Esto es importante porque no basta con saber quien es el usuario; tambien se debe saber que puede hacer segun su suscripcion, su estado de prueba y su posicion dentro de la organizacion. Los endpoints administrativos o de reset de base de datos deben permanecer deshabilitados o estrictamente protegidos en entornos publicos.",
+    "crumbs": [
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Anexo D</span>"
+    ]
+  },
+  {
+    "objectID": "AnexoD.html#pruebas-realizadas",
+    "href": "AnexoD.html#pruebas-realizadas",
+    "title": "5  Anexo D",
+    "section": "5.5 Pruebas realizadas",
+    "text": "5.5 Pruebas realizadas\n\n\n\n\n\n\n\nArea\nPrueba\n\n\n\n\nAutenticacion\nRegistro, login, refresh token, usuario inactivo, contrasena incorrecta.\n\n\nPlanes\nAcceso permitido y denegado segun PlanFeature y PlanLimit.\n\n\nClientes\nCRUD, aislamiento por usuario, busqueda y validaciones.\n\n\nCitas\nCrear, editar, cancelar, relacionar con cliente y servicio.\n\n\nPagos\nRegistro, estados, montos, relacion con factura o caja.\n\n\nInventario\nCrear SKU, stock minimo, entrada, salida y bloqueo por plan.\n\n\nReportes\nMetricas del dashboard y filtros de fecha.\n\n\nDespliegue\nGET /health, carga del login, carga del dashboard autenticado.",
+    "crumbs": [
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Anexo D</span>"
+    ]
+  },
+  {
+    "objectID": "AnexoD.html#gobernanza-git-y-documentacion",
+    "href": "AnexoD.html#gobernanza-git-y-documentacion",
+    "title": "5  Anexo D",
+    "section": "5.6 Gobernanza Git y documentacion",
+    "text": "5.6 Gobernanza Git y documentacion\nLa documentacion A-E debe vivir como evidencia del avance. Cada anexo tiene una responsabilidad: requerimientos, arquitectura, datos, calidad e implementacion. Cuando un cambio modifica una regla funcional, se actualiza Anexo A; si modifica infraestructura, Anexo B; si cambia modelos o migraciones, Anexo C; si cambia pruebas, seguridad o criterios de aceptacion, Anexo D; si cambia endpoints, capturas o despliegue, Anexo E.\nSe realizaron ramas tematicas como docs/anexos-a-e, feat/payments-trial-qr, feature/inventorio o sync-prod. Los commits deben ser descriptivos: docs: organize annexes a-e, feat: Vet feature and password, fix: Frontend bussiness details.\n\n\n\nPruebas de Usuario\n\n\n\nRegistrar fecha y comando del ultimo despliegue en Oracle VM.\nConfigurado UFW, firewall de Oracle, Nginx, HTTPS o systemd.\n\n\n\n\nAcceso a Dashboard",
+    "crumbs": [
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Anexo D</span>"
+    ]
+  },
+  {
+    "objectID": "AnexoD.html#riesgos-y-controles",
+    "href": "AnexoD.html#riesgos-y-controles",
+    "title": "5  Anexo D",
+    "section": "5.7 Riesgos y controles",
+    "text": "5.7 Riesgos y controles\nEl primer riesgo es exponer la aplicacion por HTTP sin TLS. El control recomendado es dominio, certificado HTTPS y redireccion. El segundo riesgo es usar SQLite sin backups. El control es copia programada y migracion futura a PostgreSQL. El tercero es dejar configuraciones de desarrollo en produccion, como CORS abierto, reset token expuesto o endpoint de reset de base de datos. El control es validacion de runtime y checklist de despliegue.",
+    "crumbs": [
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Anexo D</span>"
+    ]
+  },
+  {
+    "objectID": "AnexoD.html#cierre",
+    "href": "AnexoD.html#cierre",
+    "title": "5  Anexo D",
+    "section": "5.8 Cierre",
+    "text": "5.8 Cierre\nLa calidad de AdminG depende de mantener alineados codigo, datos, despliegue y documentacion. Este anexo establece el marco para revisar cada entrega y conecta directamente con el Chapter 6, donde se presenta la implementacion y la evidencia de operacion.",
+    "crumbs": [
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Anexo D</span>"
+    ]
+  },
+  {
+    "objectID": "AnexoE.html",
+    "href": "AnexoE.html",
+    "title": "6  Anexo E",
+    "section": "",
+    "text": "6.1 Implementacion, evidencia y operacion\nEduardo Martínez",
+    "crumbs": [
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>Anexo E</span>"
+    ]
+  },
+  {
+    "objectID": "AnexoE.html#proposito-del-anexo",
+    "href": "AnexoE.html#proposito-del-anexo",
+    "title": "6  Anexo E",
+    "section": "6.2 Proposito del anexo",
+    "text": "6.2 Proposito del anexo\nEste anexo documenta la implementacion de AdminG Systems y reune la evidencia practica del sistema en ejecucion. Cierra la cadena iniciada por el Chapter 2, que define requerimientos; continuada por el Chapter 3, que define arquitectura; sustentada por el Chapter 4, que define persistencia; y validada por el Chapter 5, que define calidad.\nLa implementacion actual integra backend FastAPI, frontend estatico, routers modulares, base de datos relacional mediante SQLAlchemy, migraciones, semillas iniciales, control de planes y despliegue en Oracle Free Tier VM Micro Ubuntu. Las capturas muestran que existe una pantalla de login disponible por IP publica, una version local en VS Code y un dashboard autenticado con usuario de prueba.",
+    "crumbs": [
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>Anexo E</span>"
+    ]
+  },
+  {
+    "objectID": "AnexoE.html#flujo-implementado",
+    "href": "AnexoE.html#flujo-implementado",
+    "title": "6  Anexo E",
+    "section": "6.3 Flujo implementado",
+    "text": "6.3 Flujo implementado\nEl flujo base inicia con la carga del frontend, continua con autenticacion, emision de token y consulta de datos del dashboard. El backend crea o verifica tablas al iniciar, ejecuta migraciones SQLite de arranque cuando aplica, siembra planes y tipos de negocio, y garantiza la existencia de un usuario administrador por defecto para tareas iniciales. La aplicacion monta archivos estaticos de frontend-dist y responde rutas SPA desde index.html.\n\n\n\n\n\n\n\nFrontendUsuario finalapp.dbFastAPI app.mainOracle VM UbuntuRepo AdminGDesarrolladorFrontendUsuario finalapp.dbFastAPI app.mainOracle VM UbuntuRepo AdminGDesarrollador\n\nCommit docs/codigo1Pull o copia controlada2Activar entorno Python3Iniciar servicio Uvicorn/Gunicorn4validate_runtime_config()5create_all + startup migrations6seed_plans + seed_business_types7Servir index.html, CSS y JS8Abre IP publica9POST /auth/login10Verifica usuario11JWT + datos de sesion12GET dashboard/reportes13Metricas, rol, plan y modulos14",
+    "crumbs": [
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>Anexo E</span>"
+    ]
+  },
+  {
+    "objectID": "AnexoE.html#endpoints-y-modulos-visibles",
+    "href": "AnexoE.html#endpoints-y-modulos-visibles",
+    "title": "6  Anexo E",
+    "section": "6.4 Endpoints y modulos visibles",
+    "text": "6.4 Endpoints y modulos visibles\nLos endpoints publicos esenciales son POST /auth/register, POST /auth/login, rutas de recuperacion si estan habilitadas y GET /health. Los endpoints protegidos incluyen usuarios, clientes, mascotas, negocio, citas, servicios, planes, inventario, pagos, caja, facturas, notificaciones, documentos, autorizaciones, CRM, onboarding e identidad. Tambien existen modulos opcionales que pueden activarse segun configuracion: reportes, administracion, IA, operaciones, proyectos, tesoreria y otros dominios especializados.\nEn la evidencia visual se observa el login con campos de email y contrasena, boton de inicio de sesion, enlace de registro y recuperacion. Luego, el dashboard muestra barra lateral, plan Free, usuario caniche1@example.com, rol Manager, clientes totales, citas del dia, productos e ingresos del mes. Esa vista confirma que la autenticacion enlaza con datos operativos y reglas de plan.",
+    "crumbs": [
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>Anexo E</span>"
+    ]
+  },
+  {
+    "objectID": "AnexoE.html#evidencias-graficas",
+    "href": "AnexoE.html#evidencias-graficas",
+    "title": "6  Anexo E",
+    "section": "6.5 Evidencias graficas",
+    "text": "6.5 Evidencias graficas\n\n6.5.1 Frontend en desarrollo y producción\nLas imagenes a continuacion son pruebas finales con rutas reales, en login y dashboard:\n\n\n\n\n\n\nLogin en Oracle Free Tier\n\n\n\n\n\n\n\nLogin local en VS Code\n\n\n\n\n\n\n\n\n\nCredenciales de prueba\n\n\n\n\n\n\n\nDashboard local autenticado\n\n\n\n\n\n\n\n\n\nDashboard publico autenticado\n\n\n\n\n\n\n\nLogin con dominio .online\n\n\n\n\n\n\n\n6.5.2 Despliegue operativo\nLa operacion en la VM debe documentarse con comandos exactos. Una ruta prudente incluye crear usuario del sistema, instalar Python, clonar repositorio, crear entorno virtual, instalar requirements.txt, configurar .env.production, compilar o copiar frontend-dist, abrir puertos necesarios, validar GET /health e iniciar la aplicacion mediante systemd o un proceso controlado.\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nSi\n\n\n\n\n\n\n\nNo\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nPreparar VM Ubuntu\n\n\n\n\n\n\n\nActualizar paquetes sistema\n\n\n\n\n\n\n\nInstalar Python dependencias\n\n\n\n\n\n\n\nConfigurar .env production\n\n\n\n\n\n\n\nInstalar requirements\n\n\n\n\n\n\n\nPreparar frontend-dist\n\n\n\n\n\n\n\nArrancar FastAPI\n\n\n\n\n\n\n\nHealth OK?\n\n\n\n\n\n\n\nValidar login publico\n\n\n\n\n\n\n\nRevisar logs variables\n\n\n\n\n\n\n\nProbar dashboard modulos\n\n\n\n\n\n\n\nVerificar HTTPS y APIs\n\n\n\n\n\n\n\nRegistrar evidencia Anexo E",
+    "crumbs": [
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>Anexo E</span>"
+    ]
+  },
+  {
+    "objectID": "AnexoE.html#cierre",
+    "href": "AnexoE.html#cierre",
+    "title": "6  Anexo E",
+    "section": "6.6 Cierre",
+    "text": "6.6 Cierre\nLa implementacion de AdminG ya cuenta con una base funcional y desplegada. El valor del Anexo E esta en convertir esa ejecucion en evidencia verificable: capturas, comandos, rutas, variables, pruebas y decisiones de operacion. Al mantener este anexo actualizado, el proyecto puede evolucionar sin perder trazabilidad entre lo planeado, lo construido y lo desplegado.",
+    "crumbs": [
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>Anexo E</span>"
+    ]
+  },
+  {
+    "objectID": "AnexoF.html",
+    "href": "AnexoF.html",
+    "title": "7  Anexo F",
+    "section": "",
+    "text": "7.1 Firmas",
+    "crumbs": [
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Anexo F</span>"
+    ]
+  },
+  {
+    "objectID": "AnexoF.html#firmas",
+    "href": "AnexoF.html#firmas",
+    "title": "7  Anexo F",
+    "section": "",
+    "text": "7.1.1 Aprendiz\n\n\n\n7.1.2 Ingeniero tutor encargado\n\n\n\n7.1.3 Instructor Sena Encargado",
+    "crumbs": [
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Anexo F</span>"
+    ]
+  }
+]

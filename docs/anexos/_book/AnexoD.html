@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.26">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>5&nbsp; Anexo D – AdminG</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./AnexoE.html" rel="next">
+<link href="./AnexoC.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-d9ea66fcd6c317012447f26e9c021348.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script src="site_libs/quarto-diagram/mermaid-postprocess-shim.js"></script>
+
+
+<link rel="stylesheet" href="assets/css/styles.css">
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./AnexoD.html"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Anexo D</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">AdminG</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">AdminG</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./AnexoA.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Anexo A</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./AnexoB.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Anexo B</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./AnexoC.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Anexo C</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./AnexoD.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Anexo D</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./AnexoE.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Anexo E</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./AnexoF.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Anexo F</span></span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#calidad-seguridad-y-gobernanza" id="toc-calidad-seguridad-y-gobernanza" class="nav-link active" data-scroll-target="#calidad-seguridad-y-gobernanza"><span class="header-section-number">5.1</span> Calidad, seguridad y gobernanza</a></li>
+  <li><a href="#proposito-del-anexo" id="toc-proposito-del-anexo" class="nav-link" data-scroll-target="#proposito-del-anexo"><span class="header-section-number">5.2</span> Proposito del anexo</a></li>
+  <li><a href="#estrategia-de-calidad" id="toc-estrategia-de-calidad" class="nav-link" data-scroll-target="#estrategia-de-calidad"><span class="header-section-number">5.3</span> Estrategia de calidad</a></li>
+  <li><a href="#seguridad-aplicada" id="toc-seguridad-aplicada" class="nav-link" data-scroll-target="#seguridad-aplicada"><span class="header-section-number">5.4</span> Seguridad aplicada</a></li>
+  <li><a href="#pruebas-realizadas" id="toc-pruebas-realizadas" class="nav-link" data-scroll-target="#pruebas-realizadas"><span class="header-section-number">5.5</span> Pruebas realizadas</a></li>
+  <li><a href="#gobernanza-git-y-documentacion" id="toc-gobernanza-git-y-documentacion" class="nav-link" data-scroll-target="#gobernanza-git-y-documentacion"><span class="header-section-number">5.6</span> Gobernanza Git y documentacion</a></li>
+  <li><a href="#riesgos-y-controles" id="toc-riesgos-y-controles" class="nav-link" data-scroll-target="#riesgos-y-controles"><span class="header-section-number">5.7</span> Riesgos y controles</a></li>
+  <li><a href="#cierre" id="toc-cierre" class="nav-link" data-scroll-target="#cierre"><span class="header-section-number">5.8</span> Cierre</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title"><span id="sec-anexo-d" class="quarto-section-identifier"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Anexo D</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="cabecera">
+
+</div>
+<section id="calidad-seguridad-y-gobernanza" class="level2" data-number="5.1">
+<h2 data-number="5.1" class="anchored" data-anchor-id="calidad-seguridad-y-gobernanza"><span class="header-section-number">5.1</span> Calidad, seguridad y gobernanza</h2>
+<p><strong>Eduardo Martínez</strong></p>
+</section>
+<section id="proposito-del-anexo" class="level2" data-number="5.2">
+<h2 data-number="5.2" class="anchored" data-anchor-id="proposito-del-anexo"><span class="header-section-number">5.2</span> Proposito del anexo</h2>
+<p>Este anexo define la estrategia de calidad para AdminG Systems. Su funcion es verificar que los requerimientos del <a href="AnexoA.html" class="quarto-xref"><span>Chapter 2</span></a>, la arquitectura del <a href="AnexoB.html" class="quarto-xref"><span>Chapter 3</span></a> y el modelo de datos del <a href="AnexoC.html" class="quarto-xref"><span>Chapter 4</span></a> se mantengan confiables cuando el sistema evoluciona. La calidad no se limita a pruebas; incluye seguridad, control de versiones, configuracion de produccion, revisiones, trazabilidad, documentacion y criterios de despliegue.</p>
+<p>AdminG se ejecuta en un contexto sensible: administra usuarios, clientes, pagos, facturas, inventario y datos de negocio. Por ello, la calidad debe tratarse como una condicion de operacion, no como una actividad final. Cada cambio debe responder tres preguntas: que comportamiento modifica, que riesgo introduce y que evidencia demuestra que sigue funcionando.</p>
+</section>
+<section id="estrategia-de-calidad" class="level2" data-number="5.3">
+<h2 data-number="5.3" class="anchored" data-anchor-id="estrategia-de-calidad"><span class="header-section-number">5.3</span> Estrategia de calidad</h2>
+<p>La calidad se organiza en cinco frentes. El primero es <strong>calidad de codigo</strong>: modulos pequeños, responsabilidades separadas, nombres claros, routers por dominio, schemas de entrada y salida, y menor duplicidad posible. El segundo es <strong>calidad funcional</strong>: cada flujo principal debe poder probarse desde la interfaz o por API. El tercero es <strong>calidad de datos</strong>: transacciones, claves foraneas, migraciones y validaciones. El cuarto es <strong>seguridad</strong>: autenticacion, autorizacion, secretos, CORS y proteccion de endpoints. El quinto es <strong>operacion</strong>: despliegue reproducible, logs, backups, monitoreo minimo y rollback documentado.</p>
+<div class="zoomable-diagram">
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<svg aria-roledescription="flowchart-v2" role="graphics-document document" viewbox="0 0 829.5 1370" class="flowchart" xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" width="672" id="mermaid-figure-1" height="480">
+<style>#mermaid-figure-1{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#333;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#mermaid-figure-1 .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#mermaid-figure-1 .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#mermaid-figure-1 .error-icon{fill:#552222;}#mermaid-figure-1 .error-text{fill:#552222;stroke:#552222;}#mermaid-figure-1 .edge-thickness-normal{stroke-width:1px;}#mermaid-figure-1 .edge-thickness-thick{stroke-width:3.5px;}#mermaid-figure-1 .edge-pattern-solid{stroke-dasharray:0;}#mermaid-figure-1 .edge-thickness-invisible{stroke-width:0;fill:none;}#mermaid-figure-1 .edge-pattern-dashed{stroke-dasharray:3;}#mermaid-figure-1 .edge-pattern-dotted{stroke-dasharray:2;}#mermaid-figure-1 .marker{fill:#333333;stroke:#333333;}#mermaid-figure-1 .marker.cross{stroke:#333333;}#mermaid-figure-1 svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#mermaid-figure-1 p{margin:0;}#mermaid-figure-1 .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#333;}#mermaid-figure-1 .cluster-label text{fill:#333;}#mermaid-figure-1 .cluster-label span{color:#333;}#mermaid-figure-1 .cluster-label span p{background-color:transparent;}#mermaid-figure-1 .label text,#mermaid-figure-1 span{fill:#333;color:#333;}#mermaid-figure-1 .node rect,#mermaid-figure-1 .node circle,#mermaid-figure-1 .node ellipse,#mermaid-figure-1 .node polygon,#mermaid-figure-1 .node path{fill:#ECECFF;stroke:#9370DB;stroke-width:1px;}#mermaid-figure-1 .rough-node .label text,#mermaid-figure-1 .node .label text,#mermaid-figure-1 .image-shape .label,#mermaid-figure-1 .icon-shape .label{text-anchor:middle;}#mermaid-figure-1 .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#mermaid-figure-1 .rough-node .label,#mermaid-figure-1 .node .label,#mermaid-figure-1 .image-shape .label,#mermaid-figure-1 .icon-shape .label{text-align:center;}#mermaid-figure-1 .node.clickable{cursor:pointer;}#mermaid-figure-1 .root .anchor path{fill:#333333!important;stroke-width:0;stroke:#333333;}#mermaid-figure-1 .arrowheadPath{fill:#333333;}#mermaid-figure-1 .edgePath .path{stroke:#333333;stroke-width:2.0px;}#mermaid-figure-1 .flowchart-link{stroke:#333333;fill:none;}#mermaid-figure-1 .edgeLabel{background-color:rgba(232,232,232, 0.8);text-align:center;}#mermaid-figure-1 .edgeLabel p{background-color:rgba(232,232,232, 0.8);}#mermaid-figure-1 .edgeLabel rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#mermaid-figure-1 .labelBkg{background-color:rgba(232, 232, 232, 0.5);}#mermaid-figure-1 .cluster rect{fill:#ffffde;stroke:#aaaa33;stroke-width:1px;}#mermaid-figure-1 .cluster text{fill:#333;}#mermaid-figure-1 .cluster span{color:#333;}#mermaid-figure-1 div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(80, 100%, 96.2745098039%);border:1px solid #aaaa33;border-radius:2px;pointer-events:none;z-index:100;}#mermaid-figure-1 .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#333;}#mermaid-figure-1 rect.text{fill:none;stroke-width:0;}#mermaid-figure-1 .icon-shape,#mermaid-figure-1 .image-shape{background-color:rgba(232,232,232, 0.8);text-align:center;}#mermaid-figure-1 .icon-shape p,#mermaid-figure-1 .image-shape p{background-color:rgba(232,232,232, 0.8);padding:2px;}#mermaid-figure-1 .icon-shape rect,#mermaid-figure-1 .image-shape rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#mermaid-figure-1 :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}#mermaid-figure-1 .source>*{fill:#eff6ff!important;stroke:#2563eb!important;stroke-width:2px!important;color:#0f172a!important;}#mermaid-figure-1 .source span{fill:#eff6ff!important;stroke:#2563eb!important;stroke-width:2px!important;color:#0f172a!important;}#mermaid-figure-1 .source tspan{fill:#0f172a!important;}#mermaid-figure-1 .check>*{fill:#ecfdf5!important;stroke:#059669!important;stroke-width:2px!important;color:#064e3b!important;}#mermaid-figure-1 .check span{fill:#ecfdf5!important;stroke:#059669!important;stroke-width:2px!important;color:#064e3b!important;}#mermaid-figure-1 .check tspan{fill:#064e3b!important;}#mermaid-figure-1 .risk>*{fill:#fff1f2!important;stroke:#e11d48!important;stroke-width:2px!important;color:#881337!important;}#mermaid-figure-1 .risk span{fill:#fff1f2!important;stroke:#e11d48!important;stroke-width:2px!important;color:#881337!important;}#mermaid-figure-1 .risk tspan{fill:#881337!important;}#mermaid-figure-1 .evidence>*{fill:#f8fafc!important;stroke:#475569!important;stroke-width:2px!important;color:#111827!important;}#mermaid-figure-1 .evidence span{fill:#f8fafc!important;stroke:#475569!important;stroke-width:2px!important;color:#111827!important;}#mermaid-figure-1 .evidence tspan{fill:#111827!important;}</style>
+<g><marker orient="auto" markerheight="8" markerwidth="8" markerunits="userSpaceOnUse" refy="5" refx="5" viewbox="0 0 10 10" class="marker flowchart-v2" id="mermaid-1782227937957_flowchart-v2-pointEnd"><path style="stroke-width: 1; stroke-dasharray: 1, 0;" class="arrowMarkerPath" d="M 0 0 L 10 5 L 0 10 z"></path></marker><marker orient="auto" markerheight="8" markerwidth="8" markerunits="userSpaceOnUse" refy="5" refx="4.5" viewbox="0 0 10 10" class="marker flowchart-v2" id="mermaid-1782227937957_flowchart-v2-pointStart"><path style="stroke-width: 1; stroke-dasharray: 1, 0;" class="arrowMarkerPath" d="M 0 5 L 10 10 L 10 0 z"></path></marker><marker orient="auto" markerheight="11" markerwidth="11" markerunits="userSpaceOnUse" refy="5" refx="11" viewbox="0 0 10 10" class="marker flowchart-v2" id="mermaid-1782227937957_flowchart-v2-circleEnd"><circle style="stroke-width: 1; stroke-dasharray: 1, 0;" class="arrowMarkerPath" r="5" cy="5" cx="5"></circle></marker><marker orient="auto" markerheight="11" markerwidth="11" markerunits="userSpaceOnUse" refy="5" refx="-1" viewbox="0 0 10 10" class="marker flowchart-v2" id="mermaid-1782227937957_flowchart-v2-circleStart"><circle style="stroke-width: 1; stroke-dasharray: 1, 0;" class="arrowMarkerPath" r="5" cy="5" cx="5"></circle></marker><marker orient="auto" markerheight="11" markerwidth="11" markerunits="userSpaceOnUse" refy="5.2" refx="12" viewbox="0 0 11 11" class="marker cross flowchart-v2" id="mermaid-1782227937957_flowchart-v2-crossEnd"><path style="stroke-width: 2; stroke-dasharray: 1, 0;" class="arrowMarkerPath" d="M 1,1 l 9,9 M 10,1 l -9,9"></path></marker><marker orient="auto" markerheight="11" markerwidth="11" markerunits="userSpaceOnUse" refy="5.2" refx="-1" viewbox="0 0 11 11" class="marker cross flowchart-v2" id="mermaid-1782227937957_flowchart-v2-crossStart"><path style="stroke-width: 2; stroke-dasharray: 1, 0;" class="arrowMarkerPath" d="M 1,1 l 9,9 M 10,1 l -9,9"></path></marker><g class="root"><g class="clusters"></g><g class="edgePaths"><path marker-end="url(#mermaid-1782227937957_flowchart-v2-pointEnd)" style="" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" id="L_Change_Review_0" d="M433.926,86L428.896,90.167C423.867,94.333,413.809,102.667,408.779,110.333C403.75,118,403.75,125,403.75,128.5L403.75,132"></path><path marker-end="url(#mermaid-1782227937957_flowchart-v2-pointEnd)" style="" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" id="L_Review_Standards_0" d="M315.75,180.219L286.125,186.016C256.5,191.813,197.25,203.406,167.625,224.87C138,246.333,138,277.667,138,311C138,344.333,138,379.667,138,402.833C138,426,138,437,138,442.5L138,448"></path><path marker-end="url(#mermaid-1782227937957_flowchart-v2-pointEnd)" style="" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" id="L_Standards_Tests_0" d="M138,530L138,534.167C138,538.333,138,546.667,168.259,555.992C198.519,565.318,259.038,575.636,289.297,580.795L319.557,585.954"></path><path marker-end="url(#mermaid-1782227937957_flowchart-v2-pointEnd)" style="" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" id="L_Tests_Security_0" d="M443,634L443,638.167C443,642.333,443,650.667,443,658.333C443,666,443,673,443,676.5L443,680"></path><path marker-end="url(#mermaid-1782227937957_flowchart-v2-pointEnd)" style="" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" id="L_Security_Data_0" d="M443,738L443,742.167C443,746.333,443,754.667,443,762.333C443,770,443,777,443,780.5L443,784"></path><path marker-end="url(#mermaid-1782227937957_flowchart-v2-pointEnd)" style="" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" id="L_Data_Deploy_0" d="M443,842L443,846.167C443,850.333,443,858.667,443,866.333C443,874,443,881,443,884.5L443,888"></path><path marker-end="url(#mermaid-1782227937957_flowchart-v2-pointEnd)" style="" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" id="L_Deploy_Monitor_0" d="M443,946L443,950.167C443,954.333,443,962.667,443,970.333C443,978,443,985,443,988.5L443,992"></path><path marker-end="url(#mermaid-1782227937957_flowchart-v2-pointEnd)" style="" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" id="L_Monitor_Evidence_0" d="M443,1050L443,1054.167C443,1058.333,443,1066.667,443,1074.333C443,1082,443,1089,443,1092.5L443,1096"></path><path marker-end="url(#mermaid-1782227937957_flowchart-v2-pointEnd)" style="" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" id="L_Review_R1_0" d="M482.933,190L495.152,194.167C507.372,198.333,531.811,206.667,544.101,214.417C556.391,222.167,556.531,229.334,556.601,232.917L556.672,236.501"></path><path marker-end="url(#mermaid-1782227937957_flowchart-v2-pointEnd)" style="" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" id="L_R1_Extra_0" d="M521.109,342.859L508.091,354.883C495.073,366.906,469.036,390.953,456.018,410.477C443,430,443,445,443,452.5L443,460"></path><path marker-end="url(#mermaid-1782227937957_flowchart-v2-pointEnd)" style="" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" id="L_R1_Continue_0" d="M596.582,338.668L613.985,351.39C631.388,364.112,666.194,389.556,683.597,409.778C701,430,701,445,701,452.5L701,460"></path><path marker-end="url(#mermaid-1782227937957_flowchart-v2-pointEnd)" style="" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" id="L_Extra_Tests_0" d="M443,518L443,524.167C443,530.333,443,542.667,443,552.333C443,562,443,569,443,572.5L443,576"></path><path marker-end="url(#mermaid-1782227937957_flowchart-v2-pointEnd)" style="" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" id="L_Continue_Tests_0" d="M701,518L701,524.167C701,530.333,701,542.667,678.57,553.354C656.14,564.041,611.281,573.083,588.851,577.604L566.421,582.124"></path><path marker-end="url(#mermaid-1782227937957_flowchart-v2-pointEnd)" style="" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" id="L_Evidence_Docs_0" d="M443,1154L443,1158.167C443,1162.333,443,1170.667,443,1178.333C443,1186,443,1193,443,1196.5L443,1200"></path><path marker-end="url(#mermaid-1782227937957_flowchart-v2-pointEnd)" style="" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" id="L_Docs_Audit_0" d="M443,1258L443,1262.167C443,1266.333,443,1274.667,457.621,1282.824C472.243,1290.982,501.485,1298.964,516.106,1302.956L530.728,1306.947"></path><path marker-end="url(#mermaid-1782227937957_flowchart-v2-pointEnd)" style="" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" id="L_Audit_Change_0" d="M731.115,1308L746.179,1303.833C761.244,1299.667,791.372,1291.333,806.436,1278.5C821.5,1265.667,821.5,1248.333,821.5,1231C821.5,1213.667,821.5,1196.333,821.5,1179C821.5,1161.667,821.5,1144.333,821.5,1127C821.5,1109.667,821.5,1092.333,821.5,1075C821.5,1057.667,821.5,1040.333,821.5,1023C821.5,1005.667,821.5,988.333,821.5,971C821.5,953.667,821.5,936.333,821.5,919C821.5,901.667,821.5,884.333,821.5,867C821.5,849.667,821.5,832.333,821.5,815C821.5,797.667,821.5,780.333,821.5,763C821.5,745.667,821.5,728.333,821.5,711C821.5,693.667,821.5,676.333,821.5,659C821.5,641.667,821.5,624.333,821.5,607C821.5,589.667,821.5,572.333,821.5,553C821.5,533.667,821.5,512.333,821.5,489C821.5,465.667,821.5,440.333,821.5,410C821.5,379.667,821.5,344.333,821.5,311C821.5,277.667,821.5,246.333,821.5,222C821.5,197.667,821.5,180.333,821.5,163C821.5,145.667,821.5,128.333,787.072,113.196C752.644,98.058,683.787,85.116,649.359,78.645L614.931,72.174"></path></g><g class="edgeLabels"><g class="edgeLabel"><g transform="translate(0, 0)" class="label"><foreignobject height="0" width="0">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel"></span>
+</div>
+</foreignobject></g></g><g class="edgeLabel"><g transform="translate(0, 0)" class="label"><foreignobject height="0" width="0">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel"></span>
+</div>
+</foreignobject></g></g><g class="edgeLabel"><g transform="translate(0, 0)" class="label"><foreignobject height="0" width="0">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel"></span>
+</div>
+</foreignobject></g></g><g class="edgeLabel"><g transform="translate(0, 0)" class="label"><foreignobject height="0" width="0">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel"></span>
+</div>
+</foreignobject></g></g><g class="edgeLabel"><g transform="translate(0, 0)" class="label"><foreignobject height="0" width="0">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel"></span>
+</div>
+</foreignobject></g></g><g class="edgeLabel"><g transform="translate(0, 0)" class="label"><foreignobject height="0" width="0">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel"></span>
+</div>
+</foreignobject></g></g><g class="edgeLabel"><g transform="translate(0, 0)" class="label"><foreignobject height="0" width="0">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel"></span>
+</div>
+</foreignobject></g></g><g class="edgeLabel"><g transform="translate(0, 0)" class="label"><foreignobject height="0" width="0">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel"></span>
+</div>
+</foreignobject></g></g><g class="edgeLabel"><g transform="translate(0, 0)" class="label"><foreignobject height="0" width="0">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel"></span>
+</div>
+</foreignobject></g></g><g transform="translate(443, 415)" class="edgeLabel"><g transform="translate(-6.5, -12)" class="label"><foreignobject height="24" width="13">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+Si
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(701, 415)" class="edgeLabel"><g transform="translate(-9.5, -12)" class="label"><foreignobject height="24" width="19">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+No
+</p>
+</span>
+</div>
+</foreignobject></g></g><g class="edgeLabel"><g transform="translate(0, 0)" class="label"><foreignobject height="0" width="0">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel"></span>
+</div>
+</foreignobject></g></g><g class="edgeLabel"><g transform="translate(0, 0)" class="label"><foreignobject height="0" width="0">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel"></span>
+</div>
+</foreignobject></g></g><g class="edgeLabel"><g transform="translate(0, 0)" class="label"><foreignobject height="0" width="0">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel"></span>
+</div>
+</foreignobject></g></g><g class="edgeLabel"><g transform="translate(0, 0)" class="label"><foreignobject height="0" width="0">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel"></span>
+</div>
+</foreignobject></g></g><g class="edgeLabel"><g transform="translate(0, 0)" class="label"><foreignobject height="0" width="0">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel"></span>
+</div>
+</foreignobject></g></g></g><g class="nodes"><g transform="translate(481, 47)" id="flowchart-Change-0" class="node default source"><rect height="78" width="260" y="-39" x="-130" style="fill:#eff6ff !important;stroke:#2563eb !important;stroke-width:2px !important" class="basic label-container"></rect><g transform="translate(-100, -24)" style="color:#0f172a !important" class="label"><rect></rect><foreignobject height="48" width="200">
+<div data-xmlns="http://www.w3.org/1999/xhtml" style="color: rgb(15, 23, 42) !important; display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;">
+<span class="nodeLabel" style="color:#0f172a !important">
+<p>
+Cambio en codigo o documento
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(403.75, 163)" id="flowchart-Review-1" class="node default check"><rect height="54" width="176" y="-27" x="-88" style="fill:#ecfdf5 !important;stroke:#059669 !important;stroke-width:2px !important" class="basic label-container"></rect><g transform="translate(-58, -12)" style="color:#064e3b !important" class="label"><rect></rect><foreignobject height="24" width="116">
+<div data-xmlns="http://www.w3.org/1999/xhtml" style="color: rgb(6, 78, 59) !important; display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;">
+<span class="nodeLabel" style="color:#064e3b !important">
+<p>
+Revision tecnica
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(138, 491)" id="flowchart-Standards-3" class="node default check"><rect height="78" width="260" y="-39" x="-130" style="fill:#ecfdf5 !important;stroke:#059669 !important;stroke-width:2px !important" class="basic label-container"></rect><g transform="translate(-100, -24)" style="color:#064e3b !important" class="label"><rect></rect><foreignobject height="48" width="200">
+<div data-xmlns="http://www.w3.org/1999/xhtml" style="color: rgb(6, 78, 59) !important; display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;">
+<span class="nodeLabel" style="color:#064e3b !important">
+<p>
+Validacion Clean Code y arquitectura
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(443, 607)" id="flowchart-Tests-5" class="node default check"><rect height="54" width="239" y="-27" x="-119.5" style="fill:#ecfdf5 !important;stroke:#059669 !important;stroke-width:2px !important" class="basic label-container"></rect><g transform="translate(-89.5, -12)" style="color:#064e3b !important" class="label"><rect></rect><foreignobject height="24" width="179">
+<div data-xmlns="http://www.w3.org/1999/xhtml" style="color: rgb(6, 78, 59) !important; display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;">
+<span class="nodeLabel" style="color:#064e3b !important">
+<p>
+Pytest integracion smoke
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(443, 711)" id="flowchart-Security-7" class="node default check"><rect height="54" width="205" y="-27" x="-102.5" style="fill:#ecfdf5 !important;stroke:#059669 !important;stroke-width:2px !important" class="basic label-container"></rect><g transform="translate(-72.5, -12)" style="color:#064e3b !important" class="label"><rect></rect><foreignobject height="24" width="145">
+<div data-xmlns="http://www.w3.org/1999/xhtml" style="color: rgb(6, 78, 59) !important; display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;">
+<span class="nodeLabel" style="color:#064e3b !important">
+<p>
+Validacion seguridad
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(443, 815)" id="flowchart-Data-9" class="node default check"><rect height="54" width="234" y="-27" x="-117" style="fill:#ecfdf5 !important;stroke:#059669 !important;stroke-width:2px !important" class="basic label-container"></rect><g transform="translate(-87, -12)" style="color:#064e3b !important" class="label"><rect></rect><foreignobject height="24" width="174">
+<div data-xmlns="http://www.w3.org/1999/xhtml" style="color: rgb(6, 78, 59) !important; display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;">
+<span class="nodeLabel" style="color:#064e3b !important">
+<p>
+Migraciones consistencia
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(443, 919)" id="flowchart-Deploy-11" class="node default source"><rect height="54" width="213" y="-27" x="-106.5" style="fill:#eff6ff !important;stroke:#2563eb !important;stroke-width:2px !important" class="basic label-container"></rect><g transform="translate(-76.5, -12)" style="color:#0f172a !important" class="label"><rect></rect><foreignobject height="24" width="153">
+<div data-xmlns="http://www.w3.org/1999/xhtml" style="color: rgb(15, 23, 42) !important; display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;">
+<span class="nodeLabel" style="color:#0f172a !important">
+<p>
+Despliegue VM Oracle
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(443, 1023)" id="flowchart-Monitor-13" class="node default check"><rect height="54" width="227" y="-27" x="-113.5" style="fill:#ecfdf5 !important;stroke:#059669 !important;stroke-width:2px !important" class="basic label-container"></rect><g transform="translate(-83.5, -12)" style="color:#064e3b !important" class="label"><rect></rect><foreignobject height="24" width="167">
+<div data-xmlns="http://www.w3.org/1999/xhtml" style="color: rgb(6, 78, 59) !important; display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;">
+<span class="nodeLabel" style="color:#064e3b !important">
+<p>
+Healthcheck monitoreo
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(443, 1127)" id="flowchart-Evidence-15" class="node default evidence"><rect height="54" width="229" y="-27" x="-114.5" style="fill:#f8fafc !important;stroke:#475569 !important;stroke-width:2px !important" class="basic label-container"></rect><g transform="translate(-84.5, -12)" style="color:#111827 !important" class="label"><rect></rect><foreignobject height="24" width="169">
+<div data-xmlns="http://www.w3.org/1999/xhtml" style="color: rgb(17, 24, 39) !important; display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;">
+<span class="nodeLabel" style="color:#111827 !important">
+<p>
+Capturas logs resultados
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(556.25, 309)" id="flowchart-R1-17" class="node default risk"><polygon style="fill:#fff1f2 !important;stroke:#e11d48 !important;stroke-width:2px !important" transform="translate(-69,69)" class="label-container" points="69,0 138,-69 69,-138 0,-69"></polygon><g transform="translate(-42, -12)" style="color:#881337 !important" class="label"><rect></rect><foreignobject height="24" width="84">
+<div data-xmlns="http://www.w3.org/1999/xhtml" style="color: rgb(136, 19, 55) !important; display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;">
+<span class="nodeLabel" style="color:#881337 !important">
+<p>
+Riesgo alto?
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(443, 491)" id="flowchart-Extra-19" class="node default risk"><rect height="54" width="250" y="-27" x="-125" style="fill:#fff1f2 !important;stroke:#e11d48 !important;stroke-width:2px !important" class="basic label-container"></rect><g transform="translate(-95, -12)" style="color:#881337 !important" class="label"><rect></rect><foreignobject height="24" width="190">
+<div data-xmlns="http://www.w3.org/1999/xhtml" style="color: rgb(136, 19, 55) !important; display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;">
+<span class="nodeLabel" style="color:#881337 !important">
+<p>
+Pruebas ampliadas rollback
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(701, 491)" id="flowchart-Continue-21" class="node default check"><rect height="54" width="166" y="-27" x="-83" style="fill:#ecfdf5 !important;stroke:#059669 !important;stroke-width:2px !important" class="basic label-container"></rect><g transform="translate(-53, -12)" style="color:#064e3b !important" class="label"><rect></rect><foreignobject height="24" width="106">
+<div data-xmlns="http://www.w3.org/1999/xhtml" style="color: rgb(6, 78, 59) !important; display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;">
+<span class="nodeLabel" style="color:#064e3b !important">
+<p>
+Continuar flujo
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(443, 1231)" id="flowchart-Docs-27" class="node default evidence"><rect height="54" width="211" y="-27" x="-105.5" style="fill:#f8fafc !important;stroke:#475569 !important;stroke-width:2px !important" class="basic label-container"></rect><g transform="translate(-75.5, -12)" style="color:#111827 !important" class="label"><rect></rect><foreignobject height="24" width="151">
+<div data-xmlns="http://www.w3.org/1999/xhtml" style="color: rgb(17, 24, 39) !important; display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;">
+<span class="nodeLabel" style="color:#111827 !important">
+<p>
+Actualizar anexos A-E
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(633.5, 1335)" id="flowchart-Audit-29" class="node default evidence"><rect height="54" width="203" y="-27" x="-101.5" style="fill:#f8fafc !important;stroke:#475569 !important;stroke-width:2px !important" class="basic label-container"></rect><g transform="translate(-71.5, -12)" style="color:#111827 !important" class="label"><rect></rect><foreignobject height="24" width="143">
+<div data-xmlns="http://www.w3.org/1999/xhtml" style="color: rgb(17, 24, 39) !important; display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;">
+<span class="nodeLabel" style="color:#111827 !important">
+<p>
+Trazabilidad version
+</p>
+</span>
+</div>
+</foreignobject></g></g></g></g></g>
+</svg>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="seguridad-aplicada" class="level2" data-number="5.4">
+<h2 data-number="5.4" class="anchored" data-anchor-id="seguridad-aplicada"><span class="header-section-number">5.4</span> Seguridad aplicada</h2>
+<p>El sistema debe validar la configuracion al iniciar en produccion. Las variables criticas incluyen <code>APP_ENV</code>, <code>SECRET_KEY</code>, politica de CORS, origen del frontend, SMTP si se usa recuperacion de contrasena y exposicion del reset token. En produccion, <code>CORS_ALLOW_ALL_ORIGINS</code> debe estar desactivado y reemplazado por una allowlist. Los secretos no deben quedar en el repositorio ni en capturas.</p>
+<p>La autenticacion usa contrasenas hasheadas y tokens JWT. La autorizacion se apoya en rol, plan, limites y caracteristicas. Esto es importante porque no basta con saber quien es el usuario; tambien se debe saber que puede hacer segun su suscripcion, su estado de prueba y su posicion dentro de la organizacion. Los endpoints administrativos o de reset de base de datos deben permanecer deshabilitados o estrictamente protegidos en entornos publicos.</p>
+</section>
+<section id="pruebas-realizadas" class="level2" data-number="5.5">
+<h2 data-number="5.5" class="anchored" data-anchor-id="pruebas-realizadas"><span class="header-section-number">5.5</span> Pruebas realizadas</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Area</th>
+<th>Prueba</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Autenticacion</td>
+<td>Registro, login, refresh token, usuario inactivo, contrasena incorrecta.</td>
+</tr>
+<tr class="even">
+<td>Planes</td>
+<td>Acceso permitido y denegado segun <code>PlanFeature</code> y <code>PlanLimit</code>.</td>
+</tr>
+<tr class="odd">
+<td>Clientes</td>
+<td>CRUD, aislamiento por usuario, busqueda y validaciones.</td>
+</tr>
+<tr class="even">
+<td>Citas</td>
+<td>Crear, editar, cancelar, relacionar con cliente y servicio.</td>
+</tr>
+<tr class="odd">
+<td>Pagos</td>
+<td>Registro, estados, montos, relacion con factura o caja.</td>
+</tr>
+<tr class="even">
+<td>Inventario</td>
+<td>Crear SKU, stock minimo, entrada, salida y bloqueo por plan.</td>
+</tr>
+<tr class="odd">
+<td>Reportes</td>
+<td>Metricas del dashboard y filtros de fecha.</td>
+</tr>
+<tr class="even">
+<td>Despliegue</td>
+<td><code>GET /health</code>, carga del login, carga del dashboard autenticado.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="gobernanza-git-y-documentacion" class="level2" data-number="5.6">
+<h2 data-number="5.6" class="anchored" data-anchor-id="gobernanza-git-y-documentacion"><span class="header-section-number">5.6</span> Gobernanza Git y documentacion</h2>
+<p>La documentacion A-E debe vivir como evidencia del avance. Cada anexo tiene una responsabilidad: requerimientos, arquitectura, datos, calidad e implementacion. Cuando un cambio modifica una regla funcional, se actualiza Anexo A; si modifica infraestructura, Anexo B; si cambia modelos o migraciones, Anexo C; si cambia pruebas, seguridad o criterios de aceptacion, Anexo D; si cambia endpoints, capturas o despliegue, Anexo E.</p>
+<p>Se realizaron ramas tematicas como <code>docs/anexos-a-e</code>, <code>feat/payments-trial-qr</code>, <code>feature/inventorio</code> o <code>sync-prod</code>. Los commits deben ser descriptivos: <code>docs: organize annexes a-e</code>, <code>feat: Vet feature and password</code>, <code>fix: Frontend bussiness details</code>.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="assets/img/anexo-d-test-python.png" class="img-fluid figure-img"></p>
+<figcaption>Pruebas de Usuario</figcaption>
+</figure>
+</div>
+<ul>
+<li><p>Registrar fecha y comando del ultimo despliegue en Oracle VM.</p></li>
+<li><p>Configurado UFW, firewall de Oracle, Nginx, HTTPS o systemd.</p></li>
+</ul>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="assets/img/anexo-d-dashboard-dominio.png" class="img-fluid figure-img"></p>
+<figcaption>Acceso a Dashboard</figcaption>
+</figure>
+</div>
+</section>
+<section id="riesgos-y-controles" class="level2" data-number="5.7">
+<h2 data-number="5.7" class="anchored" data-anchor-id="riesgos-y-controles"><span class="header-section-number">5.7</span> Riesgos y controles</h2>
+<p>El primer riesgo es exponer la aplicacion por HTTP sin TLS. El control recomendado es dominio, certificado HTTPS y redireccion. El segundo riesgo es usar SQLite sin backups. El control es copia programada y migracion futura a PostgreSQL. El tercero es dejar configuraciones de desarrollo en produccion, como CORS abierto, reset token expuesto o endpoint de reset de base de datos. El control es validacion de runtime y checklist de despliegue.</p>
+</section>
+<section id="cierre" class="level2" data-number="5.8">
+<h2 data-number="5.8" class="anchored" data-anchor-id="cierre"><span class="header-section-number">5.8</span> Cierre</h2>
+<p>La calidad de AdminG depende de mantener alineados codigo, datos, despliegue y documentacion. Este anexo establece el marco para revisar cada entrega y conecta directamente con el <a href="AnexoE.html" class="quarto-xref"><span>Chapter 6</span></a>, donde se presenta la implementacion y la evidencia de operacion.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script src="assets/js/site.js"></script>
+
+<script src="assets/js/diagram-modal.js"></script>
+
+<script src="assets/js/diagram-zoom.js"></script>
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./AnexoC.html" class="pagination-link" aria-label="Anexo C">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Anexo C</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./AnexoE.html" class="pagination-link" aria-label="Anexo E">
+        <span class="nav-page-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Anexo E</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

@@ -1,0 +1,157 @@
+:root {
+
+  --adming-primary: #6D2020;
+  --adming-secondary: #8A2C2C;
+  --adming-dark: #471313;
+
+  --adming-surface: #F7F3F1;
+  --adming-border: #D9C8C1;
+
+  --adming-text: #2B1A1A;
+
+}
+
+body {
+
+  color: var(--adming-text);
+
+}
+
+h1 {
+
+  color: var(--adming-primary);
+
+  border-bottom: 3px solid var(--adming-secondary);
+
+  padding-bottom: .4rem;
+
+}
+
+h2 {
+
+  color: var(--adming-secondary);
+
+}
+
+h3 {
+
+  color: var(--adming-secondary);
+
+}
+
+.sidebar nav a:hover {
+
+  color: var(--adming-primary);
+
+}
+
+.quarto-title-block {
+
+  border-bottom: 2px solid var(--adming-border);
+
+  margin-bottom: 2rem;
+
+}
+
+table {
+
+  width: 100%;
+
+  border-collapse: collapse;
+
+}
+
+th {
+
+  background: var(--adming-primary);
+
+  color: white;
+
+}
+
+th,
+td {
+
+  border: 1px solid var(--adming-border);
+
+  padding: .5rem;
+
+}
+
+/* --- Zoomable diagrams --- */
+/* cursor set by diagram-zoom.js */
+.zoomable-diagram {
+  position: relative;
+  overflow-x: auto;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+  background: #fff;
+}
+
+.zoomable-diagram::after {
+  content: "Haga clic para ampliar";
+  position: absolute;
+  right: 0.75rem;
+  top: 0.75rem;
+  font-size: 0.8rem;
+  color: #111;
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 0.4rem;
+  padding: 0.25rem 0.5rem;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.08);
+  pointer-events: none;
+}
+
+.mermaid {
+  max-width: 100%;
+  overflow: auto;
+}
+
+.mermaid svg {
+  width: 100% !important;
+  height: auto !important;
+}
+
+/* --- Diagram modal --- */
+.diagram-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.85);
+  padding: 1rem;
+}
+
+.diagram-modal.show {
+  display: flex;
+}
+
+.diagram-modal .content {
+  position: relative;
+  max-width: 95vw;
+  max-height: 95vh;
+  overflow: auto;
+  background: #ffffff;
+  border-radius: 1rem;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.35);
+  padding: 2rem;
+}
+
+.diagram-modal .content svg {
+  width: 100% !important;
+  height: auto !important;
+}
+
+.diagram-modal .close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.75rem;
+  z-index: 1;
+  font-size: 1.8rem;
+  color: #333;
+  cursor: pointer;
+  line-height: 1;
+}

@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.26">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>6&nbsp; Anexo E – AdminG</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./AnexoF.html" rel="next">
+<link href="./AnexoD.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-d9ea66fcd6c317012447f26e9c021348.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script src="site_libs/quarto-diagram/mermaid-postprocess-shim.js"></script>
+
+
+<link rel="stylesheet" href="assets/css/styles.css">
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./AnexoE.html"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Anexo E</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">AdminG</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">AdminG</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./AnexoA.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Anexo A</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./AnexoB.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Anexo B</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./AnexoC.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Anexo C</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./AnexoD.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Anexo D</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./AnexoE.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Anexo E</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./AnexoF.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Anexo F</span></span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#implementacion-evidencia-y-operacion" id="toc-implementacion-evidencia-y-operacion" class="nav-link active" data-scroll-target="#implementacion-evidencia-y-operacion"><span class="header-section-number">6.1</span> Implementacion, evidencia y operacion</a></li>
+  <li><a href="#proposito-del-anexo" id="toc-proposito-del-anexo" class="nav-link" data-scroll-target="#proposito-del-anexo"><span class="header-section-number">6.2</span> Proposito del anexo</a></li>
+  <li><a href="#flujo-implementado" id="toc-flujo-implementado" class="nav-link" data-scroll-target="#flujo-implementado"><span class="header-section-number">6.3</span> Flujo implementado</a></li>
+  <li><a href="#endpoints-y-modulos-visibles" id="toc-endpoints-y-modulos-visibles" class="nav-link" data-scroll-target="#endpoints-y-modulos-visibles"><span class="header-section-number">6.4</span> Endpoints y modulos visibles</a></li>
+  <li><a href="#evidencias-graficas" id="toc-evidencias-graficas" class="nav-link" data-scroll-target="#evidencias-graficas"><span class="header-section-number">6.5</span> Evidencias graficas</a>
+  <ul class="collapse">
+  <li><a href="#frontend-en-desarrollo-y-producción" id="toc-frontend-en-desarrollo-y-producción" class="nav-link" data-scroll-target="#frontend-en-desarrollo-y-producción"><span class="header-section-number">6.5.1</span> Frontend en desarrollo y producción</a></li>
+  <li><a href="#despliegue-operativo" id="toc-despliegue-operativo" class="nav-link" data-scroll-target="#despliegue-operativo"><span class="header-section-number">6.5.2</span> Despliegue operativo</a></li>
+  </ul></li>
+  <li><a href="#cierre" id="toc-cierre" class="nav-link" data-scroll-target="#cierre"><span class="header-section-number">6.6</span> Cierre</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title"><span id="sec-anexo-e" class="quarto-section-identifier"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Anexo E</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="cabecera">
+
+</div>
+<section id="implementacion-evidencia-y-operacion" class="level2" data-number="6.1">
+<h2 data-number="6.1" class="anchored" data-anchor-id="implementacion-evidencia-y-operacion"><span class="header-section-number">6.1</span> Implementacion, evidencia y operacion</h2>
+<p><strong>Eduardo Martínez</strong></p>
+</section>
+<section id="proposito-del-anexo" class="level2" data-number="6.2">
+<h2 data-number="6.2" class="anchored" data-anchor-id="proposito-del-anexo"><span class="header-section-number">6.2</span> Proposito del anexo</h2>
+<p>Este anexo documenta la implementacion de <strong>AdminG Systems</strong> y reune la evidencia practica del sistema en ejecucion. Cierra la cadena iniciada por el <a href="AnexoA.html" class="quarto-xref"><span>Chapter 2</span></a>, que define requerimientos; continuada por el <a href="AnexoB.html" class="quarto-xref"><span>Chapter 3</span></a>, que define arquitectura; sustentada por el <a href="AnexoC.html" class="quarto-xref"><span>Chapter 4</span></a>, que define persistencia; y validada por el <a href="AnexoD.html" class="quarto-xref"><span>Chapter 5</span></a>, que define calidad.</p>
+<p>La implementacion actual integra backend FastAPI, frontend estatico, routers modulares, base de datos relacional mediante SQLAlchemy, migraciones, semillas iniciales, control de planes y despliegue en Oracle Free Tier VM Micro Ubuntu. Las capturas muestran que existe una pantalla de login disponible por IP publica, una version local en VS Code y un dashboard autenticado con usuario de prueba.</p>
+</section>
+<section id="flujo-implementado" class="level2" data-number="6.3">
+<h2 data-number="6.3" class="anchored" data-anchor-id="flujo-implementado"><span class="header-section-number">6.3</span> Flujo implementado</h2>
+<p>El flujo base inicia con la carga del frontend, continua con autenticacion, emision de token y consulta de datos del dashboard. El backend crea o verifica tablas al iniciar, ejecuta migraciones SQLite de arranque cuando aplica, siembra planes y tipos de negocio, y garantiza la existencia de un usuario administrador por defecto para tareas iniciales. La aplicacion monta archivos estaticos de <code>frontend-dist</code> y responde rutas SPA desde <code>index.html</code>.</p>
+<div class="zoomable-diagram">
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<svg aria-roledescription="sequence" role="graphics-document document" viewbox="-50 -10 1607 903" xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" width="672" id="mermaid-figure-1" height="480">
+<g><rect class="actor actor-bottom" ry="3" rx="3" name="UI" height="65" width="150" stroke="#666" fill="#eaeaea" y="817" x="1357"></rect><text style="text-anchor: middle; font-size: 16px; font-weight: 400;" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="849.5" x="1432"><tspan dy="0" x="1432">Frontend</tspan></text></g><g><rect class="actor actor-bottom" ry="3" rx="3" name="User" height="65" width="150" stroke="#666" fill="#eaeaea" y="817" x="1157"></rect><text style="text-anchor: middle; font-size: 16px; font-weight: 400;" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="849.5" x="1232"><tspan dy="0" x="1232">Usuario final</tspan></text></g><g><rect class="actor actor-bottom" ry="3" rx="3" name="DB" height="65" width="150" stroke="#666" fill="#eaeaea" y="817" x="957"></rect><text style="text-anchor: middle; font-size: 16px; font-weight: 400;" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="849.5" x="1032"><tspan dy="0" x="1032">app.db</tspan></text></g><g><rect class="actor actor-bottom" ry="3" rx="3" name="App" height="65" width="150" stroke="#666" fill="#eaeaea" y="817" x="677"></rect><text style="text-anchor: middle; font-size: 16px; font-weight: 400;" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="849.5" x="752"><tspan dy="0" x="752">FastAPI app.main</tspan></text></g><g><rect class="actor actor-bottom" ry="3" rx="3" name="VM" height="65" width="150" stroke="#666" fill="#eaeaea" y="817" x="409"></rect><text style="text-anchor: middle; font-size: 16px; font-weight: 400;" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="849.5" x="484"><tspan dy="0" x="484">Oracle VM Ubuntu</tspan></text></g><g><rect class="actor actor-bottom" ry="3" rx="3" name="Git" height="65" width="150" stroke="#666" fill="#eaeaea" y="817" x="200"></rect><text style="text-anchor: middle; font-size: 16px; font-weight: 400;" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="849.5" x="275"><tspan dy="0" x="275">Repo AdminG</tspan></text></g><g><rect class="actor actor-bottom" ry="3" rx="3" name="Dev" height="65" width="150" stroke="#666" fill="#eaeaea" y="817" x="0"></rect><text style="text-anchor: middle; font-size: 16px; font-weight: 400;" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="849.5" x="75"><tspan dy="0" x="75">Desarrollador</tspan></text></g><g><line name="UI" stroke="#999" stroke-width="0.5px" class="actor-line 200" y2="817" x2="1432" y1="65" x1="1432" id="actor6"></line><g id="root-6"><rect class="actor actor-top" ry="3" rx="3" name="UI" height="65" width="150" stroke="#666" fill="#eaeaea" y="0" x="1357"></rect><text style="text-anchor: middle; font-size: 16px; font-weight: 400;" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="32.5" x="1432"><tspan dy="0" x="1432">Frontend</tspan></text></g></g><g><line name="User" stroke="#999" stroke-width="0.5px" class="actor-line 200" y2="817" x2="1232" y1="65" x1="1232" id="actor5"></line><g id="root-5"><rect class="actor actor-top" ry="3" rx="3" name="User" height="65" width="150" stroke="#666" fill="#eaeaea" y="0" x="1157"></rect><text style="text-anchor: middle; font-size: 16px; font-weight: 400;" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="32.5" x="1232"><tspan dy="0" x="1232">Usuario final</tspan></text></g></g><g><line name="DB" stroke="#999" stroke-width="0.5px" class="actor-line 200" y2="817" x2="1032" y1="65" x1="1032" id="actor4"></line><g id="root-4"><rect class="actor actor-top" ry="3" rx="3" name="DB" height="65" width="150" stroke="#666" fill="#eaeaea" y="0" x="957"></rect><text style="text-anchor: middle; font-size: 16px; font-weight: 400;" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="32.5" x="1032"><tspan dy="0" x="1032">app.db</tspan></text></g></g><g><line name="App" stroke="#999" stroke-width="0.5px" class="actor-line 200" y2="817" x2="752" y1="65" x1="752" id="actor3"></line><g id="root-3"><rect class="actor actor-top" ry="3" rx="3" name="App" height="65" width="150" stroke="#666" fill="#eaeaea" y="0" x="677"></rect><text style="text-anchor: middle; font-size: 16px; font-weight: 400;" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="32.5" x="752"><tspan dy="0" x="752">FastAPI app.main</tspan></text></g></g><g><line name="VM" stroke="#999" stroke-width="0.5px" class="actor-line 200" y2="817" x2="484" y1="65" x1="484" id="actor2"></line><g id="root-2"><rect class="actor actor-top" ry="3" rx="3" name="VM" height="65" width="150" stroke="#666" fill="#eaeaea" y="0" x="409"></rect><text style="text-anchor: middle; font-size: 16px; font-weight: 400;" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="32.5" x="484"><tspan dy="0" x="484">Oracle VM Ubuntu</tspan></text></g></g><g><line name="Git" stroke="#999" stroke-width="0.5px" class="actor-line 200" y2="817" x2="275" y1="65" x1="275" id="actor1"></line><g id="root-1"><rect class="actor actor-top" ry="3" rx="3" name="Git" height="65" width="150" stroke="#666" fill="#eaeaea" y="0" x="200"></rect><text style="text-anchor: middle; font-size: 16px; font-weight: 400;" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="32.5" x="275"><tspan dy="0" x="275">Repo AdminG</tspan></text></g></g><g><line name="Dev" stroke="#999" stroke-width="0.5px" class="actor-line 200" y2="817" x2="75" y1="65" x1="75" id="actor0"></line><g id="root-0"><rect class="actor actor-top" ry="3" rx="3" name="Dev" height="65" width="150" stroke="#666" fill="#eaeaea" y="0" x="0"></rect><text style="text-anchor: middle; font-size: 16px; font-weight: 400;" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="32.5" x="75"><tspan dy="0" x="75">Desarrollador</tspan></text></g></g>
+<style>#mermaid-figure-1{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#333;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#mermaid-figure-1 .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#mermaid-figure-1 .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#mermaid-figure-1 .error-icon{fill:#552222;}#mermaid-figure-1 .error-text{fill:#552222;stroke:#552222;}#mermaid-figure-1 .edge-thickness-normal{stroke-width:1px;}#mermaid-figure-1 .edge-thickness-thick{stroke-width:3.5px;}#mermaid-figure-1 .edge-pattern-solid{stroke-dasharray:0;}#mermaid-figure-1 .edge-thickness-invisible{stroke-width:0;fill:none;}#mermaid-figure-1 .edge-pattern-dashed{stroke-dasharray:3;}#mermaid-figure-1 .edge-pattern-dotted{stroke-dasharray:2;}#mermaid-figure-1 .marker{fill:#333333;stroke:#333333;}#mermaid-figure-1 .marker.cross{stroke:#333333;}#mermaid-figure-1 svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#mermaid-figure-1 p{margin:0;}#mermaid-figure-1 .actor{stroke:hsl(259.6261682243, 59.7765363128%, 87.9019607843%);fill:#ECECFF;}#mermaid-figure-1 text.actor>tspan{fill:black;stroke:none;}#mermaid-figure-1 .actor-line{stroke:hsl(259.6261682243, 59.7765363128%, 87.9019607843%);}#mermaid-figure-1 .messageLine0{stroke-width:1.5;stroke-dasharray:none;stroke:#333;}#mermaid-figure-1 .messageLine1{stroke-width:1.5;stroke-dasharray:2,2;stroke:#333;}#mermaid-figure-1 #mermaid-figure-1-arrowhead path{fill:#333;stroke:#333;}#mermaid-figure-1 .sequenceNumber{fill:white;}#mermaid-figure-1 #mermaid-figure-1-sequencenumber{fill:#333;}#mermaid-figure-1 #mermaid-figure-1-crosshead path{fill:#333;stroke:#333;}#mermaid-figure-1 .messageText{fill:#333;stroke:none;}#mermaid-figure-1 .labelBox{stroke:hsl(259.6261682243, 59.7765363128%, 87.9019607843%);fill:#ECECFF;}#mermaid-figure-1 .labelText,#mermaid-figure-1 .labelText>tspan{fill:black;stroke:none;}#mermaid-figure-1 .loopText,#mermaid-figure-1 .loopText>tspan{fill:black;stroke:none;}#mermaid-figure-1 .loopLine{stroke-width:2px;stroke-dasharray:2,2;stroke:hsl(259.6261682243, 59.7765363128%, 87.9019607843%);fill:hsl(259.6261682243, 59.7765363128%, 87.9019607843%);}#mermaid-figure-1 .note{stroke:#aaaa33;fill:#fff5ad;}#mermaid-figure-1 .noteText,#mermaid-figure-1 .noteText>tspan{fill:black;stroke:none;}#mermaid-figure-1 .activation0{fill:#f4f4f4;stroke:#666;}#mermaid-figure-1 .activation1{fill:#f4f4f4;stroke:#666;}#mermaid-figure-1 .activation2{fill:#f4f4f4;stroke:#666;}#mermaid-figure-1 .actorPopupMenu{position:absolute;}#mermaid-figure-1 .actorPopupMenuPanel{position:absolute;fill:#ECECFF;box-shadow:0px 8px 16px 0px rgba(0,0,0,0.2);filter:drop-shadow(3px 5px 2px rgb(0 0 0 / 0.4));}#mermaid-figure-1 .actor-man line{stroke:hsl(259.6261682243, 59.7765363128%, 87.9019607843%);fill:#ECECFF;}#mermaid-figure-1 .actor-man circle,#mermaid-figure-1 line{stroke:hsl(259.6261682243, 59.7765363128%, 87.9019607843%);fill:#ECECFF;stroke-width:2px;}#mermaid-figure-1 :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style>
+<g></g><defs><symbol height="24" width="24" id="mermaid-figure-1-computer"><path d="M2 2v13h20v-13h-20zm18 11h-16v-9h16v9zm-10.228 6l.466-1h3.524l.467 1h-4.457zm14.228 3h-24l2-6h2.104l-1.33 4h18.45l-1.297-4h2.073l2 6zm-5-10h-14v-7h14v7z" transform="scale(.5)"></path></symbol></defs><defs><symbol clip-rule="evenodd" fill-rule="evenodd" id="mermaid-figure-1-database"><path d="M12.258.001l.256.004.255.005.253.008.251.01.249.012.247.015.246.016.242.019.241.02.239.023.236.024.233.027.231.028.229.031.225.032.223.034.22.036.217.038.214.04.211.041.208.043.205.045.201.046.198.048.194.05.191.051.187.053.183.054.18.056.175.057.172.059.168.06.163.061.16.063.155.064.15.066.074.033.073.033.071.034.07.034.069.035.068.035.067.035.066.035.064.036.064.036.062.036.06.036.06.037.058.037.058.037.055.038.055.038.053.038.052.038.051.039.05.039.048.039.047.039.045.04.044.04.043.04.041.04.04.041.039.041.037.041.036.041.034.041.033.042.032.042.03.042.029.042.027.042.026.043.024.043.023.043.021.043.02.043.018.044.017.043.015.044.013.044.012.044.011.045.009.044.007.045.006.045.004.045.002.045.001.045v17l-.001.045-.002.045-.004.045-.006.045-.007.045-.009.044-.011.045-.012.044-.013.044-.015.044-.017.043-.018.044-.02.043-.021.043-.023.043-.024.043-.026.043-.027.042-.029.042-.03.042-.032.042-.033.042-.034.041-.036.041-.037.041-.039.041-.04.041-.041.04-.043.04-.044.04-.045.04-.047.039-.048.039-.05.039-.051.039-.052.038-.053.038-.055.038-.055.038-.058.037-.058.037-.06.037-.06.036-.062.036-.064.036-.064.036-.066.035-.067.035-.068.035-.069.035-.07.034-.071.034-.073.033-.074.033-.15.066-.155.064-.16.063-.163.061-.168.06-.172.059-.175.057-.18.056-.183.054-.187.053-.191.051-.194.05-.198.048-.201.046-.205.045-.208.043-.211.041-.214.04-.217.038-.22.036-.223.034-.225.032-.229.031-.231.028-.233.027-.236.024-.239.023-.241.02-.242.019-.246.016-.247.015-.249.012-.251.01-.253.008-.255.005-.256.004-.258.001-.258-.001-.256-.004-.255-.005-.253-.008-.251-.01-.249-.012-.247-.015-.245-.016-.243-.019-.241-.02-.238-.023-.236-.024-.234-.027-.231-.028-.228-.031-.226-.032-.223-.034-.22-.036-.217-.038-.214-.04-.211-.041-.208-.043-.204-.045-.201-.046-.198-.048-.195-.05-.19-.051-.187-.053-.184-.054-.179-.056-.176-.057-.172-.059-.167-.06-.164-.061-.159-.063-.155-.064-.151-.066-.074-.033-.072-.033-.072-.034-.07-.034-.069-.035-.068-.035-.067-.035-.066-.035-.064-.036-.063-.036-.062-.036-.061-.036-.06-.037-.058-.037-.057-.037-.056-.038-.055-.038-.053-.038-.052-.038-.051-.039-.049-.039-.049-.039-.046-.039-.046-.04-.044-.04-.043-.04-.041-.04-.04-.041-.039-.041-.037-.041-.036-.041-.034-.041-.033-.042-.032-.042-.03-.042-.029-.042-.027-.042-.026-.043-.024-.043-.023-.043-.021-.043-.02-.043-.018-.044-.017-.043-.015-.044-.013-.044-.012-.044-.011-.045-.009-.044-.007-.045-.006-.045-.004-.045-.002-.045-.001-.045v-17l.001-.045.002-.045.004-.045.006-.045.007-.045.009-.044.011-.045.012-.044.013-.044.015-.044.017-.043.018-.044.02-.043.021-.043.023-.043.024-.043.026-.043.027-.042.029-.042.03-.042.032-.042.033-.042.034-.041.036-.041.037-.041.039-.041.04-.041.041-.04.043-.04.044-.04.046-.04.046-.039.049-.039.049-.039.051-.039.052-.038.053-.038.055-.038.056-.038.057-.037.058-.037.06-.037.061-.036.062-.036.063-.036.064-.036.066-.035.067-.035.068-.035.069-.035.07-.034.072-.034.072-.033.074-.033.151-.066.155-.064.159-.063.164-.061.167-.06.172-.059.176-.057.179-.056.184-.054.187-.053.19-.051.195-.05.198-.048.201-.046.204-.045.208-.043.211-.041.214-.04.217-.038.22-.036.223-.034.226-.032.228-.031.231-.028.234-.027.236-.024.238-.023.241-.02.243-.019.245-.016.247-.015.249-.012.251-.01.253-.008.255-.005.256-.004.258-.001.258.001zm-9.258 20.499v.01l.001.021.003.021.004.022.005.021.006.022.007.022.009.023.01.022.011.023.012.023.013.023.015.023.016.024.017.023.018.024.019.024.021.024.022.025.023.024.024.025.052.049.056.05.061.051.066.051.07.051.075.051.079.052.084.052.088.052.092.052.097.052.102.051.105.052.11.052.114.051.119.051.123.051.127.05.131.05.135.05.139.048.144.049.147.047.152.047.155.047.16.045.163.045.167.043.171.043.176.041.178.041.183.039.187.039.19.037.194.035.197.035.202.033.204.031.209.03.212.029.216.027.219.025.222.024.226.021.23.02.233.018.236.016.24.015.243.012.246.01.249.008.253.005.256.004.259.001.26-.001.257-.004.254-.005.25-.008.247-.011.244-.012.241-.014.237-.016.233-.018.231-.021.226-.021.224-.024.22-.026.216-.027.212-.028.21-.031.205-.031.202-.034.198-.034.194-.036.191-.037.187-.039.183-.04.179-.04.175-.042.172-.043.168-.044.163-.045.16-.046.155-.046.152-.047.148-.048.143-.049.139-.049.136-.05.131-.05.126-.05.123-.051.118-.052.114-.051.11-.052.106-.052.101-.052.096-.052.092-.052.088-.053.083-.051.079-.052.074-.052.07-.051.065-.051.06-.051.056-.05.051-.05.023-.024.023-.025.021-.024.02-.024.019-.024.018-.024.017-.024.015-.023.014-.024.013-.023.012-.023.01-.023.01-.022.008-.022.006-.022.006-.022.004-.022.004-.021.001-.021.001-.021v-4.127l-.077.055-.08.053-.083.054-.085.053-.087.052-.09.052-.093.051-.095.05-.097.05-.1.049-.102.049-.105.048-.106.047-.109.047-.111.046-.114.045-.115.045-.118.044-.12.043-.122.042-.124.042-.126.041-.128.04-.13.04-.132.038-.134.038-.135.037-.138.037-.139.035-.142.035-.143.034-.144.033-.147.032-.148.031-.15.03-.151.03-.153.029-.154.027-.156.027-.158.026-.159.025-.161.024-.162.023-.163.022-.165.021-.166.02-.167.019-.169.018-.169.017-.171.016-.173.015-.173.014-.175.013-.175.012-.177.011-.178.01-.179.008-.179.008-.181.006-.182.005-.182.004-.184.003-.184.002h-.37l-.184-.002-.184-.003-.182-.004-.182-.005-.181-.006-.179-.008-.179-.008-.178-.01-.176-.011-.176-.012-.175-.013-.173-.014-.172-.015-.171-.016-.17-.017-.169-.018-.167-.019-.166-.02-.165-.021-.163-.022-.162-.023-.161-.024-.159-.025-.157-.026-.156-.027-.155-.027-.153-.029-.151-.03-.15-.03-.148-.031-.146-.032-.145-.033-.143-.034-.141-.035-.14-.035-.137-.037-.136-.037-.134-.038-.132-.038-.13-.04-.128-.04-.126-.041-.124-.042-.122-.042-.12-.044-.117-.043-.116-.045-.113-.045-.112-.046-.109-.047-.106-.047-.105-.048-.102-.049-.1-.049-.097-.05-.095-.05-.093-.052-.09-.051-.087-.052-.085-.053-.083-.054-.08-.054-.077-.054v4.127zm0-5.654v.011l.001.021.003.021.004.021.005.022.006.022.007.022.009.022.01.022.011.023.012.023.013.023.015.024.016.023.017.024.018.024.019.024.021.024.022.024.023.025.024.024.052.05.056.05.061.05.066.051.07.051.075.052.079.051.084.052.088.052.092.052.097.052.102.052.105.052.11.051.114.051.119.052.123.05.127.051.131.05.135.049.139.049.144.048.147.048.152.047.155.046.16.045.163.045.167.044.171.042.176.042.178.04.183.04.187.038.19.037.194.036.197.034.202.033.204.032.209.03.212.028.216.027.219.025.222.024.226.022.23.02.233.018.236.016.24.014.243.012.246.01.249.008.253.006.256.003.259.001.26-.001.257-.003.254-.006.25-.008.247-.01.244-.012.241-.015.237-.016.233-.018.231-.02.226-.022.224-.024.22-.025.216-.027.212-.029.21-.03.205-.032.202-.033.198-.035.194-.036.191-.037.187-.039.183-.039.179-.041.175-.042.172-.043.168-.044.163-.045.16-.045.155-.047.152-.047.148-.048.143-.048.139-.05.136-.049.131-.05.126-.051.123-.051.118-.051.114-.052.11-.052.106-.052.101-.052.096-.052.092-.052.088-.052.083-.052.079-.052.074-.051.07-.052.065-.051.06-.05.056-.051.051-.049.023-.025.023-.024.021-.025.02-.024.019-.024.018-.024.017-.024.015-.023.014-.023.013-.024.012-.022.01-.023.01-.023.008-.022.006-.022.006-.022.004-.021.004-.022.001-.021.001-.021v-4.139l-.077.054-.08.054-.083.054-.085.052-.087.053-.09.051-.093.051-.095.051-.097.05-.1.049-.102.049-.105.048-.106.047-.109.047-.111.046-.114.045-.115.044-.118.044-.12.044-.122.042-.124.042-.126.041-.128.04-.13.039-.132.039-.134.038-.135.037-.138.036-.139.036-.142.035-.143.033-.144.033-.147.033-.148.031-.15.03-.151.03-.153.028-.154.028-.156.027-.158.026-.159.025-.161.024-.162.023-.163.022-.165.021-.166.02-.167.019-.169.018-.169.017-.171.016-.173.015-.173.014-.175.013-.175.012-.177.011-.178.009-.179.009-.179.007-.181.007-.182.005-.182.004-.184.003-.184.002h-.37l-.184-.002-.184-.003-.182-.004-.182-.005-.181-.007-.179-.007-.179-.009-.178-.009-.176-.011-.176-.012-.175-.013-.173-.014-.172-.015-.171-.016-.17-.017-.169-.018-.167-.019-.166-.02-.165-.021-.163-.022-.162-.023-.161-.024-.159-.025-.157-.026-.156-.027-.155-.028-.153-.028-.151-.03-.15-.03-.148-.031-.146-.033-.145-.033-.143-.033-.141-.035-.14-.036-.137-.036-.136-.037-.134-.038-.132-.039-.13-.039-.128-.04-.126-.041-.124-.042-.122-.043-.12-.043-.117-.044-.116-.044-.113-.046-.112-.046-.109-.046-.106-.047-.105-.048-.102-.049-.1-.049-.097-.05-.095-.051-.093-.051-.09-.051-.087-.053-.085-.052-.083-.054-.08-.054-.077-.054v4.139zm0-5.666v.011l.001.02.003.022.004.021.005.022.006.021.007.022.009.023.01.022.011.023.012.023.013.023.015.023.016.024.017.024.018.023.019.024.021.025.022.024.023.024.024.025.052.05.056.05.061.05.066.051.07.051.075.052.079.051.084.052.088.052.092.052.097.052.102.052.105.051.11.052.114.051.119.051.123.051.127.05.131.05.135.05.139.049.144.048.147.048.152.047.155.046.16.045.163.045.167.043.171.043.176.042.178.04.183.04.187.038.19.037.194.036.197.034.202.033.204.032.209.03.212.028.216.027.219.025.222.024.226.021.23.02.233.018.236.017.24.014.243.012.246.01.249.008.253.006.256.003.259.001.26-.001.257-.003.254-.006.25-.008.247-.01.244-.013.241-.014.237-.016.233-.018.231-.02.226-.022.224-.024.22-.025.216-.027.212-.029.21-.03.205-.032.202-.033.198-.035.194-.036.191-.037.187-.039.183-.039.179-.041.175-.042.172-.043.168-.044.163-.045.16-.045.155-.047.152-.047.148-.048.143-.049.139-.049.136-.049.131-.051.126-.05.123-.051.118-.052.114-.051.11-.052.106-.052.101-.052.096-.052.092-.052.088-.052.083-.052.079-.052.074-.052.07-.051.065-.051.06-.051.056-.05.051-.049.023-.025.023-.025.021-.024.02-.024.019-.024.018-.024.017-.024.015-.023.014-.024.013-.023.012-.023.01-.022.01-.023.008-.022.006-.022.006-.022.004-.022.004-.021.001-.021.001-.021v-4.153l-.077.054-.08.054-.083.053-.085.053-.087.053-.09.051-.093.051-.095.051-.097.05-.1.049-.102.048-.105.048-.106.048-.109.046-.111.046-.114.046-.115.044-.118.044-.12.043-.122.043-.124.042-.126.041-.128.04-.13.039-.132.039-.134.038-.135.037-.138.036-.139.036-.142.034-.143.034-.144.033-.147.032-.148.032-.15.03-.151.03-.153.028-.154.028-.156.027-.158.026-.159.024-.161.024-.162.023-.163.023-.165.021-.166.02-.167.019-.169.018-.169.017-.171.016-.173.015-.173.014-.175.013-.175.012-.177.01-.178.01-.179.009-.179.007-.181.006-.182.006-.182.004-.184.003-.184.001-.185.001-.185-.001-.184-.001-.184-.003-.182-.004-.182-.006-.181-.006-.179-.007-.179-.009-.178-.01-.176-.01-.176-.012-.175-.013-.173-.014-.172-.015-.171-.016-.17-.017-.169-.018-.167-.019-.166-.02-.165-.021-.163-.023-.162-.023-.161-.024-.159-.024-.157-.026-.156-.027-.155-.028-.153-.028-.151-.03-.15-.03-.148-.032-.146-.032-.145-.033-.143-.034-.141-.034-.14-.036-.137-.036-.136-.037-.134-.038-.132-.039-.13-.039-.128-.041-.126-.041-.124-.041-.122-.043-.12-.043-.117-.044-.116-.044-.113-.046-.112-.046-.109-.046-.106-.048-.105-.048-.102-.048-.1-.05-.097-.049-.095-.051-.093-.051-.09-.052-.087-.052-.085-.053-.083-.053-.08-.054-.077-.054v4.153zm8.74-8.179l-.257.004-.254.005-.25.008-.247.011-.244.012-.241.014-.237.016-.233.018-.231.021-.226.022-.224.023-.22.026-.216.027-.212.028-.21.031-.205.032-.202.033-.198.034-.194.036-.191.038-.187.038-.183.04-.179.041-.175.042-.172.043-.168.043-.163.045-.16.046-.155.046-.152.048-.148.048-.143.048-.139.049-.136.05-.131.05-.126.051-.123.051-.118.051-.114.052-.11.052-.106.052-.101.052-.096.052-.092.052-.088.052-.083.052-.079.052-.074.051-.07.052-.065.051-.06.05-.056.05-.051.05-.023.025-.023.024-.021.024-.02.025-.019.024-.018.024-.017.023-.015.024-.014.023-.013.023-.012.023-.01.023-.01.022-.008.022-.006.023-.006.021-.004.022-.004.021-.001.021-.001.021.001.021.001.021.004.021.004.022.006.021.006.023.008.022.01.022.01.023.012.023.013.023.014.023.015.024.017.023.018.024.019.024.02.025.021.024.023.024.023.025.051.05.056.05.06.05.065.051.07.052.074.051.079.052.083.052.088.052.092.052.096.052.101.052.106.052.11.052.114.052.118.051.123.051.126.051.131.05.136.05.139.049.143.048.148.048.152.048.155.046.16.046.163.045.168.043.172.043.175.042.179.041.183.04.187.038.191.038.194.036.198.034.202.033.205.032.21.031.212.028.216.027.22.026.224.023.226.022.231.021.233.018.237.016.241.014.244.012.247.011.25.008.254.005.257.004.26.001.26-.001.257-.004.254-.005.25-.008.247-.011.244-.012.241-.014.237-.016.233-.018.231-.021.226-.022.224-.023.22-.026.216-.027.212-.028.21-.031.205-.032.202-.033.198-.034.194-.036.191-.038.187-.038.183-.04.179-.041.175-.042.172-.043.168-.043.163-.045.16-.046.155-.046.152-.048.148-.048.143-.048.139-.049.136-.05.131-.05.126-.051.123-.051.118-.051.114-.052.11-.052.106-.052.101-.052.096-.052.092-.052.088-.052.083-.052.079-.052.074-.051.07-.052.065-.051.06-.05.056-.05.051-.05.023-.025.023-.024.021-.024.02-.025.019-.024.018-.024.017-.023.015-.024.014-.023.013-.023.012-.023.01-.023.01-.022.008-.022.006-.023.006-.021.004-.022.004-.021.001-.021.001-.021-.001-.021-.001-.021-.004-.021-.004-.022-.006-.021-.006-.023-.008-.022-.01-.022-.01-.023-.012-.023-.013-.023-.014-.023-.015-.024-.017-.023-.018-.024-.019-.024-.02-.025-.021-.024-.023-.024-.023-.025-.051-.05-.056-.05-.06-.05-.065-.051-.07-.052-.074-.051-.079-.052-.083-.052-.088-.052-.092-.052-.096-.052-.101-.052-.106-.052-.11-.052-.114-.052-.118-.051-.123-.051-.126-.051-.131-.05-.136-.05-.139-.049-.143-.048-.148-.048-.152-.048-.155-.046-.16-.046-.163-.045-.168-.043-.172-.043-.175-.042-.179-.041-.183-.04-.187-.038-.191-.038-.194-.036-.198-.034-.202-.033-.205-.032-.21-.031-.212-.028-.216-.027-.22-.026-.224-.023-.226-.022-.231-.021-.233-.018-.237-.016-.241-.014-.244-.012-.247-.011-.25-.008-.254-.005-.257-.004-.26-.001-.26.001z" transform="scale(.5)"></path></symbol></defs><defs><symbol height="24" width="24" id="mermaid-figure-1-clock"><path d="M12 2c5.514 0 10 4.486 10 10s-4.486 10-10 10-10-4.486-10-10 4.486-10 10-10zm0-2c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm5.848 12.459c.202.038.202.333.001.372-1.907.361-6.045 1.111-6.547 1.111-.719 0-1.301-.582-1.301-1.301 0-.512.77-5.447 1.125-7.445.034-.192.312-.181.343.014l.985 6.238 5.394 1.011z" transform="scale(.5)"></path></symbol></defs><defs><marker orient="auto-start-reverse" markerheight="12" markerwidth="12" markerunits="userSpaceOnUse" refy="5" refx="7.9" id="mermaid-figure-1-arrowhead"><path d="M -1 0 L 10 5 L 0 10 z"></path></marker></defs><defs><marker refy="4.5" refx="4" orient="auto" markerheight="8" markerwidth="15" id="mermaid-figure-1-crosshead"><path style="stroke-dasharray: 0, 0;" d="M 1,2 L 6,7 M 6,2 L 1,7" stroke-width="1pt" stroke="#000000" fill="none"></path></marker></defs><defs><marker orient="auto" markerheight="28" markerwidth="20" refy="7" refx="15.5" id="mermaid-figure-1-filled-head"><path d="M 18,7 L9,13 L14,7 L9,1 Z"></path></marker></defs><defs><marker orient="auto" markerheight="40" markerwidth="60" refy="15" refx="15" id="mermaid-figure-1-sequencenumber"><circle r="6" cy="15" cx="15"></circle></marker></defs><text style="font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="80" x="174">Commit docs/codigo</text><line style="fill: none;" marker-start="url(#mermaid-figure-1-sequencenumber)" marker-end="url(#mermaid-figure-1-arrowhead)" stroke="none" stroke-width="2" class="messageLine0" y2="113" x2="271" y1="113" x1="76"></line><text class="sequenceNumber" text-anchor="middle" font-size="12px" font-family="sans-serif" y="117" x="76">1</text><text style="font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="128" x="378">Pull o copia controlada</text><line style="fill: none;" marker-start="url(#mermaid-figure-1-sequencenumber)" marker-end="url(#mermaid-figure-1-arrowhead)" stroke="none" stroke-width="2" class="messageLine0" y2="161" x2="480" y1="161" x1="276"></line><text class="sequenceNumber" text-anchor="middle" font-size="12px" font-family="sans-serif" y="165" x="276">2</text><text style="font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="176" x="485">Activar entorno Python</text><path style="fill: none;" marker-start="url(#mermaid-figure-1-sequencenumber)" marker-end="url(#mermaid-figure-1-arrowhead)" stroke="none" stroke-width="2" class="messageLine0" d="M 485,209 C 545,199 545,239 485,229"></path><text class="sequenceNumber" text-anchor="middle" font-size="12px" font-family="sans-serif" y="213" x="485">3</text><text style="font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="254" x="617">Iniciar servicio Uvicorn/Gunicorn</text><line style="fill: none;" marker-start="url(#mermaid-figure-1-sequencenumber)" marker-end="url(#mermaid-figure-1-arrowhead)" stroke="none" stroke-width="2" class="messageLine0" y2="287" x2="748" y1="287" x1="485"></line><text class="sequenceNumber" text-anchor="middle" font-size="12px" font-family="sans-serif" y="291" x="485">4</text><text style="font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="302" x="753">validate_runtime_config()</text><path style="fill: none;" marker-start="url(#mermaid-figure-1-sequencenumber)" marker-end="url(#mermaid-figure-1-arrowhead)" stroke="none" stroke-width="2" class="messageLine0" d="M 753,335 C 813,325 813,365 753,355"></path><text class="sequenceNumber" text-anchor="middle" font-size="12px" font-family="sans-serif" y="339" x="753">5</text><text style="font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="380" x="891">create_all + startup migrations</text><line style="fill: none;" marker-start="url(#mermaid-figure-1-sequencenumber)" marker-end="url(#mermaid-figure-1-arrowhead)" stroke="none" stroke-width="2" class="messageLine0" y2="413" x2="1028" y1="413" x1="753"></line><text class="sequenceNumber" text-anchor="middle" font-size="12px" font-family="sans-serif" y="417" x="753">6</text><text style="font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="428" x="891">seed_plans + seed_business_types</text><line style="fill: none;" marker-start="url(#mermaid-figure-1-sequencenumber)" marker-end="url(#mermaid-figure-1-arrowhead)" stroke="none" stroke-width="2" class="messageLine0" y2="461" x2="1028" y1="461" x1="753"></line><text class="sequenceNumber" text-anchor="middle" font-size="12px" font-family="sans-serif" y="465" x="753">7</text><text style="font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="476" x="1091">Servir index.html, CSS y JS</text><line style="fill: none;" marker-start="url(#mermaid-figure-1-sequencenumber)" marker-end="url(#mermaid-figure-1-arrowhead)" stroke="none" stroke-width="2" class="messageLine0" y2="509" x2="1428" y1="509" x1="753"></line><text class="sequenceNumber" text-anchor="middle" font-size="12px" font-family="sans-serif" y="513" x="753">8</text><text style="font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="524" x="1331">Abre IP publica</text><line style="fill: none;" marker-start="url(#mermaid-figure-1-sequencenumber)" marker-end="url(#mermaid-figure-1-arrowhead)" stroke="none" stroke-width="2" class="messageLine0" y2="557" x2="1428" y1="557" x1="1233"></line><text class="sequenceNumber" text-anchor="middle" font-size="12px" font-family="sans-serif" y="561" x="1233">9</text><text style="font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="572" x="1094">POST /auth/login</text><line style="fill: none;" marker-start="url(#mermaid-figure-1-sequencenumber)" marker-end="url(#mermaid-figure-1-arrowhead)" stroke="none" stroke-width="2" class="messageLine0" y2="605" x2="756" y1="605" x1="1431"></line><text class="sequenceNumber" text-anchor="middle" font-size="12px" font-family="sans-serif" y="609" x="1431">10</text><text style="font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="620" x="891">Verifica usuario</text><line style="fill: none;" marker-start="url(#mermaid-figure-1-sequencenumber)" marker-end="url(#mermaid-figure-1-arrowhead)" stroke="none" stroke-width="2" class="messageLine0" y2="653" x2="1028" y1="653" x1="753"></line><text class="sequenceNumber" text-anchor="middle" font-size="12px" font-family="sans-serif" y="657" x="753">11</text><text style="font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="668" x="1091">JWT + datos de sesion</text><line style="stroke-dasharray: 3, 3; fill: none;" marker-start="url(#mermaid-figure-1-sequencenumber)" marker-end="url(#mermaid-figure-1-arrowhead)" stroke="none" stroke-width="2" class="messageLine1" y2="701" x2="1428" y1="701" x1="753"></line><text class="sequenceNumber" text-anchor="middle" font-size="12px" font-family="sans-serif" y="705" x="753">12</text><text style="font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="716" x="1094">GET dashboard/reportes</text><line style="fill: none;" marker-start="url(#mermaid-figure-1-sequencenumber)" marker-end="url(#mermaid-figure-1-arrowhead)" stroke="none" stroke-width="2" class="messageLine0" y2="749" x2="756" y1="749" x1="1431"></line><text class="sequenceNumber" text-anchor="middle" font-size="12px" font-family="sans-serif" y="753" x="1431">13</text><text style="font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="764" x="1091">Metricas, rol, plan y modulos</text><line style="stroke-dasharray: 3, 3; fill: none;" marker-start="url(#mermaid-figure-1-sequencenumber)" marker-end="url(#mermaid-figure-1-arrowhead)" stroke="none" stroke-width="2" class="messageLine1" y2="797" x2="1428" y1="797" x1="753"></line><text class="sequenceNumber" text-anchor="middle" font-size="12px" font-family="sans-serif" y="801" x="753">14</text>
+</svg>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="endpoints-y-modulos-visibles" class="level2" data-number="6.4">
+<h2 data-number="6.4" class="anchored" data-anchor-id="endpoints-y-modulos-visibles"><span class="header-section-number">6.4</span> Endpoints y modulos visibles</h2>
+<p>Los endpoints publicos esenciales son <code>POST /auth/register</code>, <code>POST /auth/login</code>, rutas de recuperacion si estan habilitadas y <code>GET /health</code>. Los endpoints protegidos incluyen usuarios, clientes, mascotas, negocio, citas, servicios, planes, inventario, pagos, caja, facturas, notificaciones, documentos, autorizaciones, CRM, onboarding e identidad. Tambien existen modulos opcionales que pueden activarse segun configuracion: reportes, administracion, IA, operaciones, proyectos, tesoreria y otros dominios especializados.</p>
+<p>En la evidencia visual se observa el login con campos de email y contrasena, boton de inicio de sesion, enlace de registro y recuperacion. Luego, el dashboard muestra barra lateral, plan Free, usuario <code>caniche1@example.com</code>, rol Manager, clientes totales, citas del dia, productos e ingresos del mes. Esa vista confirma que la autenticacion enlaza con datos operativos y reglas de plan.</p>
+</section>
+<section id="evidencias-graficas" class="level2" data-number="6.5">
+<h2 data-number="6.5" class="anchored" data-anchor-id="evidencias-graficas"><span class="header-section-number">6.5</span> Evidencias graficas</h2>
+<section id="frontend-en-desarrollo-y-producción" class="level3" data-number="6.5.1">
+<h3 data-number="6.5.1" class="anchored" data-anchor-id="frontend-en-desarrollo-y-producción"><span class="header-section-number">6.5.1</span> Frontend en desarrollo y producción</h3>
+<p>Las imagenes a continuacion son pruebas finales con rutas reales, en login y dashboard:</p>
+<div class="quarto-layout-panel" data-fig-gap="10" data-layout="[[2, 1],[1, 2]]">
+<div class="quarto-layout-row">
+<div class="quarto-layout-cell" style="flex-basis: 66.7%;justify-content: flex-start;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="assets/img/anexo-e-login-oracle.png" class="img-fluid figure-img"></p>
+<figcaption>Login en Oracle Free Tier</figcaption>
+</figure>
+</div>
+</div>
+<div class="quarto-layout-cell" style="flex-basis: 33.3%;justify-content: flex-start;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="assets/img/anexo-e-login-local.png" class="img-fluid figure-img"></p>
+<figcaption>Login local en VS Code</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="quarto-layout-row">
+<div class="quarto-layout-cell" style="flex-basis: 33.3%;justify-content: flex-start;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="assets/img/anexo-e-login-caniche.png" class="img-fluid figure-img"></p>
+<figcaption>Credenciales de prueba</figcaption>
+</figure>
+</div>
+</div>
+<div class="quarto-layout-cell" style="flex-basis: 66.7%;justify-content: flex-start;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="assets/img/anexo-e-dashboard-local.png" class="img-fluid figure-img"></p>
+<figcaption>Dashboard local autenticado</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="quarto-layout-row">
+<div class="quarto-layout-cell" style="flex-basis: 33.3%;justify-content: flex-start;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="assets/img/anexo-e-dashboard-oracle.png" class="img-fluid figure-img"></p>
+<figcaption>Dashboard publico autenticado</figcaption>
+</figure>
+</div>
+</div>
+<div class="quarto-layout-cell" style="flex-basis: 66.7%;justify-content: flex-start;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="assets/img/anexo-e-domain-https-completed.png" class="img-fluid figure-img"></p>
+<figcaption>Login con dominio .online</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="despliegue-operativo" class="level3" data-number="6.5.2">
+<h3 data-number="6.5.2" class="anchored" data-anchor-id="despliegue-operativo"><span class="header-section-number">6.5.2</span> Despliegue operativo</h3>
+<p>La operacion en la VM debe documentarse con comandos exactos. Una ruta prudente incluye crear usuario del sistema, instalar Python, clonar repositorio, crear entorno virtual, instalar <code>requirements.txt</code>, configurar <code>.env.production</code>, compilar o copiar <code>frontend-dist</code>, abrir puertos necesarios, validar <code>GET /health</code> e iniciar la aplicacion mediante <code>systemd</code> o un proceso controlado.</p>
+<div class="zoomable-diagram">
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<svg aria-roledescription="flowchart-v2" role="graphics-document document" viewbox="0 0 509 1339" class="flowchart" xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" width="672" id="mermaid-figure-3" height="480">
+<style>#mermaid-figure-3{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#333;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#mermaid-figure-3 .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#mermaid-figure-3 .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#mermaid-figure-3 .error-icon{fill:#552222;}#mermaid-figure-3 .error-text{fill:#552222;stroke:#552222;}#mermaid-figure-3 .edge-thickness-normal{stroke-width:1px;}#mermaid-figure-3 .edge-thickness-thick{stroke-width:3.5px;}#mermaid-figure-3 .edge-pattern-solid{stroke-dasharray:0;}#mermaid-figure-3 .edge-thickness-invisible{stroke-width:0;fill:none;}#mermaid-figure-3 .edge-pattern-dashed{stroke-dasharray:3;}#mermaid-figure-3 .edge-pattern-dotted{stroke-dasharray:2;}#mermaid-figure-3 .marker{fill:#333333;stroke:#333333;}#mermaid-figure-3 .marker.cross{stroke:#333333;}#mermaid-figure-3 svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#mermaid-figure-3 p{margin:0;}#mermaid-figure-3 .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#333;}#mermaid-figure-3 .cluster-label text{fill:#333;}#mermaid-figure-3 .cluster-label span{color:#333;}#mermaid-figure-3 .cluster-label span p{background-color:transparent;}#mermaid-figure-3 .label text,#mermaid-figure-3 span{fill:#333;color:#333;}#mermaid-figure-3 .node rect,#mermaid-figure-3 .node circle,#mermaid-figure-3 .node ellipse,#mermaid-figure-3 .node polygon,#mermaid-figure-3 .node path{fill:#ECECFF;stroke:#9370DB;stroke-width:1px;}#mermaid-figure-3 .rough-node .label text,#mermaid-figure-3 .node .label text,#mermaid-figure-3 .image-shape .label,#mermaid-figure-3 .icon-shape .label{text-anchor:middle;}#mermaid-figure-3 .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#mermaid-figure-3 .rough-node .label,#mermaid-figure-3 .node .label,#mermaid-figure-3 .image-shape .label,#mermaid-figure-3 .icon-shape .label{text-align:center;}#mermaid-figure-3 .node.clickable{cursor:pointer;}#mermaid-figure-3 .root .anchor path{fill:#333333!important;stroke-width:0;stroke:#333333;}#mermaid-figure-3 .arrowheadPath{fill:#333333;}#mermaid-figure-3 .edgePath .path{stroke:#333333;stroke-width:2.0px;}#mermaid-figure-3 .flowchart-link{stroke:#333333;fill:none;}#mermaid-figure-3 .edgeLabel{background-color:rgba(232,232,232, 0.8);text-align:center;}#mermaid-figure-3 .edgeLabel p{background-color:rgba(232,232,232, 0.8);}#mermaid-figure-3 .edgeLabel rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#mermaid-figure-3 .labelBkg{background-color:rgba(232, 232, 232, 0.5);}#mermaid-figure-3 .cluster rect{fill:#ffffde;stroke:#aaaa33;stroke-width:1px;}#mermaid-figure-3 .cluster text{fill:#333;}#mermaid-figure-3 .cluster span{color:#333;}#mermaid-figure-3 div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(80, 100%, 96.2745098039%);border:1px solid #aaaa33;border-radius:2px;pointer-events:none;z-index:100;}#mermaid-figure-3 .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#333;}#mermaid-figure-3 rect.text{fill:none;stroke-width:0;}#mermaid-figure-3 .icon-shape,#mermaid-figure-3 .image-shape{background-color:rgba(232,232,232, 0.8);text-align:center;}#mermaid-figure-3 .icon-shape p,#mermaid-figure-3 .image-shape p{background-color:rgba(232,232,232, 0.8);padding:2px;}#mermaid-figure-3 .icon-shape rect,#mermaid-figure-3 .image-shape rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#mermaid-figure-3 :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}#mermaid-figure-3 .step>*{fill:#f8fafc!important;stroke:#334155!important;stroke-width:2px!important;color:#0f172a!important;}#mermaid-figure-3 .step span{fill:#f8fafc!important;stroke:#334155!important;stroke-width:2px!important;color:#0f172a!important;}#mermaid-figure-3 .step tspan{fill:#0f172a!important;}#mermaid-figure-3 .secure>*{fill:#fee2e2!important;stroke:#dc2626!important;stroke-width:2px!important;color:#7f1d1d!important;}#mermaid-figure-3 .secure span{fill:#fee2e2!important;stroke:#dc2626!important;stroke-width:2px!important;color:#7f1d1d!important;}#mermaid-figure-3 .secure tspan{fill:#7f1d1d!important;}#mermaid-figure-3 .ok>*{fill:#dcfce7!important;stroke:#16a34a!important;stroke-width:2px!important;color:#14532d!important;}#mermaid-figure-3 .ok span{fill:#dcfce7!important;stroke:#16a34a!important;stroke-width:2px!important;color:#14532d!important;}#mermaid-figure-3 .ok tspan{fill:#14532d!important;}</style>
+<g><marker orient="auto" markerheight="8" markerwidth="8" markerunits="userSpaceOnUse" refy="5" refx="5" viewbox="0 0 10 10" class="marker flowchart-v2" id="mermaid-1782227990468_flowchart-v2-pointEnd"><path style="stroke-width: 1; stroke-dasharray: 1, 0;" class="arrowMarkerPath" d="M 0 0 L 10 5 L 0 10 z"></path></marker><marker orient="auto" markerheight="8" markerwidth="8" markerunits="userSpaceOnUse" refy="5" refx="4.5" viewbox="0 0 10 10" class="marker flowchart-v2" id="mermaid-1782227990468_flowchart-v2-pointStart"><path style="stroke-width: 1; stroke-dasharray: 1, 0;" class="arrowMarkerPath" d="M 0 5 L 10 10 L 10 0 z"></path></marker><marker orient="auto" markerheight="11" markerwidth="11" markerunits="userSpaceOnUse" refy="5" refx="11" viewbox="0 0 10 10" class="marker flowchart-v2" id="mermaid-1782227990468_flowchart-v2-circleEnd"><circle style="stroke-width: 1; stroke-dasharray: 1, 0;" class="arrowMarkerPath" r="5" cy="5" cx="5"></circle></marker><marker orient="auto" markerheight="11" markerwidth="11" markerunits="userSpaceOnUse" refy="5" refx="-1" viewbox="0 0 10 10" class="marker flowchart-v2" id="mermaid-1782227990468_flowchart-v2-circleStart"><circle style="stroke-width: 1; stroke-dasharray: 1, 0;" class="arrowMarkerPath" r="5" cy="5" cx="5"></circle></marker><marker orient="auto" markerheight="11" markerwidth="11" markerunits="userSpaceOnUse" refy="5.2" refx="12" viewbox="0 0 11 11" class="marker cross flowchart-v2" id="mermaid-1782227990468_flowchart-v2-crossEnd"><path style="stroke-width: 2; stroke-dasharray: 1, 0;" class="arrowMarkerPath" d="M 1,1 l 9,9 M 10,1 l -9,9"></path></marker><marker orient="auto" markerheight="11" markerwidth="11" markerunits="userSpaceOnUse" refy="5.2" refx="-1" viewbox="0 0 11 11" class="marker cross flowchart-v2" id="mermaid-1782227990468_flowchart-v2-crossStart"><path style="stroke-width: 2; stroke-dasharray: 1, 0;" class="arrowMarkerPath" d="M 1,1 l 9,9 M 10,1 l -9,9"></path></marker><g class="root"><g class="clusters"></g><g class="edgePaths"><path marker-end="url(#mermaid-1782227990468_flowchart-v2-pointEnd)" style="" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" id="L_A_A1_0" d="M266,62L266,66.167C266,70.333,266,78.667,266,86.333C266,94,266,101,266,104.5L266,108"></path><path marker-end="url(#mermaid-1782227990468_flowchart-v2-pointEnd)" style="" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" id="L_A1_B_0" d="M266,166L266,170.167C266,174.333,266,182.667,266,190.333C266,198,266,205,266,208.5L266,212"></path><path marker-end="url(#mermaid-1782227990468_flowchart-v2-pointEnd)" style="" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" id="L_B_C_0" d="M266,294L266,298.167C266,302.333,266,310.667,266,318.333C266,326,266,333,266,336.5L266,340"></path><path marker-end="url(#mermaid-1782227990468_flowchart-v2-pointEnd)" style="" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" id="L_C_D_0" d="M208.365,398L199.471,402.167C190.577,406.333,172.788,414.667,163.894,422.333C155,430,155,437,155,440.5L155,444"></path><path marker-end="url(#mermaid-1782227990468_flowchart-v2-pointEnd)" style="" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" id="L_D_E_0" d="M155,502L155,506.167C155,510.333,155,518.667,155,526.333C155,534,155,541,155,544.5L155,548"></path><path marker-end="url(#mermaid-1782227990468_flowchart-v2-pointEnd)" style="" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" id="L_E_F_0" d="M155,606L155,610.167C155,614.333,155,622.667,155,630.333C155,638,155,645,155,648.5L155,652"></path><path marker-end="url(#mermaid-1782227990468_flowchart-v2-pointEnd)" style="" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" id="L_F_G_0" d="M155,710L155,714.167C155,718.333,155,726.667,155.07,734.417C155.141,742.167,155.281,749.334,155.351,752.917L155.422,756.501"></path><path marker-end="url(#mermaid-1782227990468_flowchart-v2-pointEnd)" style="" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" id="L_G_H_0" d="M145.716,881.716L144.263,889.43C142.811,897.144,139.905,912.572,138.453,925.786C137,939,137,950,137,955.5L137,961"></path><path marker-end="url(#mermaid-1782227990468_flowchart-v2-pointEnd)" style="" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" id="L_G_I_0" d="M191.999,855.001L207.332,867.168C222.666,879.334,253.333,903.667,278.784,921.667C304.236,939.667,324.471,951.335,334.589,957.168L344.707,963.002"></path><path marker-end="url(#mermaid-1782227990468_flowchart-v2-pointEnd)" style="" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" id="L_H_J_0" d="M137,1019L137,1023.167C137,1027.333,137,1035.667,137,1043.333C137,1051,137,1058,137,1061.5L137,1065"></path><path marker-end="url(#mermaid-1782227990468_flowchart-v2-pointEnd)" style="" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" id="L_J_K_0" d="M137,1123L137,1127.167C137,1131.333,137,1139.667,137,1147.333C137,1155,137,1162,137,1165.5L137,1169"></path><path marker-end="url(#mermaid-1782227990468_flowchart-v2-pointEnd)" style="" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" id="L_K_L_0" d="M137,1227L137,1231.167C137,1235.333,137,1243.667,137,1251.333C137,1259,137,1266,137,1269.5L137,1273"></path><path marker-end="url(#mermaid-1782227990468_flowchart-v2-pointEnd)" style="" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" id="L_I_C_0" d="M401.223,965L402.644,958.833C404.065,952.667,406.908,940.333,408.329,917.083C409.75,893.833,409.75,859.667,409.75,827.5C409.75,795.333,409.75,765.167,409.75,741.417C409.75,717.667,409.75,700.333,409.75,683C409.75,665.667,409.75,648.333,409.75,631C409.75,613.667,409.75,596.333,409.75,579C409.75,561.667,409.75,544.333,409.75,527C409.75,509.667,409.75,492.333,409.75,475C409.75,457.667,409.75,440.333,398.858,427.727C387.967,415.12,366.184,407.24,355.292,403.301L344.401,399.361"></path></g><g class="edgeLabels"><g class="edgeLabel"><g transform="translate(0, 0)" class="label"><foreignobject height="0" width="0">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel"></span>
+</div>
+</foreignobject></g></g><g class="edgeLabel"><g transform="translate(0, 0)" class="label"><foreignobject height="0" width="0">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel"></span>
+</div>
+</foreignobject></g></g><g class="edgeLabel"><g transform="translate(0, 0)" class="label"><foreignobject height="0" width="0">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel"></span>
+</div>
+</foreignobject></g></g><g class="edgeLabel"><g transform="translate(0, 0)" class="label"><foreignobject height="0" width="0">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel"></span>
+</div>
+</foreignobject></g></g><g class="edgeLabel"><g transform="translate(0, 0)" class="label"><foreignobject height="0" width="0">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel"></span>
+</div>
+</foreignobject></g></g><g class="edgeLabel"><g transform="translate(0, 0)" class="label"><foreignobject height="0" width="0">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel"></span>
+</div>
+</foreignobject></g></g><g class="edgeLabel"><g transform="translate(0, 0)" class="label"><foreignobject height="0" width="0">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel"></span>
+</div>
+</foreignobject></g></g><g transform="translate(137, 928)" class="edgeLabel"><g transform="translate(-6.5, -12)" class="label"><foreignobject height="24" width="13">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+Si
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(284, 928)" class="edgeLabel"><g transform="translate(-9.5, -12)" class="label"><foreignobject height="24" width="19">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel">
+<p>
+No
+</p>
+</span>
+</div>
+</foreignobject></g></g><g class="edgeLabel"><g transform="translate(0, 0)" class="label"><foreignobject height="0" width="0">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel"></span>
+</div>
+</foreignobject></g></g><g class="edgeLabel"><g transform="translate(0, 0)" class="label"><foreignobject height="0" width="0">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel"></span>
+</div>
+</foreignobject></g></g><g class="edgeLabel"><g transform="translate(0, 0)" class="label"><foreignobject height="0" width="0">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel"></span>
+</div>
+</foreignobject></g></g><g class="edgeLabel"><g transform="translate(0, 0)" class="label"><foreignobject height="0" width="0">
+<div class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" data-xmlns="http://www.w3.org/1999/xhtml">
+<span class="edgeLabel"></span>
+</div>
+</foreignobject></g></g></g><g class="nodes"><g transform="translate(266, 35)" id="flowchart-A-0" class="node default step"><rect height="54" width="199" y="-27" x="-99.5" style="fill:#f8fafc !important;stroke:#334155 !important;stroke-width:2px !important" class="basic label-container"></rect><g transform="translate(-69.5, -12)" style="color:#0f172a !important" class="label"><rect></rect><foreignobject height="24" width="139">
+<div data-xmlns="http://www.w3.org/1999/xhtml" style="color: rgb(15, 23, 42) !important; display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;">
+<span class="nodeLabel" style="color:#0f172a !important">
+<p>
+Preparar VM Ubuntu
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(266, 139)" id="flowchart-A1-1" class="node default step"><rect height="54" width="257" y="-27" x="-128.5" style="fill:#f8fafc !important;stroke:#334155 !important;stroke-width:2px !important" class="basic label-container"></rect><g transform="translate(-98.5, -12)" style="color:#0f172a !important" class="label"><rect></rect><foreignobject height="24" width="197">
+<div data-xmlns="http://www.w3.org/1999/xhtml" style="color: rgb(15, 23, 42) !important; display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;">
+<span class="nodeLabel" style="color:#0f172a !important">
+<p>
+Actualizar paquetes sistema
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(266, 255)" id="flowchart-B-3" class="node default step"><rect height="78" width="260" y="-39" x="-130" style="fill:#f8fafc !important;stroke:#334155 !important;stroke-width:2px !important" class="basic label-container"></rect><g transform="translate(-100, -24)" style="color:#0f172a !important" class="label"><rect></rect><foreignobject height="48" width="200">
+<div data-xmlns="http://www.w3.org/1999/xhtml" style="color: rgb(15, 23, 42) !important; display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;">
+<span class="nodeLabel" style="color:#0f172a !important">
+<p>
+Instalar Python dependencias
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(266, 371)" id="flowchart-C-5" class="node default secure"><rect height="54" width="253" y="-27" x="-126.5" style="fill:#fee2e2 !important;stroke:#dc2626 !important;stroke-width:2px !important" class="basic label-container"></rect><g transform="translate(-96.5, -12)" style="color:#7f1d1d !important" class="label"><rect></rect><foreignobject height="24" width="193">
+<div data-xmlns="http://www.w3.org/1999/xhtml" style="color: rgb(127, 29, 29) !important; display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;">
+<span class="nodeLabel" style="color:#7f1d1d !important">
+<p>
+Configurar .env production
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(155, 475)" id="flowchart-D-7" class="node default step"><rect height="54" width="209" y="-27" x="-104.5" style="fill:#f8fafc !important;stroke:#334155 !important;stroke-width:2px !important" class="basic label-container"></rect><g transform="translate(-74.5, -12)" style="color:#0f172a !important" class="label"><rect></rect><foreignobject height="24" width="149">
+<div data-xmlns="http://www.w3.org/1999/xhtml" style="color: rgb(15, 23, 42) !important; display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;">
+<span class="nodeLabel" style="color:#0f172a !important">
+<p>
+Instalar requirements
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(155, 579)" id="flowchart-E-9" class="node default step"><rect height="54" width="218" y="-27" x="-109" style="fill:#f8fafc !important;stroke:#334155 !important;stroke-width:2px !important" class="basic label-container"></rect><g transform="translate(-79, -12)" style="color:#0f172a !important" class="label"><rect></rect><foreignobject height="24" width="158">
+<div data-xmlns="http://www.w3.org/1999/xhtml" style="color: rgb(15, 23, 42) !important; display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;">
+<span class="nodeLabel" style="color:#0f172a !important">
+<p>
+Preparar frontend-dist
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(155, 683)" id="flowchart-F-11" class="node default step"><rect height="54" width="174" y="-27" x="-87" style="fill:#f8fafc !important;stroke:#334155 !important;stroke-width:2px !important" class="basic label-container"></rect><g transform="translate(-57, -12)" style="color:#0f172a !important" class="label"><rect></rect><foreignobject height="24" width="114">
+<div data-xmlns="http://www.w3.org/1999/xhtml" style="color: rgb(15, 23, 42) !important; display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;">
+<span class="nodeLabel" style="color:#0f172a !important">
+<p>
+Arrancar FastAPI
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(155, 825.5)" id="flowchart-G-13" class="node default ok"><polygon style="fill:#dcfce7 !important;stroke:#16a34a !important;stroke-width:2px !important" transform="translate(-65.5,65.5)" class="label-container" points="65.5,0 131,-65.5 65.5,-131 0,-65.5"></polygon><g transform="translate(-38.5, -12)" style="color:#14532d !important" class="label"><rect></rect><foreignobject height="24" width="77">
+<div data-xmlns="http://www.w3.org/1999/xhtml" style="color: rgb(20, 83, 45) !important; display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;">
+<span class="nodeLabel" style="color:#14532d !important">
+<p>
+Health OK?
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(137, 992)" id="flowchart-H-15" class="node default ok"><rect height="54" width="204" y="-27" x="-102" style="fill:#dcfce7 !important;stroke:#16a34a !important;stroke-width:2px !important" class="basic label-container"></rect><g transform="translate(-72, -12)" style="color:#14532d !important" class="label"><rect></rect><foreignobject height="24" width="144">
+<div data-xmlns="http://www.w3.org/1999/xhtml" style="color: rgb(20, 83, 45) !important; display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;">
+<span class="nodeLabel" style="color:#14532d !important">
+<p>
+Validar login publico
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(395, 992)" id="flowchart-I-17" class="node default secure"><rect height="54" width="212" y="-27" x="-106" style="fill:#fee2e2 !important;stroke:#dc2626 !important;stroke-width:2px !important" class="basic label-container"></rect><g transform="translate(-76, -12)" style="color:#7f1d1d !important" class="label"><rect></rect><foreignobject height="24" width="152">
+<div data-xmlns="http://www.w3.org/1999/xhtml" style="color: rgb(127, 29, 29) !important; display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;">
+<span class="nodeLabel" style="color:#7f1d1d !important">
+<p>
+Revisar logs variables
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(137, 1096)" id="flowchart-J-19" class="node default ok"><rect height="54" width="247" y="-27" x="-123.5" style="fill:#dcfce7 !important;stroke:#16a34a !important;stroke-width:2px !important" class="basic label-container"></rect><g transform="translate(-93.5, -12)" style="color:#14532d !important" class="label"><rect></rect><foreignobject height="24" width="187">
+<div data-xmlns="http://www.w3.org/1999/xhtml" style="color: rgb(20, 83, 45) !important; display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;">
+<span class="nodeLabel" style="color:#14532d !important">
+<p>
+Probar dashboard modulos
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(137, 1200)" id="flowchart-K-21" class="node default ok"><rect height="54" width="216" y="-27" x="-108" style="fill:#dcfce7 !important;stroke:#16a34a !important;stroke-width:2px !important" class="basic label-container"></rect><g transform="translate(-78, -12)" style="color:#14532d !important" class="label"><rect></rect><foreignobject height="24" width="156">
+<div data-xmlns="http://www.w3.org/1999/xhtml" style="color: rgb(20, 83, 45) !important; display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;">
+<span class="nodeLabel" style="color:#14532d !important">
+<p>
+Verificar HTTPS y APIs
+</p>
+</span>
+</div>
+</foreignobject></g></g><g transform="translate(137, 1304)" id="flowchart-L-23" class="node default ok"><rect height="54" width="258" y="-27" x="-129" style="fill:#dcfce7 !important;stroke:#16a34a !important;stroke-width:2px !important" class="basic label-container"></rect><g transform="translate(-99, -12)" style="color:#14532d !important" class="label"><rect></rect><foreignobject height="24" width="198">
+<div data-xmlns="http://www.w3.org/1999/xhtml" style="color: rgb(20, 83, 45) !important; display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;">
+<span class="nodeLabel" style="color:#14532d !important">
+<p>
+Registrar evidencia Anexo E
+</p>
+</span>
+</div>
+</foreignobject></g></g></g></g></g>
+</svg>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="cierre" class="level2" data-number="6.6">
+<h2 data-number="6.6" class="anchored" data-anchor-id="cierre"><span class="header-section-number">6.6</span> Cierre</h2>
+<p>La implementacion de AdminG ya cuenta con una base funcional y desplegada. El valor del Anexo E esta en convertir esa ejecucion en evidencia verificable: capturas, comandos, rutas, variables, pruebas y decisiones de operacion. Al mantener este anexo actualizado, el proyecto puede evolucionar sin perder trazabilidad entre lo planeado, lo construido y lo desplegado.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script src="assets/js/site.js"></script>
+
+<script src="assets/js/diagram-modal.js"></script>
+
+<script src="assets/js/diagram-zoom.js"></script>
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./AnexoD.html" class="pagination-link" aria-label="Anexo D">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Anexo D</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./AnexoF.html" class="pagination-link" aria-label="Anexo F">
+        <span class="nav-page-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Anexo F</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
