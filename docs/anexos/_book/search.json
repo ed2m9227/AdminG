@@ -424,7 +424,7 @@
     "href": "AnexoD.html#gobernanza-git-y-documentacion",
     "title": "5  Anexo D",
     "section": "5.6 Gobernanza Git y documentacion",
-    "text": "5.6 Gobernanza Git y documentacion\nLa documentacion A-E debe vivir como evidencia del avance. Cada anexo tiene una responsabilidad: requerimientos, arquitectura, datos, calidad e implementacion. Cuando un cambio modifica una regla funcional, se actualiza Anexo A; si modifica infraestructura, Anexo B; si cambia modelos o migraciones, Anexo C; si cambia pruebas, seguridad o criterios de aceptacion, Anexo D; si cambia endpoints, capturas o despliegue, Anexo E.\nSe realizaron ramas tematicas como docs/anexos-a-e, feat/payments-trial-qr, feature/inventorio o sync-prod. Los commits deben ser descriptivos: docs: organize annexes a-e, feat: Vet feature and password, fix: Frontend bussiness details.\n\n\n\nPruebas de Usuario\n\n\n\nRegistrar fecha y comando del ultimo despliegue en Oracle VM.\nConfigurado UFW, firewall de Oracle, Nginx, HTTPS o systemd.\n\n\n\n\nAcceso a Dashboard",
+    "text": "5.6 Gobernanza Git y documentacion\nLa documentacion A-E debe vivir como evidencia del avance. Cada anexo tiene una responsabilidad: requerimientos, arquitectura, datos, calidad e implementacion. Cuando un cambio modifica una regla funcional, se actualiza Anexo A; si modifica infraestructura, Anexo B; si cambia modelos o migraciones, Anexo C; si cambia pruebas, seguridad o criterios de aceptacion, Anexo D; si cambia endpoints, capturas o despliegue, Anexo E.\nSe realizaron ramas tematicas como docs/anexos-a-e, feat/payments-trial-qr, feature/inventorio o sync-prod. Los commits deben ser descriptivos: docs: organize annexes a-e, feat: Vet feature and password, fix: Frontend bussiness details.\n\n\n\nPruebas de Usuario\n\n\n\nConfigurado UFW, firewall de Oracle, Nginx, HTTPS o systemd.\n\n\n\n\nAcceso a Dashboard",
     "crumbs": [
       "<span class='chapter-number'>5</span>  <span class='chapter-title'>Anexo D</span>"
     ]
@@ -507,26 +507,6 @@
     "text": "6.6 Cierre\nLa implementacion de AdminG ya cuenta con una base funcional y desplegada. El valor del Anexo E esta en convertir esa ejecucion en evidencia verificable: capturas, comandos, rutas, variables, pruebas y decisiones de operacion. Al mantener este anexo actualizado, el proyecto puede evolucionar sin perder trazabilidad entre lo planeado, lo construido y lo desplegado.",
     "crumbs": [
       "<span class='chapter-number'>6</span>  <span class='chapter-title'>Anexo E</span>"
-    ]
-  },
-  {
-    "objectID": "AnexoF.html",
-    "href": "AnexoF.html",
-    "title": "7  Anexo F",
-    "section": "",
-    "text": "7.1 Firmas",
-    "crumbs": [
-      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Anexo F</span>"
-    ]
-  },
-  {
-    "objectID": "AnexoF.html#firmas",
-    "href": "AnexoF.html#firmas",
-    "title": "7  Anexo F",
-    "section": "",
-    "text": "7.1.1 Aprendiz\n\n\n\n7.1.2 Ingeniero tutor encargado\n\n\n\n7.1.3 Instructor Sena Encargado",
-    "crumbs": [
-      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Anexo F</span>"
     ]
   }
 ]
