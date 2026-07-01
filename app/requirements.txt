@@ -14,3 +14,4 @@ pyotp
 cryptography
 psycopg2-binary  # Para PostgreSQL (opcional)
 python-multipart  # Para uploads de archivos
+httpx2>=0.1
