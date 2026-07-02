@@ -175,22 +175,55 @@ async def update_risk(risk_id: int, risk: RiskUpdate):
     import sqlite3
     conn = sqlite3.connect("app.db")
     cursor = conn.cursor()
-    
-    fields = []
-    values = []
-    for field, value in risk.model_dump(exclude_unset=True).items():
-        fields.append(f"{field} = ?")
-        values.append(value)
-    
-    if not fields:
+
+    data = risk.model_dump(exclude_unset=True)
+    if not data:
         raise HTTPException(status_code=400, detail="No hay campos para actualizar")
-    
-    values.append(risk_id)
-    cursor.execute(f"UPDATE strategic_risks SET {', '.join(fields)}, updated_at = CURRENT_TIMESTAMP WHERE id = ?", values)
-    
+
+    existing = cursor.execute("SELECT * FROM strategic_risks WHERE id = ?", (risk_id,)).fetchone()
+    if not existing:
+        raise HTTPException(status_code=404, detail="Riesgo no encontrado")
+
+    updated_values = {
+        "nombre": existing["nombre"],
+        "descripcion": existing["descripcion"],
+        "categoria": existing["categoria"],
+        "nivel_impacto": existing["nivel_impacto"],
+        "nivel_probabilidad": existing["nivel_probabilidad"],
+        "factores": existing["factores"],
+        "indicadores": existing["indicadores"],
+        "plan_contingencia": existing["plan_contingencia"],
+        "responsable": existing["responsable"],
+        "estado": existing["estado"],
+    }
+    updated_values.update({key: value for key, value in data.items() if key in updated_values})
+
+    cursor.execute(
+        """
+        UPDATE strategic_risks
+        SET nombre = ?, descripcion = ?, categoria = ?, nivel_impacto = ?, nivel_probabilidad = ?,
+            factores = ?, indicadores = ?, plan_contingencia = ?, responsable = ?, estado = ?,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+        """,
+        [
+            updated_values["nombre"],
+            updated_values["descripcion"],
+            updated_values["categoria"],
+            updated_values["nivel_impacto"],
+            updated_values["nivel_probabilidad"],
+            updated_values["factores"],
+            updated_values["indicadores"],
+            updated_values["plan_contingencia"],
+            updated_values["responsable"],
+            updated_values["estado"],
+            risk_id,
+        ],
+    )
+
     conn.commit()
     conn.close()
-    
+
     return {"message": "Riesgo actualizado exitosamente"}
 
 @router.delete("/risks/{risk_id}")
@@ -324,22 +357,36 @@ async def update_early_warning(warning_id: int, warning: EarlyWarningUpdate):
     import sqlite3
     conn = sqlite3.connect("app.db")
     cursor = conn.cursor()
-    
-    fields = []
-    values = []
-    for field, value in warning.model_dump(exclude_unset=True).items():
-        fields.append(f"{field} = ?")
-        values.append(value)
-    
-    if not fields:
+
+    data = warning.model_dump(exclude_unset=True)
+    if not data:
         raise HTTPException(status_code=400, detail="No hay campos para actualizar")
-    
-    values.append(warning_id)
-    cursor.execute(f"UPDATE early_warnings SET {', '.join(fields)}, updated_at = CURRENT_TIMESTAMP WHERE id = ?", values)
-    
+
+    existing = cursor.execute("SELECT * FROM early_warnings WHERE id = ?", (warning_id,)).fetchone()
+    if not existing:
+        raise HTTPException(status_code=404, detail="Alerta no encontrada")
+
+    updated_values = {
+        "indicador": existing["indicador"],
+        "umbral": existing["umbral"],
+        "operador": existing["operador"],
+        "frecuencia": existing["frecuencia"],
+        "estado": existing["estado"],
+    }
+    updated_values.update({key: value for key, value in data.items() if key in updated_values})
+
+    cursor.execute(
+        """
+        UPDATE early_warnings
+        SET indicador = ?, umbral = ?, operador = ?, frecuencia = ?, estado = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+        """,
+        [updated_values["indicador"], updated_values["umbral"], updated_values["operador"], updated_values["frecuencia"], updated_values["estado"], warning_id],
+    )
+
     conn.commit()
     conn.close()
-    
+
     return {"message": "Alerta actualizada exitosamente"}
 
 @router.delete("/early-warnings/{warning_id}")
@@ -463,22 +510,53 @@ async def update_scenario(scenario_id: int, scenario: ScenarioUpdate):
     import sqlite3
     conn = sqlite3.connect("app.db")
     cursor = conn.cursor()
-    
-    fields = []
-    values = []
-    for field, value in scenario.model_dump(exclude_unset=True).items():
-        fields.append(f"{field} = ?")
-        values.append(value)
-    
-    if not fields:
+
+    data = scenario.model_dump(exclude_unset=True)
+    if not data:
         raise HTTPException(status_code=400, detail="No hay campos para actualizar")
-    
-    values.append(scenario_id)
-    cursor.execute(f"UPDATE strategic_scenarios SET {', '.join(fields)}, updated_at = CURRENT_TIMESTAMP WHERE id = ?", values)
-    
+
+    existing = cursor.execute("SELECT * FROM strategic_scenarios WHERE id = ?", (scenario_id,)).fetchone()
+    if not existing:
+        raise HTTPException(status_code=404, detail="Escenario no encontrado")
+
+    updated_values = {
+        "titulo": existing["titulo"],
+        "descripcion": existing["descripcion"],
+        "tipo": existing["tipo"],
+        "probabilidad": existing["probabilidad"],
+        "impacto_estimado": existing["impacto_estimado"],
+        "acciones_preventivas": existing["acciones_preventivas"],
+        "acciones_mitigacion": existing["acciones_mitigacion"],
+        "indicadores_seguimiento": existing["indicadores_seguimiento"],
+        "estado": existing["estado"],
+    }
+    updated_values.update({key: value for key, value in data.items() if key in updated_values})
+
+    cursor.execute(
+        """
+        UPDATE strategic_scenarios
+        SET titulo = ?, descripcion = ?, tipo = ?, probabilidad = ?, impacto_estimado = ?,
+            acciones_preventivas = ?, acciones_mitigacion = ?, indicadores_seguimiento = ?, estado = ?,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+        """,
+        [
+            updated_values["titulo"],
+            updated_values["descripcion"],
+            updated_values["tipo"],
+            updated_values["probabilidad"],
+            updated_values["impacto_estimado"],
+            updated_values["acciones_preventivas"],
+            updated_values["acciones_mitigacion"],
+            updated_values["indicadores_seguimiento"],
+            updated_values["estado"],
+            scenario_id,
+        ],
+    )
+
     conn.commit()
     conn.close()
-    
+
     return {"message": "Escenario actualizado exitosamente"}
 
 @router.delete("/scenarios/{scenario_id}")
@@ -570,22 +648,50 @@ async def update_strategic_plan(plan_id: int, plan: StrategicPlanUpdate):
     import sqlite3
     conn = sqlite3.connect("app.db")
     cursor = conn.cursor()
-    
-    fields = []
-    values = []
-    for field, value in plan.model_dump(exclude_unset=True).items():
-        fields.append(f"{field} = ?")
-        values.append(value)
-    
-    if not fields:
+
+    data = plan.model_dump(exclude_unset=True)
+    if not data:
         raise HTTPException(status_code=400, detail="No hay campos para actualizar")
-    
-    values.append(plan_id)
-    cursor.execute(f"UPDATE strategic_plans SET {', '.join(fields)}, updated_at = CURRENT_TIMESTAMP WHERE id = ?", values)
-    
+
+    existing = cursor.execute("SELECT * FROM strategic_plans WHERE id = ?", (plan_id,)).fetchone()
+    if not existing:
+        raise HTTPException(status_code=404, detail="Plan no encontrado")
+
+    updated_values = {
+        "titulo": existing["titulo"],
+        "horizonte": existing["horizonte"],
+        "vision": existing["vision"],
+        "objetivos_estrategicos": existing["objetivos_estrategicos"],
+        "metas": existing["metas"],
+        "recursos": existing["recursos"],
+        "indicadores": existing["indicadores"],
+        "estado": existing["estado"],
+    }
+    updated_values.update({key: value for key, value in data.items() if key in updated_values})
+
+    cursor.execute(
+        """
+        UPDATE strategic_plans
+        SET titulo = ?, horizonte = ?, vision = ?, objetivos_estrategicos = ?, metas = ?, recursos = ?,
+            indicadores = ?, estado = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+        """,
+        [
+            updated_values["titulo"],
+            updated_values["horizonte"],
+            updated_values["vision"],
+            updated_values["objetivos_estrategicos"],
+            updated_values["metas"],
+            updated_values["recursos"],
+            updated_values["indicadores"],
+            updated_values["estado"],
+            plan_id,
+        ],
+    )
+
     conn.commit()
     conn.close()
-    
+
     return {"message": "Plan actualizado exitosamente"}
 
 @router.delete("/plans/{plan_id}")
