@@ -160,23 +160,57 @@ async def update_asset(asset_id: int, asset: AssetUpdate):
     import sqlite3
     conn = sqlite3.connect("app.db")
     cursor = conn.cursor()
-    
-    # Build dynamic update
-    fields = []
-    values = []
-    for field, value in asset.model_dump(exclude_unset=True).items():
-        fields.append(f"{field} = ?")
-        values.append(value)
-    
-    if not fields:
+
+    data = asset.model_dump(exclude_unset=True)
+    if not data:
         raise HTTPException(status_code=400, detail="No hay campos para actualizar")
-    
-    values.append(asset_id)
-    cursor.execute(f"UPDATE jac_assets SET {', '.join(fields)}, updated_at = CURRENT_TIMESTAMP WHERE id = ?", values)
-    
+
+    existing = cursor.execute("SELECT * FROM jac_assets WHERE id = ?", (asset_id,)).fetchone()
+    if not existing:
+        raise HTTPException(status_code=404, detail="Activo no encontrado")
+
+    updated_values = {
+        "nombre": existing["nombre"],
+        "descripcion": existing["descripcion"],
+        "categoria": existing["categoria"],
+        "estado": existing["estado"],
+        "ubicacion": existing["ubicacion"],
+        "fecha_adquisicion": existing["fecha_adquisicion"],
+        "valor_adquisicion": existing["valor_adquisicion"],
+        "vida_util_anios": existing["vida_util_anios"],
+        "proveedor": existing["proveedor"],
+        "numero_serial": existing["numero_serial"],
+        "observaciones": existing["observaciones"],
+    }
+    updated_values.update({key: value for key, value in data.items() if key in updated_values})
+
+    cursor.execute(
+        """
+        UPDATE jac_assets
+        SET nombre = ?, descripcion = ?, categoria = ?, estado = ?, ubicacion = ?,
+            fecha_adquisicion = ?, valor_adquisicion = ?, vida_util_anios = ?,
+            proveedor = ?, numero_serial = ?, observaciones = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+        """,
+        [
+            updated_values["nombre"],
+            updated_values["descripcion"],
+            updated_values["categoria"],
+            updated_values["estado"],
+            updated_values["ubicacion"],
+            updated_values["fecha_adquisicion"],
+            updated_values["valor_adquisicion"],
+            updated_values["vida_util_anios"],
+            updated_values["proveedor"],
+            updated_values["numero_serial"],
+            updated_values["observaciones"],
+            asset_id,
+        ],
+    )
+
     conn.commit()
     conn.close()
-    
+
     return {"message": "Activo actualizado exitosamente"}
 
 @router.delete("/assets/{asset_id}")
@@ -369,22 +403,57 @@ async def update_entity(entity_id: int, entity: ExternalEntityUpdate):
     import sqlite3
     conn = sqlite3.connect("app.db")
     cursor = conn.cursor()
-    
-    fields = []
-    values = []
-    for field, value in entity.model_dump(exclude_unset=True).items():
-        fields.append(f"{field} = ?")
-        values.append(value)
-    
-    if not fields:
+
+    data = entity.model_dump(exclude_unset=True)
+    if not data:
         raise HTTPException(status_code=400, detail="No hay campos para actualizar")
-    
-    values.append(entity_id)
-    cursor.execute(f"UPDATE external_entities SET {', '.join(fields)}, updated_at = CURRENT_TIMESTAMP WHERE id = ?", values)
-    
+
+    existing = cursor.execute("SELECT * FROM external_entities WHERE id = ?", (entity_id,)).fetchone()
+    if not existing:
+        raise HTTPException(status_code=404, detail="Entidad no encontrada")
+
+    updated_values = {
+        "nombre": existing["nombre"],
+        "tipo": existing["tipo"],
+        "nivel": existing["nivel"],
+        "nit": existing["nit"],
+        "direccion": existing["direccion"],
+        "telefono": existing["telefono"],
+        "email": existing["email"],
+        "contacto_nombre": existing["contacto_nombre"],
+        "contacto_cargo": existing["contacto_cargo"],
+        "contacto_telefono": existing["contacto_telefono"],
+        "observaciones": existing["observaciones"],
+    }
+    updated_values.update({key: value for key, value in data.items() if key in updated_values})
+
+    cursor.execute(
+        """
+        UPDATE external_entities
+        SET nombre = ?, tipo = ?, nivel = ?, nit = ?, direccion = ?, telefono = ?,
+            email = ?, contacto_nombre = ?, contacto_cargo = ?, contacto_telefono = ?,
+            observaciones = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+        """,
+        [
+            updated_values["nombre"],
+            updated_values["tipo"],
+            updated_values["nivel"],
+            updated_values["nit"],
+            updated_values["direccion"],
+            updated_values["telefono"],
+            updated_values["email"],
+            updated_values["contacto_nombre"],
+            updated_values["contacto_cargo"],
+            updated_values["contacto_telefono"],
+            updated_values["observaciones"],
+            entity_id,
+        ],
+    )
+
     conn.commit()
     conn.close()
-    
+
     return {"message": "Entidad actualizada exitosamente"}
 
 @router.delete("/entities/{entity_id}")
@@ -484,22 +553,50 @@ async def update_relationship(relationship_id: int, relationship: RelationshipUp
     import sqlite3
     conn = sqlite3.connect("app.db")
     cursor = conn.cursor()
-    
-    fields = []
-    values = []
-    for field, value in relationship.model_dump(exclude_unset=True).items():
-        fields.append(f"{field} = ?")
-        values.append(value)
-    
-    if not fields:
+
+    data = relationship.model_dump(exclude_unset=True)
+    if not data:
         raise HTTPException(status_code=400, detail="No hay campos para actualizar")
-    
-    values.append(relationship_id)
-    cursor.execute(f"UPDATE external_relationships SET {', '.join(fields)}, updated_at = CURRENT_TIMESTAMP WHERE id = ?", values)
-    
+
+    existing = cursor.execute("SELECT * FROM external_relationships WHERE id = ?", (relationship_id,)).fetchone()
+    if not existing:
+        raise HTTPException(status_code=404, detail="Relación no encontrada")
+
+    updated_values = {
+        "tipo_relacion": existing["tipo_relacion"],
+        "objeto": existing["objeto"],
+        "fecha_inicio": existing["fecha_inicio"],
+        "fecha_fin": existing["fecha_fin"],
+        "estado": existing["estado"],
+        "beneficios": existing["beneficios"],
+        "obligaciones": existing["obligaciones"],
+        "observaciones": existing["observaciones"],
+    }
+    updated_values.update({key: value for key, value in data.items() if key in updated_values})
+
+    cursor.execute(
+        """
+        UPDATE external_relationships
+        SET tipo_relacion = ?, objeto = ?, fecha_inicio = ?, fecha_fin = ?, estado = ?,
+            beneficios = ?, obligaciones = ?, observaciones = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+        """,
+        [
+            updated_values["tipo_relacion"],
+            updated_values["objeto"],
+            updated_values["fecha_inicio"],
+            updated_values["fecha_fin"],
+            updated_values["estado"],
+            updated_values["beneficios"],
+            updated_values["obligaciones"],
+            updated_values["observaciones"],
+            relationship_id,
+        ],
+    )
+
     conn.commit()
     conn.close()
-    
+
     return {"message": "Relación actualizada exitosamente"}
 
 @router.delete("/relationships/{relationship_id}")
